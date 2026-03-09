@@ -39,8 +39,8 @@
 
   .field { margin-bottom: 1rem; }
   label { display: block; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin-bottom: 6px; }
-  input[type="text"], input[type="date"], select { width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; color: var(--ink); background: var(--cream); transition: border-color 0.2s; outline: none; }
-  input[type="text"]:focus, input[type="date"]:focus, select:focus { border-color: var(--teal); background: white; }
+  input[type="text"], input[type="date"], input[type="password"], input[type="email"], select { width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; color: var(--ink); background: var(--cream); transition: border-color 0.2s; outline: none; box-sizing: border-box; }
+  input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus, input[type="email"]:focus, select:focus { border-color: var(--teal); background: white; }
 
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.88rem; cursor: pointer; letter-spacing: 0.3px; transition: all 0.2s; }
   .btn-primary { background: var(--teal); color: white; }
@@ -1618,16 +1618,38 @@ async function doRegister() {
   setLoginLoading(true);
   try {
     const data = await sbAuth('signup', { email, password: pass, data: { name } });
-    _sbToken  = data.access_token;
-    _sbUserId = data.user.id;
+
+    // Supabase may return token immediately (email confirm OFF) or not (email confirm ON)
+    let token  = data.access_token  || null;
+    let userId = data.user?.id || null;
+
+    if (!token) {
+      // Try logging in right away (works if confirm is off but token wasn't returned)
+      try {
+        const login = await sbAuth('token?grant_type=password', { email, password: pass });
+        token  = login.access_token;
+        userId = login.user?.id;
+      } catch(e2) {
+        // Email confirmation required
+        showLoginError('✅ ¡Cuenta creada! Revisá tu email para confirmarla, luego iniciá sesión.');
+        document.getElementById('login-user').value = email;
+        switchLoginTab('login');
+        return;
+      }
+    }
+
+    if (!userId) throw new Error('No se pudo obtener el ID de usuario');
+
+    _sbToken  = token;
+    _sbUserId = userId;
     localStorage.setItem('aa_sb_session', JSON.stringify({ token: _sbToken, userId: _sbUserId, name }));
-    // Create profile
     try {
       await sbFetch('profiles', { method:'POST', body: { id: _sbUserId, name }, prefer: 'return=minimal' });
-    } catch(e) { /* may already exist */ }
+    } catch(e) { /* profile may already exist */ }
     await enterApp(name);
   } catch(e) {
-    showLoginError('❌ ' + (e.message.includes('already')||e.message.includes('registered') ? 'Ese email ya está registrado' : e.message));
+    const msg = e.message||'';
+    showLoginError('❌ ' + (msg.includes('already')||msg.includes('registered') ? 'Ese email ya está registrado' : msg || 'Error al crear la cuenta'));
   } finally { setLoginLoading(false); }
 }
 
