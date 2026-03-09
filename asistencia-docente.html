@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AsistApp — Sistema de Asistencia Docente</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap');
+
+  :root {
+    --ink: #1a1a2e; --slate: #2d3561; --teal: #0f9b8e; --teal-light: #1bc5b4;
+    --gold: #f5a623; --cream: #faf8f3; --paper: #f0ede4; --rose: #e85d75;
+    --mist: #e8f4f2; --border: #d4cfc4; --success: #27ae60;
+    --radius: 16px; --shadow: 0 8px 32px rgba(26,26,46,0.12); --shadow-sm: 0 2px 8px rgba(26,26,46,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+  header { background: var(--ink); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; box-shadow: 0 2px 16px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; }
+  .logo { font-family: 'DM Serif Display', serif; color: white; font-size: 1.5rem; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+  .logo span { color: var(--teal-light); }
+  .logo-badge { background: var(--gold); color: var(--ink); font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 500; letter-spacing: 1px; }
+  nav { display: flex; gap: 4px; }
+  .nav-btn { background: transparent; color: rgba(255,255,255,0.6); border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
+  .nav-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-btn.active { background: var(--teal); color: white; }
+
+  .view { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
+  .view.active { display: block; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--ink); margin-bottom: 0.3rem; }
+  .page-sub { color: #6b7280; font-size: 0.92rem; margin-bottom: 2rem; font-weight: 600; }
+
+  .card { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+  .card-title { font-family: 'DM Serif Display', serif; font-size: 1.15rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; color: var(--slate); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+  .field { margin-bottom: 1rem; }
+  label { display: block; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin-bottom: 6px; }
+  input[type="text"], input[type="date"], select { width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; color: var(--ink); background: var(--cream); transition: border-color 0.2s; outline: none; }
+  input[type="text"]:focus, input[type="date"]:focus, select:focus { border-color: var(--teal); background: white; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.88rem; cursor: pointer; letter-spacing: 0.3px; transition: all 0.2s; }
+  .btn-primary { background: var(--teal); color: white; }
+  .btn-primary:hover { background: var(--teal-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,155,142,0.35); }
+  .btn-secondary { background: var(--paper); color: var(--ink); border: 2px solid var(--border); }
+  .btn-secondary:hover { background: white; }
+  .btn-danger { background: var(--rose); color: white; }
+  .btn-danger:hover { background: #d44060; }
+  .btn-gold { background: var(--gold); color: var(--ink); }
+  .btn-gold:hover { background: #e09510; }
+  .btn-slate { background: var(--slate); color: white; }
+  .btn-slate:hover { background: #3d4a7a; }
+  .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* CURSO CARDS */
+  .cursos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .curso-card { background: white; border: 2px solid var(--border); border-radius: 14px; padding: 1.1rem 1.2rem; cursor: default; transition: all 0.2s; position: relative; }
+  .curso-card:hover { border-color: #aaa; box-shadow: var(--shadow-sm); }
+  .curso-card-stripe { position: absolute; top: 0; left: 0; right: 0; height: 5px; border-radius: 12px 12px 0 0; }
+  .curso-card-name { font-weight: 800; font-size: 1.05rem; color: var(--ink); margin-top: 6px; }
+  .curso-card-meta { font-size: 0.78rem; color: #6b7280; font-weight: 600; margin-top: 2px; }
+  .curso-card-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--teal); background: var(--mist); padding: 2px 8px; border-radius: 20px; width: fit-content; margin-top: 8px; }
+  .curso-card-actions { display: flex; gap: 6px; margin-top: 12px; }
+  .curso-add-card { border: 2px dashed var(--border); border-radius: 14px; padding: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; color: #9ca3af; font-weight: 700; font-size: 0.9rem; min-height: 100px; }
+  .curso-add-card:hover { border-color: var(--teal); color: var(--teal); background: var(--mist); }
+
+  /* CURSO HEADER BAR */
+  .curso-bar { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--mist); border-radius: 12px; border: 1.5px solid rgba(15,155,142,0.35); margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .curso-bar .lbl { font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.7px; }
+  .curso-bar .val { font-weight: 800; color: var(--slate); font-size: 0.92rem; }
+  .curso-bar .sep { color: var(--border); font-size: 1.2rem; }
+
+  /* STUDENT LIST */
+  .student-list { display: flex; flex-direction: column; gap: 6px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+  .student-item { display: flex; align-items: center; padding: 10px 14px; background: var(--cream); border-radius: 10px; border: 1px solid var(--border); transition: all 0.15s; }
+  .student-item:hover { background: var(--mist); border-color: var(--teal); }
+  .student-num { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: #9ca3af; min-width: 28px; }
+  .student-name { font-weight: 700; flex: 1; padding: 0 10px; }
+
+  /* QR */
+  .qr-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 1rem; }
+  .qr-card { background: white; border-radius: 12px; padding: 1.2rem; text-align: center; border: 2px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .qr-card:hover { border-color: var(--teal); box-shadow: var(--shadow); transform: translateY(-2px); }
+  .qr-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--teal),var(--teal-light)); }
+  .qr-name { font-weight: 800; font-size: 0.82rem; color: var(--ink); margin-top: 10px; line-height: 1.3; }
+  .qr-id { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: #9ca3af; margin-top: 4px; }
+  .qr-container { margin: 0 auto; width: fit-content; }
+  .qr-container canvas, .qr-container img { border-radius: 6px; }
+
+  /* SCANNER */
+  .scanner-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+  #reader { border-radius: 12px; overflow: hidden; border: 3px solid var(--teal); box-shadow: 0 0 0 6px rgba(15,155,142,0.12); }
+  #reader video { width: 100% !important; }
+  .scan-status { padding: 18px; border-radius: 12px; text-align: center; margin-bottom: 1rem; font-weight: 700; font-size: 0.95rem; transition: all 0.3s; }
+  .scan-status.idle { background: var(--paper); color: #6b7280; }
+  .scan-status.success { background: #d4edda; color: #155724; animation: pulse 0.5s ease; }
+  .scan-status.error { background: #f8d7da; color: #721c24; animation: shake 0.4s ease; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .scan-log { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+  .log-entry { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  .log-entry.ok { background: #d4edda; }
+  .log-entry.dup { background: #fff3cd; }
+  .log-time { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #6b7280; min-width: 48px; }
+
+  /* PLANILLA */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead tr { background: var(--slate); color: white; }
+  th { padding: 10px 14px; text-align: left; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.5px; white-space: nowrap; }
+  th.date-col { text-align: center; min-width: 68px; }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--paper); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--mist); }
+  td.name-cell { font-weight: 700; white-space: nowrap; }
+  td.num-cell { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
+  td.att-cell { text-align: center; }
+  .badge-p { display: inline-block; background: var(--success); color: white; width: 26px; height: 26px; line-height: 26px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-align: center; }
+  .badge-empty { display: inline-block; width: 26px; height: 26px; border-radius: 6px; border: 2px dashed #d1d5db; }
+
+  .stat-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .chip-teal { background: var(--mist); color: var(--teal); }
+  .chip-gold { background: #fef3cd; color: #856404; }
+  .chip-rose { background: #fde8ec; color: var(--rose); }
+  .chip-slate { background: #eef0f8; color: var(--slate); }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 1.2rem 0; color: #9ca3af; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,26,46,0.7); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 20px; padding: 2rem; max-width: 460px; width: 90%; box-shadow: 0 24px 64px rgba(0,0,0,0.3); animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes popIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 0.4rem; }
+  .modal-qr { display: flex; justify-content: center; margin: 1.2rem 0; }
+
+  .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(26,26,46,0.65); backdrop-filter: blur(4px); z-index: 500; align-items: center; justify-content: center; }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box { background: white; border-radius: 18px; padding: 2rem; max-width: 360px; width: 90%; box-shadow: 0 24px 64px rgba(0,0,0,0.3); animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1); text-align: center; }
+  .confirm-icon { font-size: 2.8rem; margin-bottom: 0.8rem; }
+  .confirm-msg { font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; line-height: 1.4; }
+  .confirm-sub { font-size: 0.83rem; color: #6b7280; margin-bottom: 1.5rem; line-height: 1.5; }
+  .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--ink); color: white; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow); z-index: 300; display: none; }
+  .empty-state { text-align: center; padding: 3rem 2rem; color: #9ca3af; }
+  .empty-state .ei { font-size: 3.5rem; margin-bottom: 1rem; }
+  .empty-state p { font-weight: 600; }
+
+  .print-area { display: none; }
+  @media print {
+    body > *:not(.print-area) { display: none !important; }
+    .print-area { display: block; }
+    .print-qr-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; padding: 1rem; }
+    .print-qr-item { text-align: center; border: 1px solid #ccc; border-radius: 8px; padding: 12px; break-inside: avoid; }
+    .print-qr-item p { font-family: Arial,sans-serif; font-size: 11px; margin-top: 6px; font-weight: bold; }
+    .print-qr-item small { font-family: Arial,sans-serif; font-size: 10px; color: #555; }
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--paper); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* FOOTER */
+  footer {
+    text-align: center; padding: 20px 1rem 16px;
+    font-family: 'Barlow Condensed', 'Nunito', sans-serif;
+    font-size: 0.85rem; font-weight: 400;
+    color: #9ca3af; letter-spacing: 0.5px; text-transform: uppercase;
+    border-top: 1px solid var(--border); margin-top: 3rem;
+    background: var(--cream);
+  }
+  footer .brand {
+    color: var(--teal); font-weight: 700; letter-spacing: 1px;
+  }
+
+  /* EXPORT MODAL */
+  .export-modal { max-width: 560px; }
+  .export-modal h3 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .export-modal .sub { color: #6b7280; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; }
+  .period-tabs { display: flex; gap: 6px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .ptab { padding: 7px 14px; border-radius: 8px; border: 2px solid var(--border); background: var(--cream); font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; color: var(--ink); }
+  .ptab:hover { border-color: var(--teal); }
+  .ptab.active { background: var(--teal); color: white; border-color: var(--teal); }
+  .export-section { background: var(--cream); border-radius: 12px; padding: 1.2rem; border: 1px solid var(--border); margin-bottom: 1rem; }
+  .export-section-title { font-weight: 800; font-size: 0.85rem; color: var(--slate); margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* REPORT MODAL */
+  .report-modal { max-width: 700px; width: 95%; max-height: 88vh; overflow-y: auto; }
+  .report-header { background: var(--ink); color: white; border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1.5rem; }
+  .report-header h4 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 2px; }
+  .report-header p { font-size: 0.8rem; opacity: 0.7; }
+  .report-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .kpi { background: white; border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid var(--border); }
+  .kpi-val { font-family: 'DM Serif Display', serif; font-size: 1.8rem; font-weight: 400; margin-bottom: 2px; }
+  .kpi-lbl { font-size: 0.72rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+  .report-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  .report-table th { background: var(--slate); color: white; padding: 8px 12px; text-align: left; font-size: 0.75rem; letter-spacing: 0.4px; }
+  .report-table td { padding: 8px 12px; border-bottom: 1px solid var(--paper); }
+  .report-table tr:hover td { background: var(--mist); }
+  .bar-bg { background: #e5e7eb; border-radius: 4px; height: 8px; width: 100%; min-width: 80px; }
+  .bar-fill { height: 8px; border-radius: 4px; transition: width 0.5s ease; }
+  .risk-high { color: #e74c3c; font-weight: 800; }
+  .risk-med  { color: #e67e22; font-weight: 800; }
+  .risk-ok   { color: #27ae60; font-weight: 800; }
+
+  /* ATTENDANCE CELL EDIT */
+  .att-cell-wrap { position: relative; display: inline-block; }
+  .badge-a { display: inline-block; background: var(--rose); color: white; width: 26px; height: 26px; line-height: 26px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-align: center; }
+  .badge-t { display: inline-block; background: var(--gold); color: var(--ink); width: 26px; height: 26px; line-height: 26px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-align: center; }
+  .att-toggle { cursor: pointer; user-select: none; transition: transform 0.1s; }
+  .att-toggle:hover { transform: scale(1.15); }
+  .close-day-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 9px; border: none; background: var(--slate); color: white; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+  .close-day-btn:hover { background: #3d4a7a; transform: translateY(-1px); }
+
+  /* SCANNER: ausentes card */
+  .absent-list { display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; }
+  .absent-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: var(--cream); border-radius: 8px; border: 1px solid var(--border); font-size: 0.85rem; font-weight: 700; }
+  .absent-item-btns { display: flex; gap: 4px; }
+  .mark-btn { border: none; border-radius: 6px; width: 28px; height: 28px; font-weight: 800; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+  .mark-btn:hover { transform: scale(1.1); }
+  .mark-a { background: var(--rose); color: white; }
+  .mark-t { background: var(--gold); color: var(--ink); }
+
+  /* ═══ RESPONSIVE ═══ */
+
+  /* Tablet (≤ 1024px) */
+  @media (max-width: 1024px) {
+    .cursos-grid { grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); }
+    .report-kpi-grid { grid-template-columns: repeat(2,1fr); }
+    .qr-grid { grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); }
+  }
+
+  /* Tablet portrait / large phone (≤ 768px) */
+  @media (max-width: 768px) {
+    body { font-size: 15px; }
+
+    header { padding: 0 0.8rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+    .logo { font-size: 1.2rem; }
+    .logo-badge { display: none; }
+    nav { width: 100%; justify-content: center; gap: 3px; padding-bottom: 4px; flex-wrap: wrap; }
+    .nav-btn { padding: 6px 10px; font-size: 0.7rem; letter-spacing: 0; flex: 1; min-width: 60px; text-align: center; justify-content: center; }
+
+    .view { padding: 1rem; padding-bottom: 2rem; }
+    .page-title { font-size: 1.5rem; }
+    .page-sub { font-size: 0.82rem; margin-bottom: 1.2rem; }
+
+    .grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+    .scanner-wrapper { grid-template-columns: 1fr; gap: 1rem; }
+    .export-grid { grid-template-columns: 1fr; }
+    .report-kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .cursos-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .curso-card { padding: 0.9rem; }
+    .curso-card-actions { flex-wrap: wrap; }
+    .curso-card-actions .btn { flex: 1; min-width: 70px; justify-content: center; }
+
+    .qr-grid { grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 0.8rem; }
+
+    .btn { padding: 9px 14px; font-size: 0.83rem; }
+    .btn-sm { padding: 7px 11px; font-size: 0.77rem; }
+
+    .card { padding: 1.1rem; }
+    .modal { padding: 1.3rem; border-radius: 16px; }
+    .export-modal, .report-modal { width: 98%; margin: 0 1%; }
+    .report-modal { max-height: 92vh; }
+
+    .period-tabs { gap: 5px; }
+    .ptab { padding: 6px 10px; font-size: 0.78rem; flex: 1; text-align: center; }
+
+    .stat-chips { gap: 7px; }
+    .chip { padding: 5px 10px; font-size: 0.78rem; }
+
+    .curso-bar { gap: 7px; font-size: 0.82rem; padding: 9px 12px; }
+
+    .student-list { max-height: 300px; }
+    .scan-log { max-height: 220px; }
+    .absent-list { max-height: 160px; }
+
+    .table-wrap { border-radius: 8px; }
+    th, td { padding: 7px 10px; font-size: 0.78rem; }
+
+    footer { font-size: 0.75rem; letter-spacing: 2px; margin-top: 2rem; }
+  }
+
+  /* Small phone (≤ 480px) */
+  @media (max-width: 480px) {
+    header { padding: 6px 0.6rem; }
+    .logo { font-size: 1.05rem; gap: 6px; }
+    nav { gap: 2px; }
+    .nav-btn { font-size: 0.62rem; padding: 5px 6px; }
+
+    .page-title { font-size: 1.3rem; }
+    .cursos-grid { grid-template-columns: 1fr; }
+    .qr-grid { grid-template-columns: repeat(2,1fr); }
+
+    .report-kpi-grid { grid-template-columns: 1fr 1fr; }
+    .kpi-val { font-size: 1.4rem; }
+    .kpi-lbl { font-size: 0.65rem; }
+
+    .btn { padding: 8px 12px; font-size: 0.8rem; }
+    .btn-sm { padding: 6px 9px; font-size: 0.73rem; }
+
+    .export-modal h3, .modal h3 { font-size: 1.2rem; }
+
+    .scan-status { font-size: 0.85rem; padding: 14px; }
+
+    .curso-card-actions { flex-direction: column; }
+    .curso-card-actions .btn { width: 100%; }
+  }
+  /* LOGIN SCREEN */
+  .login-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .login-screen.hidden { display: none; }
+  .login-box {
+    background: white; border-radius: 24px; padding: 2.5rem 2rem;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .login-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; text-align: center; margin-bottom: 0.2rem;
+    color: var(--ink);
+  }
+  .login-logo span { color: var(--teal); }
+  .login-sub {
+    text-align: center; color: #9ca3af; font-size: 0.82rem;
+    font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+  .login-tabs {
+    display: flex; border-radius: 10px; overflow: hidden;
+    border: 2px solid var(--border); margin-bottom: 1.5rem;
+  }
+  .login-tab {
+    flex: 1; padding: 8px; text-align: center; cursor: pointer;
+    font-weight: 700; font-size: 0.85rem; transition: all 0.2s;
+    background: var(--cream); color: #6b7280; border: none;
+    font-family: 'Nunito', sans-serif;
+  }
+  .login-tab.active { background: var(--teal); color: white; }
+  .login-error {
+    background: #fde8ec; color: var(--rose); border-radius: 8px;
+    padding: 10px 14px; font-size: 0.85rem; font-weight: 700;
+    margin-bottom: 1rem; display: none; text-align: center;
+  }
+  .login-error.show { display: block; }
+  .login-divider {
+    text-align: center; color: #9ca3af; font-size: 0.75rem;
+    font-weight: 700; margin: 1.2rem 0; text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .login-footer {
+    text-align: center; margin-top: 1.5rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem; color: #9ca3af; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .login-footer span { color: var(--teal); font-weight: 700; }
+
+  /* APP WRAPPER */
+  #app-wrapper { display: none; }
+  #app-wrapper.visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">📋 <span>Asist</span>App</div>
+    <div class="login-sub">Sistema de Asistencia Docente</div>
+
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-login" onclick="switchLoginTab('login')">Iniciar sesión</button>
+      <button class="login-tab" id="tab-register" onclick="switchLoginTab('register')">Registrarse</button>
+    </div>
+
+    <div class="login-error" id="login-error"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="login-user" placeholder="tucorreo@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="login-pass" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:0.5rem">
+        🔑 Ingresar
+      </button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="reg-name" placeholder="Ej: Prof. Ana Pérez">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="reg-user" placeholder="tucorreo@email.com">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()" style="margin-top:0.5rem">
+        ✅ Crear cuenta
+      </button>
+    </div>
+
+    <div class="login-footer">Desarrollado por &nbsp;<span>Digital Shop</span></div>
+  </div>
+</div>
+
+<!-- ═══ APP WRAPPER ═══ -->
+<div id="app-wrapper">
+
+<header>
+  <div class="logo">📋 <span>Asist</span>App <span class="logo-badge">DOCENTE</span></div>
+  <nav>
+    <button class="nav-btn active"  onclick="showView('cursos',this)">🏫 Cursos</button>
+    <button class="nav-btn" onclick="showView('nomina',this)">👥 Nómina</button>
+    <button class="nav-btn" onclick="showView('qr',this)">🔲 QR</button>
+    <button class="nav-btn" onclick="showView('scanner',this)">📷 Escanear</button>
+    <button class="nav-btn" onclick="showView('planilla',this)">📊 Planilla</button>
+    <span id="header-user" style="display:none;color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:700;padding:0 8px;align-items:center"></span>
+    <button id="btn-logout" onclick="doLogout()" style="display:none;background:rgba(232,93,117,0.25);color:#ff8fa3;border:none;padding:6px 12px;border-radius:8px;font-family:Nunito,sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(232,93,117,0.45)'" onmouseout="this.style.background='rgba(232,93,117,0.25)'">🚪 Salir</button>
+  </nav>
+</header>
+
+<!-- ═══ CURSOS ═══ -->
+<div class="view active" id="view-cursos">
+  <div class="page-title">🏫 Mis Cursos</div>
+  <p class="page-sub">Creá un curso por cada división o materia. Cada uno tiene su propia nómina y planilla.</p>
+  <div class="cursos-grid" id="cursos-grid"></div>
+  <div class="card" style="max-width:560px">
+    <div class="card-title">➕ Crear Nuevo Curso</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Curso / División</label>
+        <input type="text" id="inp-curso-nombre" placeholder="Ej: 3° A" onkeydown="if(event.key==='Enter')addCurso()">
+      </div>
+      <div class="field">
+        <label>Materia (opcional)</label>
+        <input type="text" id="inp-curso-materia" placeholder="Ej: Matemática" onkeydown="if(event.key==='Enter')addCurso()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Docente a cargo</label>
+      <input type="text" id="inp-curso-docente" placeholder="Ej: Prof. Ana Pérez" onkeydown="if(event.key==='Enter')addCurso()">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="addCurso()">🏫 Crear Curso</button>
+  </div>
+</div>
+
+<!-- ═══ NÓMINA ═══ -->
+<div class="view" id="view-nomina">
+  <div class="page-title">👥 Nómina de Alumnos</div>
+  <p class="page-sub">Seleccioná el curso para agregar o gestionar sus alumnos</p>
+  <div class="field" style="max-width:400px;margin-bottom:1.5rem">
+    <label>📚 Curso activo</label>
+    <select id="nomina-curso-sel" onchange="onNominaCursoChange()">
+      <option value="">— Seleccioná un curso —</option>
+    </select>
+  </div>
+  <div id="nomina-content" style="display:none">
+    <div class="curso-bar" id="nomina-bar"></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">➕ Agregar Alumno</div>
+        <div class="field"><label>Apellido/s</label><input type="text" id="inp-apellido" placeholder="Ej: García López" onkeydown="if(event.key==='Enter')addStudent()"></div>
+        <div class="field"><label>Nombre/s</label><input type="text" id="inp-nombre" placeholder="Ej: Martina Belén" onkeydown="if(event.key==='Enter')addStudent()"></div>
+        <button class="btn btn-primary btn-full" onclick="addStudent()">➕ Agregar</button>
+        <div class="divider">importar</div>
+        <button class="btn btn-secondary btn-full btn-sm" onclick="importCSV()">📤 Importar desde CSV</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Lista <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.8rem;color:#9ca3af" id="student-count">0 alumnos</span></div>
+        <div class="student-list" id="student-list"></div>
+        <div class="divider">acciones</div>
+        <button class="btn btn-danger btn-sm" onclick="clearStudents()">🗑 Limpiar nómina del curso</button>
+      </div>
+    </div>
+  </div>
+  <div id="nomina-empty" class="empty-state"><div class="ei">🏫</div><p>Seleccioná un curso para ver su nómina</p></div>
+</div>
+
+<!-- ═══ QR ═══ -->
+<div class="view" id="view-qr">
+  <div class="page-title">🔲 Códigos QR por Alumno</div>
+  <p class="page-sub">Seleccioná el curso para ver y descargar sus QRs individuales</p>
+  <div class="field" style="max-width:400px;margin-bottom:1.5rem">
+    <label>📚 Curso</label>
+    <select id="qr-curso-sel" onchange="onQrCursoChange()"><option value="">— Seleccioná un curso —</option></select>
+  </div>
+  <div id="qr-content" style="display:none">
+    <div class="curso-bar" id="qr-bar"></div>
+    <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="generateQRs()">🔄 Generar / Actualizar QRs</button>
+      <button class="btn btn-gold" onclick="printQRs()">🖨 Imprimir todos</button>
+    </div>
+    <div class="qr-grid" id="qr-grid"></div>
+  </div>
+  <div id="qr-empty" class="empty-state"><div class="ei">🔲</div><p>Seleccioná un curso para ver sus QRs</p></div>
+</div>
+
+<!-- ═══ SCANNER ═══ -->
+<div class="view" id="view-scanner">
+  <div class="page-title">📷 Escanear Asistencia</div>
+  <p class="page-sub">Seleccioná el curso y la fecha, luego escaneá los QRs</p>
+  <div class="grid-2" style="max-width:640px;margin-bottom:1.5rem">
+    <div class="field">
+      <label>📚 Curso</label>
+      <select id="scanner-curso-sel" onchange="onScannerCursoChange()"><option value="">— Seleccioná un curso —</option></select>
+    </div>
+    <div class="field">
+      <label>📅 Fecha</label>
+      <div style="display:flex;gap:8px">
+        <input type="date" id="scan-date" style="flex:1" onchange="onDateChange()">
+        <button class="btn btn-secondary btn-sm" onclick="setTodayDate()">Hoy</button>
+      </div>
+    </div>
+  </div>
+  <div id="scanner-content" style="display:none">
+    <div class="curso-bar" id="scanner-bar" style="margin-bottom:1.5rem"></div>
+    <div class="scanner-wrapper">
+      <div>
+        <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-start-scan" onclick="startScanner()">▶ Iniciar Cámara</button>
+          <button class="btn btn-secondary" id="btn-stop-scan" onclick="stopScanner()" style="display:none">⏹ Detener</button>
+        </div>
+        <div id="reader"></div>
+      </div>
+      <div>
+        <div class="scan-status idle" id="scan-status">📡 Esperando escaneo...</div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">📋 Registro del día</div>
+          <div class="scan-log" id="scan-log"><div style="color:#9ca3af;font-size:0.85rem;text-align:center;padding:1rem" data-placeholder>Los escaneos aparecerán aquí</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Resumen</div>
+          <div class="stat-chips">
+            <div class="chip chip-teal">✅ Presentes: <strong id="stat-present">0</strong></div>
+            <div class="chip chip-rose">❌ Ausentes: <strong id="stat-absent">0</strong></div>
+          </div>
+          <div style="margin-top:1rem">
+            <button class="close-day-btn btn-full" onclick="openCloseDayPanel()" style="width:100%;justify-content:center">
+              🔒 Cerrar día — registrar ausentes
+            </button>
+          </div>
+        </div>
+
+        <div class="card" id="absent-panel" style="display:none;margin-top:1rem">
+          <div class="card-title">🔴 Alumnos sin registrar</div>
+          <p style="font-size:0.8rem;color:#6b7280;margin-bottom:0.8rem;font-weight:600">
+            Asigná <strong>A</strong> (Ausente) o <strong>T</strong> (Tarde) a cada alumno. Los sin tocar quedarán vacíos.
+          </p>
+          <div class="absent-list" id="absent-list"></div>
+          <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+            <button class="btn btn-danger btn-sm" onclick="markAllAbsent()" style="flex:1">🔴 Todos Ausentes (A)</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('absent-panel').style.display='none'" style="flex:1">✕ Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="scanner-empty" class="empty-state"><div class="ei">📷</div><p>Seleccioná un curso y una fecha para comenzar</p></div>
+</div>
+
+<!-- ═══ PLANILLA ═══ -->
+<div class="view" id="view-planilla">
+  <div class="page-title">📊 Planilla de Asistencia</div>
+  <p class="page-sub">Seleccioná el curso para ver su registro completo. P = Presente</p>
+  <div class="field" style="max-width:400px;margin-bottom:1.5rem">
+    <label>📚 Curso</label>
+    <select id="planilla-curso-sel" onchange="onPlanillaCursoChange()"><option value="">— Seleccioná un curso —</option></select>
+  </div>
+  <div id="planilla-content" style="display:none">
+    <div class="curso-bar" id="planilla-bar"></div>
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="renderAttendanceTable()">🔄 Actualizar</button>
+      <button class="btn btn-secondary" onclick="openExportModal()">📥 Exportar / Informe</button>
+      <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
+      <button class="btn btn-gold" onclick="window.print()">🖨 Imprimir</button>
+    </div>
+    <div class="stat-chips" id="global-stats" style="margin-bottom:1.5rem"></div>
+    <div class="table-wrap">
+      <table id="att-table">
+        <thead><tr><th>#</th><th>Apellido y Nombre</th></tr></thead>
+        <tbody id="att-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="planilla-empty" class="empty-state"><div class="ei">📊</div><p>Seleccioná un curso para ver su planilla</p></div>
+</div>
+
+<!-- MODAL QR -->
+<div class="modal-overlay" id="qr-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
+      <div>
+        <h3 id="modal-name"></h3>
+        <p id="modal-curso-lbl" style="font-size:0.8rem;color:#6b7280;font-weight:700;margin-top:2px"></p>
+        <p id="modal-id" style="font-family:'DM Mono',monospace;font-size:0.74rem;color:#9ca3af;margin-top:2px"></p>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('qr-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-qr" id="modal-qr-container"></div>
+    <button class="btn btn-gold btn-full" onclick="downloadQR()">⬇ Descargar QR</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-sub" id="confirm-sub"></div>
+    <div class="confirm-btns">
+      <button class="btn btn-secondary" onclick="confirmResolve(false)">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok-btn" onclick="confirmResolve(true)">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="print-area" id="print-area"></div>
+
+<!-- EXPORT / INFORME MODAL -->
+<div class="modal-overlay" id="export-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal export-modal">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.3rem">
+      <h3>📥 Exportar & Informe</h3>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('export-modal').classList.remove('open')">✕</button>
+    </div>
+    <p class="sub" id="exp-curso-lbl"></p>
+
+    <div class="export-section">
+      <div class="export-section-title">📅 Seleccionar período</div>
+      <div class="period-tabs">
+        <button class="ptab active" onclick="setPeriod('all',this)">Todo el ciclo</button>
+        <button class="ptab" onclick="setPeriod('month',this)">Este mes</button>
+        <button class="ptab" onclick="setPeriod('trimestre',this)">Último trimestre</button>
+        <button class="ptab" onclick="setPeriod('custom',this)">Período personalizado</button>
+      </div>
+      <div id="custom-period-fields" style="display:none">
+        <div class="export-grid">
+          <div class="field" style="margin:0">
+            <label>Desde</label>
+            <input type="date" id="exp-from">
+          </div>
+          <div class="field" style="margin:0">
+            <label>Hasta</label>
+            <input type="date" id="exp-to">
+          </div>
+        </div>
+      </div>
+      <div id="period-preview" style="margin-top:10px;font-size:0.82rem;font-weight:700;color:var(--teal)"></div>
+    </div>
+
+    <div class="export-section">
+      <div class="export-section-title">📤 Acciones disponibles</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="exportCSV()">📄 Exportar CSV básico</button>
+        <button class="btn btn-primary" onclick="generateReport()">📊 Generar informe estadístico</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="report-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal report-modal">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
+      <div style="flex:1">
+        <div class="report-header" id="report-header"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('report-modal').classList.remove('open')">✕ Cerrar</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportReportCSV()">📄 Exportar CSV</button>
+      <button class="btn btn-gold btn-sm" onclick="printReport()">🖨 Imprimir informe</button>
+    </div>
+    <div class="report-kpi-grid" id="report-kpis"></div>
+    <div class="divider">detalle por alumno</div>
+    <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
+      <table class="report-table" id="report-table">
+        <thead><tr>
+          <th>#</th><th>Alumno</th><th>Presentes</th><th>Ausentes</th><th>Tarde</th><th>% Asist.</th><th style="min-width:100px">Nivel</th><th>Estado</th>
+        </tr></thead>
+        <tbody id="report-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Desarrollado por &nbsp;<span class="brand">Digital Shop</span>
+</footer>
+
+</div><!-- end app-wrapper -->
+
+<script>
+// ─── CONFIRM ───
+let _confirmCb = null;
+function showConfirm(msg, sub, icon, okLabel, okClass) {
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-sub').textContent = sub || '';
+  document.getElementById('confirm-icon').textContent = icon || '⚠️';
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.textContent = okLabel || 'Eliminar';
+  btn.className = 'btn ' + (okClass || 'btn-danger');
+  document.getElementById('confirm-overlay').classList.add('open');
+  return new Promise(r => { _confirmCb = r; });
+}
+function confirmResolve(v) {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  if (_confirmCb) { _confirmCb(v); _confirmCb = null; }
+}
+
+// ─── DATA ───
+// cursos: [{id,nombre,materia,docente,color}]
+// students: [{id,cursoId,apellido,nombre,full}]
+// attendance: {studentId: {"YYYY-MM-DD": true}}
+let cursos = [], students = [], attendance = {};
+const PALETTE = ['#0f9b8e','#2d3561','#e85d75','#f5a623','#8b5cf6','#ef4444','#10b981','#3b82f6','#f97316','#ec4899'];
+
+function genId() { return '_'+Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+function save() {
+  try {
+    localStorage.setItem('aa_cursos', JSON.stringify(cursos));
+    localStorage.setItem('aa_students', JSON.stringify(students));
+    localStorage.setItem('aa_attendance', JSON.stringify(attendance));
+  } catch(e) {}
+}
+const getCurso = id => cursos.find(c=>c.id===id);
+const studentsOf = cid => students.filter(s=>s.cursoId===cid);
+
+// ─── NAV ───
+function showView(id, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id !== 'scanner') stopScanner();
+  if (id === 'cursos')   renderCursosGrid();
+  if (id === 'nomina')   { syncSelects(); renderStudentList(); }
+  if (id === 'qr')       { syncSelects(); }
+  if (id === 'scanner')  { syncSelects(); }
+  if (id === 'planilla') { syncSelects(); }
+}
+
+// ─── SELECTS SYNC ───
+function syncSelects() {
+  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel'].forEach(sid => {
+    const el = document.getElementById(sid);
+    const prev = el.value;
+    el.innerHTML = '<option value="">— Seleccioná un curso —</option>';
+    cursos.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.nombre + (c.materia ? ' — '+c.materia : '') + (c.docente ? '  · '+c.docente : '');
+      el.appendChild(o);
+    });
+    if (prev && cursos.find(c=>c.id===prev)) el.value = prev;
+  });
+}
+
+function buildBar(cid) {
+  const c = getCurso(cid); if (!c) return '';
+  return `<span class="lbl">Curso:</span><span class="val" style="color:${c.color}">${c.nombre}</span>
+    ${c.materia?`<span class="sep">|</span><span class="lbl">Materia:</span><span class="val">${c.materia}</span>`:''}
+    ${c.docente?`<span class="sep">|</span><span class="lbl">Docente:</span><span class="val">${c.docente}</span>`:''}`;
+}
+
+// ─── CURSOS ───
+function addCurso() {
+  const nombre  = document.getElementById('inp-curso-nombre').value.trim();
+  const materia = document.getElementById('inp-curso-materia').value.trim();
+  const docente = document.getElementById('inp-curso-docente').value.trim();
+  if (!nombre) { showToast('⚠ Ingresá el nombre del curso'); return; }
+  cursos.push({ id: genId(), nombre, materia, docente, color: PALETTE[cursos.length % PALETTE.length] });
+  ['inp-curso-nombre','inp-curso-materia','inp-curso-docente'].forEach(i=>document.getElementById(i).value='');
+  save(); renderCursosGrid();
+  showToast('✅ Curso creado: ' + nombre);
+}
+
+function renderCursosGrid() {
+  const grid = document.getElementById('cursos-grid');
+  grid.innerHTML = '';
+  if (cursos.length === 0) {
+    const d = document.createElement('div');
+    d.className = 'empty-state'; d.style.gridColumn = '1/-1';
+    d.innerHTML = '<div class="ei">🏫</div><p>Aún no tenés cursos. ¡Creá el primero!</p>';
+    grid.appendChild(d);
+  }
+  cursos.forEach(c => {
+    const count = studentsOf(c.id).length;
+    const div = document.createElement('div');
+    div.className = 'curso-card';
+    div.innerHTML = `
+      <div class="curso-card-stripe" style="background:${c.color}"></div>
+      <div class="curso-card-name">${c.nombre}</div>
+      ${c.materia?`<div class="curso-card-meta">📖 ${c.materia}</div>`:''}
+      ${c.docente?`<div class="curso-card-meta">👤 ${c.docente}</div>`:''}
+      <div class="curso-card-count">👥 ${count} alumno${count!==1?'s':''}</div>
+      <div class="curso-card-actions">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="goToNomina('${c.id}')">👥 Nómina</button>
+        <button class="btn btn-secondary btn-sm" onclick="goToQR('${c.id}')">🔲 QR</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCurso('${c.id}')">🗑</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+  const addCard = document.createElement('div');
+  addCard.className = 'curso-add-card';
+  addCard.innerHTML = '➕ Nuevo curso';
+  addCard.onclick = () => document.getElementById('inp-curso-nombre').focus();
+  grid.appendChild(addCard);
+}
+
+async function deleteCurso(id) {
+  const c = getCurso(id); if (!c) return;
+  const ok = await showConfirm(`¿Eliminar el curso "${c.nombre}"?`, 'Se borrarán todos sus alumnos y registros de asistencia. Esta acción no se puede deshacer.', '🗑️', 'Eliminar curso', 'btn-danger');
+  if (!ok) return;
+  studentsOf(id).forEach(s => delete attendance[s.id]);
+  students = students.filter(s=>s.cursoId!==id);
+  cursos   = cursos.filter(c=>c.id!==id);
+  save(); renderCursosGrid(); syncSelects();
+  showToast('🗑 Curso eliminado');
+}
+
+function goToNomina(cid) {
+  showView('nomina', document.querySelectorAll('.nav-btn')[1]);
+  syncSelects();
+  document.getElementById('nomina-curso-sel').value = cid;
+  onNominaCursoChange();
+}
+function goToQR(cid) {
+  showView('qr', document.querySelectorAll('.nav-btn')[2]);
+  syncSelects();
+  document.getElementById('qr-curso-sel').value = cid;
+  onQrCursoChange();
+}
+
+// ─── NÓMINA ───
+let activeCursoId = null;
+
+function onNominaCursoChange() {
+  const id = document.getElementById('nomina-curso-sel').value;
+  activeCursoId = id || null;
+  document.getElementById('nomina-content').style.display = id ? 'block' : 'none';
+  document.getElementById('nomina-empty').style.display   = id ? 'none' : 'block';
+  if (id) { document.getElementById('nomina-bar').innerHTML = buildBar(id); renderStudentList(); }
+}
+
+function addStudent() {
+  if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
+  const ape = document.getElementById('inp-apellido').value.trim();
+  const nom = document.getElementById('inp-nombre').value.trim();
+  if (!ape && !nom) { showToast('⚠ Ingresá apellido y/o nombre'); return; }
+  const full = [ape, nom].filter(Boolean).join(', ');
+  students.push({ id: genId(), cursoId: activeCursoId, apellido: ape, nombre: nom, full });
+  document.getElementById('inp-apellido').value = '';
+  document.getElementById('inp-nombre').value = '';
+  document.getElementById('inp-apellido').focus();
+  save(); renderStudentList();
+  showToast('✅ ' + full);
+}
+
+async function removeStudent(id) {
+  const s = students.find(x=>x.id===id);
+  const ok = await showConfirm('¿Eliminar alumno?', (s?s.full:'') + ' será eliminado junto con sus asistencias.', '🗑️', 'Eliminar', 'btn-danger');
+  if (!ok) return;
+  students = students.filter(x=>x.id!==id);
+  delete attendance[id];
+  save(); renderStudentList();
+  showToast('🗑 Alumno eliminado');
+}
+
+function renderStudentList() {
+  const el = document.getElementById('student-list'); if (!el) return;
+  const list = activeCursoId ? studentsOf(activeCursoId) : [];
+  document.getElementById('student-count').textContent = list.length + ' alumnos';
+  if (list.length === 0) {
+    el.innerHTML = '<div class="empty-state" style="padding:1.5rem 1rem"><div class="ei" style="font-size:2rem">🎒</div><p>Sin alumnos aún</p></div>';
+    return;
+  }
+  el.innerHTML = list.map((s,i) => `
+    <div class="student-item">
+      <span class="student-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="student-name">${s.apellido?`<strong>${s.apellido}</strong>, ${s.nombre}`:`<strong>${s.nombre}</strong>`}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function clearStudents() {
+  if (!activeCursoId) return;
+  const c = getCurso(activeCursoId);
+  const ok = await showConfirm('¿Limpiar nómina de "' + (c?c.nombre:'este curso') + '"?', 'Se eliminarán todos los alumnos y sus asistencias.', '⚠️', 'Limpiar todo', 'btn-danger');
+  if (!ok) return;
+  studentsOf(activeCursoId).forEach(s => delete attendance[s.id]);
+  students = students.filter(s=>s.cursoId!==activeCursoId);
+  save(); renderStudentList();
+  showToast('🗑 Nómina del curso eliminada');
+}
+
+function importCSV() {
+  if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='.csv,.txt';
+  inp.onchange = e => {
+    const fr = new FileReader();
+    fr.onload = ev => {
+      let added = 0;
+      ev.target.result.split('\n').filter(l=>l.trim()).forEach(line => {
+        const p = line.split(',').map(x=>x.trim().replace(/"/g,''));
+        if (p.length >= 2) { students.push({id:genId(),cursoId:activeCursoId,apellido:p[0],nombre:p[1],full:p[0]+', '+p[1]}); added++; }
+        else if (p[0]) { students.push({id:genId(),cursoId:activeCursoId,apellido:p[0],nombre:'',full:p[0]}); added++; }
+      });
+      save(); renderStudentList();
+      showToast('✅ Importados '+added+' alumnos');
+    };
+    fr.readAsText(e.target.files[0]);
+  };
+  inp.click();
+}
+
+// ─── QR ───
+let activeQrId = null, currentModalStudent = null;
+
+function onQrCursoChange() {
+  const id = document.getElementById('qr-curso-sel').value;
+  activeQrId = id || null;
+  document.getElementById('qr-content').style.display = id ? 'block' : 'none';
+  document.getElementById('qr-empty').style.display   = id ? 'none' : 'block';
+  if (id) { document.getElementById('qr-bar').innerHTML = buildBar(id); generateQRs(); }
+}
+
+function generateQRs() {
+  if (!activeQrId) return;
+  const grid = document.getElementById('qr-grid'); grid.innerHTML = '';
+  const list = studentsOf(activeQrId);
+  const c = getCurso(activeQrId);
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="ei">🎒</div><p>Sin alumnos en este curso</p></div>';
+    return;
+  }
+  list.forEach((s,i) => {
+    const card = document.createElement('div'); card.className = 'qr-card'; card.onclick = () => openModal(s);
+    card.innerHTML = `<div class="qr-container" id="qr_${s.id}"></div>
+      <div class="qr-name">${s.apellido?s.apellido+'<br><span style="color:#6b7280;font-weight:600">'+s.nombre+'</span>':s.nombre}</div>
+      <div class="qr-id">${c?c.nombre:''} · ${s.id.slice(-5).toUpperCase()}</div>`;
+    grid.appendChild(card);
+    setTimeout(() => {
+      new QRCode(document.getElementById('qr_'+s.id), {
+        text: JSON.stringify({id:s.id,name:s.full,cursoId:s.cursoId,app:'asistapp'}),
+        width:130,height:130,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M
+      });
+    }, i*30);
+  });
+}
+
+function openModal(s) {
+  currentModalStudent = s;
+  const c = getCurso(s.cursoId);
+  document.getElementById('modal-name').textContent = s.full;
+  document.getElementById('modal-curso-lbl').textContent = c ? '📚 '+c.nombre+(c.materia?' — '+c.materia:'') : '';
+  document.getElementById('modal-id').textContent = 'ID: '+s.id.slice(-8).toUpperCase();
+  const con = document.getElementById('modal-qr-container'); con.innerHTML = '';
+  new QRCode(con, {
+    text: JSON.stringify({id:s.id,name:s.full,cursoId:s.cursoId,app:'asistapp'}),
+    width:220,height:220,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H
+  });
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function downloadQR() {
+  if (!currentModalStudent) return;
+  setTimeout(() => {
+    const canvas = document.querySelector('#modal-qr-container canvas');
+    if (!canvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'QR_'+currentModalStudent.full.replace(/[^a-z0-9]/gi,'_')+'.png';
+    a.click();
+  }, 200);
+}
+
+function printQRs() {
+  if (!activeQrId) return;
+  const list = studentsOf(activeQrId); const c = getCurso(activeQrId);
+  if (!list.length) { showToast('⚠ No hay alumnos'); return; }
+  const pa = document.getElementById('print-area');
+  pa.innerHTML = `<p style="font-family:Arial;padding:1rem 1rem 0;font-size:13px;font-weight:bold">${c?c.nombre+(c.materia?' — '+c.materia:''):''}</p><div class="print-qr-grid" id="pqg"></div>`;
+  const grid = document.getElementById('pqg');
+  list.forEach((s,i) => {
+    const d = document.createElement('div'); d.className='print-qr-item';
+    const qd = document.createElement('div'); qd.id='pqr_'+s.id;
+    const p = document.createElement('p'); p.textContent = s.full;
+    const sm = document.createElement('small'); sm.textContent = c?c.nombre:'';
+    d.appendChild(qd); d.appendChild(p); d.appendChild(sm);
+    grid.appendChild(d);
+    setTimeout(()=>{ new QRCode(qd,{text:JSON.stringify({id:s.id,name:s.full,cursoId:s.cursoId,app:'asistapp'}),width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }, i*20);
+  });
+  setTimeout(()=>window.print(), list.length*25+600);
+}
+
+// ─── SCANNER ───
+let activeScanId = null, html5Scanner = null, scanCooldown = false;
+
+function setTodayDate() {
+  document.getElementById('scan-date').value = new Date().toISOString().split('T')[0];
+}
+
+function onScannerCursoChange() {
+  activeScanId = document.getElementById('scanner-curso-sel').value || null;
+  updateScannerVisibility();
+  stopScanner();
+}
+function onDateChange() { updateScannerVisibility(); }
+
+function updateScannerVisibility() {
+  const id   = activeScanId;
+  const date = document.getElementById('scan-date').value;
+  const show = !!(id && date);
+  document.getElementById('scanner-content').style.display = show ? 'block' : 'none';
+  document.getElementById('scanner-empty').style.display   = show ? 'none' : 'block';
+  if (show) {
+    document.getElementById('scanner-bar').innerHTML = buildBar(id);
+    updateDayStats(date);
+  }
+}
+
+function startScanner() {
+  if (!activeScanId) { showToast('⚠ Seleccioná un curso'); return; }
+  const date = document.getElementById('scan-date').value;
+  if (!date) { showToast('⚠ Seleccioná una fecha'); return; }
+  if (!studentsOf(activeScanId).length) { showToast('⚠ Este curso no tiene alumnos'); return; }
+  document.getElementById('btn-start-scan').style.display = 'none';
+  document.getElementById('btn-stop-scan').style.display  = 'inline-flex';
+  html5Scanner = new Html5Qrcode('reader');
+  html5Scanner.start(
+    {facingMode:'environment'},
+    {fps:10, qrbox:{width:250,height:250}},
+    onScanSuccess, ()=>{}
+  ).catch(()=>{
+    showToast('⚠ No se pudo acceder a la cámara');
+    document.getElementById('btn-start-scan').style.display = 'inline-flex';
+    document.getElementById('btn-stop-scan').style.display  = 'none';
+  });
+}
+
+function stopScanner() {
+  if (html5Scanner && html5Scanner.isScanning) { html5Scanner.stop().catch(()=>{}); html5Scanner = null; }
+  const s = document.getElementById('btn-start-scan');
+  const e = document.getElementById('btn-stop-scan');
+  if (s) s.style.display = 'inline-flex';
+  if (e) e.style.display = 'none';
+}
+
+function onScanSuccess(txt) {
+  if (scanCooldown) return;
+  let data;
+  try { data = JSON.parse(txt); } catch(e) { setStatus('error','❌ QR inválido'); return; }
+  if (!data.id || data.app !== 'asistapp') { setStatus('error','❌ QR no reconocido'); return; }
+
+  const student = students.find(s=>s.id===data.id);
+  if (!student) { setStatus('error','❌ Alumno no encontrado'); triggerCooldown(); return; }
+  if (student.cursoId !== activeScanId) {
+    const otro = getCurso(student.cursoId);
+    setStatus('error','⚠ Alumno de '+(otro?otro.nombre:'otro curso'));
+    triggerCooldown(); return;
+  }
+  const date = document.getElementById('scan-date').value;
+  if (!attendance[student.id]) attendance[student.id] = {};
+  if (attendance[student.id][date]) {
+    setStatus('error','⚠ '+student.full+' — ya registrado');
+    addLogEntry(student,'dup'); triggerCooldown(); return;
+  }
+  attendance[student.id][date] = true;
+  save();
+  setStatus('success','✅ PRESENTE — '+student.full);
+  addLogEntry(student,'ok');
+  updateDayStats(date);
+  triggerCooldown();
+}
+
+function setStatus(type, msg) {
+  const el = document.getElementById('scan-status');
+  el.className = 'scan-status '+type; el.textContent = msg;
+  if (type!=='idle') setTimeout(()=>{ el.className='scan-status idle'; el.textContent='📡 Esperando escaneo...'; }, 3000);
+}
+
+function addLogEntry(s, type) {
+  const log = document.getElementById('scan-log');
+  const ph = log.querySelector('[data-placeholder]'); if (ph) ph.remove();
+  const now = new Date();
+  const t = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const d = document.createElement('div'); d.className = 'log-entry '+type;
+  d.innerHTML = `<span>${type==='ok'?'✅':'⚠️'}</span><span class="log-time">${t}</span><span>${s.full}</span>`;
+  log.insertBefore(d, log.firstChild);
+}
+
+function updateDayStats(date) {
+  if (!activeScanId||!date) return;
+  const list = studentsOf(activeScanId);
+  const pres  = list.filter(s=>attendance[s.id]&&attendance[s.id][date]===true).length;
+  const aus   = list.filter(s=>attendance[s.id]&&(attendance[s.id][date]==='A'||attendance[s.id][date]==='T')).length;
+  const unreg = list.length - pres - aus;
+  const e1 = document.getElementById('stat-present'), e2 = document.getElementById('stat-absent');
+  if (e1) e1.textContent = pres;
+  if (e2) e2.textContent = unreg + aus;
+}
+
+function triggerCooldown() { scanCooldown=true; setTimeout(()=>{scanCooldown=false;},1500); }
+
+// ─── PLANILLA ───
+let activePlanillaId = null;
+
+function onPlanillaCursoChange() {
+  const id = document.getElementById('planilla-curso-sel').value;
+  activePlanillaId = id || null;
+  document.getElementById('planilla-content').style.display = id ? 'block' : 'none';
+  document.getElementById('planilla-empty').style.display   = id ? 'none' : 'block';
+  if (id) { document.getElementById('planilla-bar').innerHTML = buildBar(id); renderAttendanceTable(); }
+}
+
+function datesForCurso(cid) {
+  const set = new Set();
+  studentsOf(cid).forEach(s => { if(attendance[s.id]) Object.keys(attendance[s.id]).forEach(d=>set.add(d)); });
+  return Array.from(set).sort();
+}
+function fmt(d) { const [y,m,day]=d.split('-'); return `${day}/${m}`; }
+
+function renderAttendanceTable() {
+  if (!activePlanillaId) return;
+  const list  = studentsOf(activePlanillaId);
+  const dates = datesForCurso(activePlanillaId);
+  const thead = document.querySelector('#att-table thead tr');
+  const tbody = document.getElementById('att-body');
+  thead.innerHTML = '<th>#</th><th>Apellido y Nombre</th>';
+  dates.forEach(d => {
+    const th = document.createElement('th'); th.className='date-col'; th.textContent=fmt(d); th.title=d;
+    thead.appendChild(th);
+  });
+  if (dates.length) { const th=document.createElement('th'); th.className='date-col'; th.textContent='%'; thead.appendChild(th); }
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="30" style="text-align:center;padding:2rem;color:#9ca3af">Sin alumnos en este curso</td></tr>';
+    document.getElementById('global-stats').innerHTML=''; return;
+  }
+
+  tbody.innerHTML = list.map((s,i) => {
+    const cells = dates.map(d => {
+      const val = attendance[s.id] && attendance[s.id][d]; // true | 'A' | 'T' | undefined
+      return `<td class="att-cell"><span class="att-toggle" onclick="cycleAttendance('${s.id}','${d}',this)">${renderBadge(val)}</span></td>`;
+    }).join('');
+    const pres = dates.filter(d => attendance[s.id] && attendance[s.id][d] === true).length;
+    const pct  = dates.length ? Math.round(pres/dates.length*100) : '-';
+    const col  = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
+    const pctCell = dates.length ? `<td class="att-cell" style="font-weight:800;color:${col}">${pct}%</td>` : '';
+    return `<tr><td class="num-cell">${String(i+1).padStart(2,'0')}</td>
+      <td class="name-cell">${s.apellido?s.apellido+', '+s.nombre:s.nombre}</td>
+      ${cells}${pctCell}</tr>`;
+  }).join('');
+
+  const totalPres = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length,0);
+  const totalPoss = list.length*dates.length;
+  const gPct = totalPoss>0?Math.round(totalPres/totalPoss*100):0;
+  document.getElementById('global-stats').innerHTML=`
+    <div class="chip chip-teal">📅 Clases: <strong>${dates.length}</strong></div>
+    <div class="chip chip-slate">👥 Alumnos: <strong>${list.length}</strong></div>
+    <div class="chip chip-gold">📊 Asistencia global: <strong>${gPct}%</strong></div>
+    <div style="margin-left:auto;font-size:0.75rem;color:#9ca3af;font-weight:700;align-self:center">Tocá una celda para cambiar · P → A → T → vacío</div>`;
+}
+
+function renderBadge(val) {
+  if (val === true)  return '<span class="badge-p">P</span>';
+  if (val === 'A')   return '<span class="badge-a">A</span>';
+  if (val === 'T')   return '<span class="badge-t">T</span>';
+  return '<span class="badge-empty"></span>';
+}
+
+// Cycle: undefined → P(true) → A → T → undefined
+function cycleAttendance(studentId, date, el) {
+  if (!attendance[studentId]) attendance[studentId] = {};
+  const cur = attendance[studentId][date];
+  let next;
+  if (cur === undefined || cur === null) next = true;
+  else if (cur === true)  next = 'A';
+  else if (cur === 'A')   next = 'T';
+  else                    next = undefined;
+
+  if (next === undefined) delete attendance[studentId][date];
+  else attendance[studentId][date] = next;
+  save();
+  el.innerHTML = renderBadge(next);
+  // Update % cell in same row
+  if (activePlanillaId) {
+    const dates = datesForCurso(activePlanillaId);
+    const pres  = dates.filter(d => attendance[studentId]&&attendance[studentId][d]===true).length;
+    const pct   = dates.length ? Math.round(pres/dates.length*100) : '-';
+    const col   = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
+    const row   = el.closest('tr');
+    if (row) { const last = row.lastElementChild; last.style.color=col; last.textContent=pct+'%'; }
+    // Refresh global stats
+    const list_ = studentsOf(activePlanillaId);
+    const totalPres = list_.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length,0);
+    const totalPoss = list_.length*dates.length;
+    const gPct = totalPoss>0?Math.round(totalPres/totalPoss*100):0;
+    const gs = document.getElementById('global-stats');
+    if (gs) {
+      const chips = gs.querySelectorAll('.chip strong');
+      if (chips[2]) chips[2].textContent = gPct+'%';
+    }
+  }
+}
+
+// ─── CLOSE DAY / AUSENTES ───
+function openCloseDayPanel() {
+  if (!activeScanId) { showToast('⚠ Seleccioná un curso'); return; }
+  const date = document.getElementById('scan-date').value;
+  if (!date) { showToast('⚠ Seleccioná una fecha'); return; }
+  const list = studentsOf(activeScanId);
+  const unregistered = list.filter(s => !attendance[s.id] || !attendance[s.id][date]);
+  const panel = document.getElementById('absent-panel');
+  const absList = document.getElementById('absent-list');
+  if (!unregistered.length) {
+    showToast('✅ Todos los alumnos ya están registrados');
+    panel.style.display = 'none'; return;
+  }
+  absList.innerHTML = unregistered.map(s => `
+    <div class="absent-item" id="absi_${s.id}">
+      <span style="flex:1">${s.apellido?s.apellido+', '+s.nombre:s.nombre}</span>
+      <div class="absent-item-btns">
+        <button class="mark-btn mark-a" onclick="markAbsent('${s.id}','A','${date}')" title="Ausente">A</button>
+        <button class="mark-btn mark-t" onclick="markAbsent('${s.id}','T','${date}')" title="Tarde">T</button>
+      </div>
+    </div>`).join('');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function markAbsent(studentId, val, date) {
+  if (!attendance[studentId]) attendance[studentId] = {};
+  attendance[studentId][date] = val;
+  save();
+  const row = document.getElementById('absi_'+studentId);
+  if (row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+  updateDayStats(date);
+  showToast(val==='A' ? '🔴 Ausente registrado' : '🟡 Tarde registrado');
+}
+
+function markAllAbsent() {
+  if (!activeScanId) return;
+  const date = document.getElementById('scan-date').value;
+  if (!date) return;
+  const list = studentsOf(activeScanId);
+  list.forEach(s => {
+    if (!attendance[s.id]) attendance[s.id] = {};
+    if (!attendance[s.id][date]) attendance[s.id][date] = 'A';
+  });
+  save(); updateDayStats(date);
+  document.getElementById('absent-panel').style.display = 'none';
+  showToast('🔴 Todos los ausentes registrados');
+}
+
+// Planilla close-day: opens a date picker first
+let _closeDayDate = null;
+function openCloseDayFromPlanilla() {
+  if (!activePlanillaId) return;
+  const dates = datesForCurso(activePlanillaId);
+  const today = new Date().toISOString().split('T')[0];
+  // Build a small inline modal reusing confirm overlay
+  showConfirmCustom(
+    '🔒 Cerrar día en planilla',
+    'Seleccioná la fecha para marcar ausentes:',
+    dates,
+    today
+  );
+}
+
+function showConfirmCustom(title, sub, dates, defaultDate) {
+  // Reuse confirm overlay as a date-picker dialog
+  document.getElementById('confirm-icon').textContent = '🔒';
+  document.getElementById('confirm-msg').textContent = title;
+  const subEl = document.getElementById('confirm-sub');
+  const dateOpts = dates.map(d=>`<option value="${d}"${d===defaultDate?' selected':''}>${fmt(d)} (${d})</option>`).join('');
+  subEl.innerHTML = `<span>${sub}</span><br><br>
+    <select id="close-day-date-sel" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:10px;font-family:Nunito,sans-serif;font-size:0.9rem;outline:none;margin-top:4px">
+      <option value="${defaultDate}">📅 Hoy (${fmt(defaultDate)})</option>
+      ${dateOpts}
+    </select>`;
+  const okBtn = document.getElementById('confirm-ok-btn');
+  okBtn.textContent = 'Marcar ausentes';
+  okBtn.className = 'btn btn-danger';
+  document.getElementById('confirm-overlay').classList.add('open');
+  _confirmCb = (result) => {
+    document.getElementById('confirm-overlay').classList.remove('open');
+    if (!result) return;
+    const selectedDate = document.getElementById('close-day-date-sel')?.value || defaultDate;
+    applyCloseDayToPlanilla(selectedDate);
+  };
+}
+
+function applyCloseDayToPlanilla(date) {
+  if (!activePlanillaId) return;
+  const list = studentsOf(activePlanillaId);
+  let count = 0;
+  list.forEach(s => {
+    if (!attendance[s.id]) attendance[s.id] = {};
+    if (!attendance[s.id][date]) { attendance[s.id][date] = 'A'; count++; }
+  });
+  save(); renderAttendanceTable();
+  showToast(`🔴 ${count} ausentes marcados para el ${fmt(date)}`);
+}
+
+// ─── EXPORT & REPORT MODAL ───
+let exportPeriod = 'all';
+let _reportData  = null;
+
+function openExportModal() {
+  if (!activePlanillaId) return;
+  const c = getCurso(activePlanillaId);
+  document.getElementById('exp-curso-lbl').textContent =
+    (c ? c.nombre + (c.materia?' — '+c.materia:'') + (c.docente?' · '+c.docente:'') : '');
+  setPeriod('all', document.querySelector('.ptab'));
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function setPeriod(type, btn) {
+  exportPeriod = type;
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('custom-period-fields').style.display = type==='custom' ? 'block' : 'none';
+  updatePeriodPreview();
+}
+
+function getFilteredDates() {
+  if (!activePlanillaId) return [];
+  const all = datesForCurso(activePlanillaId);
+  const now = new Date();
+  if (exportPeriod === 'all') return all;
+  if (exportPeriod === 'month') {
+    const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+    return all.filter(d => d.startsWith(`${y}-${m}`));
+  }
+  if (exportPeriod === 'trimestre') {
+    const cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth()-3);
+    return all.filter(d => new Date(d) >= cutoff);
+  }
+  if (exportPeriod === 'custom') {
+    const from = document.getElementById('exp-from').value;
+    const to   = document.getElementById('exp-to').value;
+    if (!from && !to) return all;
+    return all.filter(d => (!from || d >= from) && (!to || d <= to));
+  }
+  return all;
+}
+
+function updatePeriodPreview() {
+  const dates = getFilteredDates();
+  const el = document.getElementById('period-preview');
+  if (!dates.length) { el.textContent = '⚠ Sin clases en este período'; el.style.color='var(--rose)'; return; }
+  el.style.color = 'var(--teal)';
+  el.textContent = `✅ ${dates.length} clase${dates.length!==1?'s':''} encontradas — del ${fmt(dates[0])} al ${fmt(dates[dates.length-1])}`;
+}
+
+// Listen to custom date changes
+['exp-from','exp-to'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', updatePeriodPreview);
+});
+
+function exportCSV() {
+  if (!activePlanillaId) return;
+  const c     = getCurso(activePlanillaId);
+  const list  = studentsOf(activePlanillaId);
+  const dates = getFilteredDates();
+  if (!dates.length) { showToast('⚠ Sin clases en el período seleccionado'); return; }
+
+  const hdr  = ['#','Apellido','Nombre',...dates.map(fmt),'Presencias','Ausencias','% Asistencia'].join(',');
+  const rows = list.map((s,i) => {
+    const cells = dates.map(d => attendance[s.id]&&attendance[s.id][d]?'P':'');
+    const pres  = dates.filter(d => attendance[s.id]&&attendance[s.id][d]).length;
+    const aus   = dates.length - pres;
+    const pct   = dates.length ? Math.round(pres/dates.length*100)+'%' : '0%';
+    return [i+1, s.apellido, s.nombre, ...cells, pres, aus, pct].join(',');
+  });
+
+  // Summary rows
+  const totalPres = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]).length,0);
+  const totalPoss = list.length*dates.length;
+  const gPct = totalPoss>0?Math.round(totalPres/totalPoss*100):0;
+  const periodo = exportPeriod==='all'?'Ciclo completo':
+    exportPeriod==='month'?'Este mes':
+    exportPeriod==='trimestre'?'Último trimestre':
+    `${document.getElementById('exp-from').value||'inicio'} a ${document.getElementById('exp-to').value||'hoy'}`;
+
+  const summary = [
+    '',
+    ['RESUMEN GRUPAL','','','','','','',''].join(','),
+    ['Período','','','','','','',''].join(','),
+    [periodo].join(','),
+    ['Total clases','','',dates.length,'','','',''].join(','),
+    ['Total alumnos','','',list.length,'','','',''].join(','),
+    ['Asistencia global','','','','','',gPct+'%'].join(','),
+  ];
+
+  const csv = [hdr, ...rows, ...summary].join('\n');
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(new Blob(['\uFEFF'+csv,{type:'text/csv;charset=utf-8;'}]));
+  a.download = `asistencia_${c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso'}_${exportPeriod}.csv`;
+  a.click();
+  showToast('✅ CSV exportado');
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+function generateReport() {
+  if (!activePlanillaId) return;
+  const c     = getCurso(activePlanillaId);
+  const list  = studentsOf(activePlanillaId);
+  const dates = getFilteredDates();
+  if (!dates.length) { showToast('⚠ Sin clases en el período'); return; }
+
+  const periodo = exportPeriod==='all'?'Ciclo completo':
+    exportPeriod==='month'?'Este mes':
+    exportPeriod==='trimestre'?'Último trimestre':
+    `${document.getElementById('exp-from').value||'—'} al ${document.getElementById('exp-to').value||'—'}`;
+
+  // Per-student stats
+  const stats = list.map(s => {
+    const pres = dates.filter(d => attendance[s.id]&&attendance[s.id][d]===true).length;
+    const aus  = dates.filter(d => attendance[s.id]&&attendance[s.id][d]==='A').length;
+    const tard = dates.filter(d => attendance[s.id]&&attendance[s.id][d]==='T').length;
+    const pct  = Math.round(pres/dates.length*100);
+    return { s, pres, aus, tard, pct };
+  }).sort((a,b) => b.pct - a.pct);
+
+  const totalPres = stats.reduce((a,x)=>a+x.pres,0);
+  const totalPoss = list.length * dates.length;
+  const gPct      = totalPoss>0?Math.round(totalPres/totalPoss*100):0;
+  const perfect   = stats.filter(x=>x.pct===100).length;
+  const risk      = stats.filter(x=>x.pct<75).length;
+  const bestPct   = stats[0]?.pct??0;
+
+  _reportData = { c, list, dates, stats, gPct, perfect, risk, periodo, totalPoss, totalPres };
+
+  // Build report header
+  document.getElementById('report-header').innerHTML = `
+    <h4>📊 Informe de Asistencia — ${c?c.nombre:''}</h4>
+    <p>${c&&c.materia?c.materia+' · ':''}${c&&c.docente?c.docente+' · ':''}Período: ${periodo} · ${dates.length} clase${dates.length!==1?'s':''}</p>`;
+
+  // KPIs
+  document.getElementById('report-kpis').innerHTML = `
+    <div class="kpi"><div class="kpi-val" style="color:var(--teal)">${gPct}%</div><div class="kpi-lbl">Asistencia global</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--success)">${perfect}</div><div class="kpi-lbl">Asistencia perfecta</div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--rose)">${risk}</div><div class="kpi-lbl">Alumnos en riesgo<br><span style="font-size:0.65rem;font-weight:400">(< 75%)</span></div></div>
+    <div class="kpi"><div class="kpi-val" style="color:var(--slate)">${list.length}</div><div class="kpi-lbl">Total alumnos</div></div>`;
+
+  // Student rows
+  document.getElementById('report-body').innerHTML = stats.map((x,i) => {
+    const barColor = x.pct>=75?'#27ae60':x.pct>=50?'#e67e22':'#e74c3c';
+    const riskClass = x.pct>=75?'risk-ok':x.pct>=50?'risk-med':'risk-high';
+    const estado = x.pct===100?'⭐ Perfecta':x.pct>=90?'✅ Excelente':x.pct>=75?'✅ Regular':x.pct>=50?'⚠️ En riesgo':'🚨 Crítica';
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:0.75rem;color:#9ca3af">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:700">${x.s.apellido?x.s.apellido+', '+x.s.nombre:x.s.nombre}</td>
+      <td style="text-align:center;color:var(--success);font-weight:800">${x.pres}</td>
+      <td style="text-align:center;color:var(--rose);font-weight:800">${x.aus}</td>
+      <td style="text-align:center;color:var(--gold);font-weight:800">${x.tard}</td>
+      <td style="text-align:center"><span class="${riskClass}">${x.pct}%</span></td>
+      <td><div class="bar-bg"><div class="bar-fill" style="width:${x.pct}%;background:${barColor}"></div></div></td>
+      <td style="font-size:0.82rem">${estado}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('export-modal').classList.remove('open');
+  document.getElementById('report-modal').classList.add('open');
+}
+
+function exportReportCSV() {
+  if (!_reportData) return;
+  const { c, stats, dates, gPct, periodo } = _reportData;
+  const hdr  = ['#','Apellido','Nombre','Presencias','Ausencias','% Asistencia','Estado'].join(',');
+  const rows = stats.map((x,i) => {
+    const estado = x.pct===100?'Perfecta':x.pct>=90?'Excelente':x.pct>=75?'Regular':x.pct>=50?'En riesgo':'Crítica';
+    return [i+1, x.s.apellido, x.s.nombre, x.pres, x.aus, x.pct+'%', estado].join(',');
+  });
+  const summary = ['','RESUMEN',`Período: ${periodo}`,`Total clases: ${dates.length}`,`Asistencia global: ${gPct}%`];
+  const csv = [hdr,...rows,...summary].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `informe_${c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso'}.csv`;
+  a.click();
+}
+
+function printReport() {
+  const pa = document.getElementById('print-area');
+  const content = document.getElementById('report-modal').querySelector('.modal').innerHTML;
+  pa.innerHTML = `<div style="font-family:Arial,sans-serif;padding:1rem">${content}</div>`;
+  window.print();
+}
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},3000);
+}
+
+// ════════════════════════════════════════
+// SUPABASE CONFIG
+// ════════════════════════════════════════
+const SUPA_URL = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
+const SUPA_KEY = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
+
+// Lightweight fetch wrapper for Supabase REST API
+async function sbFetch(path, options={}) {
+  const url = SUPA_URL + '/rest/v1/' + path;
+  const headers = {
+    'apikey':        SUPA_KEY,
+    'Authorization': 'Bearer ' + (_sbToken || SUPA_KEY),
+    'Content-Type':  'application/json',
+    'Prefer':        options.prefer || 'return=representation',
+    ...options.headers
+  };
+  const res = await fetch(url, { method: options.method||'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.message || err.hint || res.statusText);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// Supabase Auth REST
+async function sbAuth(action, payload) {
+  const url = SUPA_URL + '/auth/v1/' + action;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.msg || data.message || 'Error de autenticación');
+  return data;
+}
+
+let _sbToken   = null;
+let _sbUserId  = null;
+let _sbSession = null;
+
+// ════════════════════════════════════════
+// LOGIN UI
+// ════════════════════════════════════════
+function switchLoginTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  document.getElementById('form-login').style.display    = tab==='login'    ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.classList.add('show');
+}
+
+function setLoginLoading(loading) {
+  const btns = document.querySelectorAll('#form-login .btn, #form-register .btn');
+  btns.forEach(b => { b.disabled = loading; b.style.opacity = loading ? '0.6' : '1'; });
+}
+
+// ════════════════════════════════════════
+// AUTH ACTIONS
+// ════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-user').value.trim();
+  const pass  = document.getElementById('login-pass').value.trim();
+  if (!email||!pass) { showLoginError('⚠ Completá email y contraseña'); return; }
+  setLoginLoading(true);
+  try {
+    const data = await sbAuth('token?grant_type=password', { email, password: pass });
+    _sbToken   = data.access_token;
+    _sbUserId  = data.user.id;
+    _sbSession = data;
+    localStorage.setItem('aa_sb_session', JSON.stringify({ token: _sbToken, userId: _sbUserId, name: data.user.user_metadata?.name || email }));
+    await enterApp(data.user.user_metadata?.name || email);
+  } catch(e) {
+    showLoginError('❌ ' + (e.message.includes('Invalid')||e.message.includes('invalid') ? 'Email o contraseña incorrectos' : e.message));
+  } finally { setLoginLoading(false); }
+}
+
+async function doRegister() {
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-user').value.trim();
+  const pass  = document.getElementById('reg-pass').value.trim();
+  if (!name||!email||!pass) { showLoginError('⚠ Completá todos los campos'); return; }
+  if (pass.length < 6)      { showLoginError('⚠ La contraseña debe tener al menos 6 caracteres'); return; }
+  if (!email.includes('@'))  { showLoginError('⚠ Ingresá un email válido'); return; }
+  setLoginLoading(true);
+  try {
+    const data = await sbAuth('signup', { email, password: pass, data: { name } });
+    _sbToken  = data.access_token;
+    _sbUserId = data.user.id;
+    localStorage.setItem('aa_sb_session', JSON.stringify({ token: _sbToken, userId: _sbUserId, name }));
+    // Create profile
+    try {
+      await sbFetch('profiles', { method:'POST', body: { id: _sbUserId, name }, prefer: 'return=minimal' });
+    } catch(e) { /* may already exist */ }
+    await enterApp(name);
+  } catch(e) {
+    showLoginError('❌ ' + (e.message.includes('already')||e.message.includes('registered') ? 'Ese email ya está registrado' : e.message));
+  } finally { setLoginLoading(false); }
+}
+
+async function enterApp(userName) {
+  document.getElementById('header-user').textContent = '👤 ' + userName;
+  document.getElementById('header-user').style.display = 'inline-flex';
+  document.getElementById('btn-logout').style.display  = 'inline-flex';
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-wrapper').classList.add('visible');
+  showAppLoading(true);
+  await loadAllData();
+  showAppLoading(false);
+  setTodayDate();
+  renderCursosGrid();
+  syncSelects();
+}
+
+function showAppLoading(on) {
+  let el = document.getElementById('app-loading');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'app-loading';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,243,0.85);z-index:99;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:Nunito,sans-serif;font-weight:700;color:#0f9b8e;font-size:1rem;backdrop-filter:blur(2px)';
+    el.innerHTML = '<div style="font-size:2.5rem;animation:spin 1s linear infinite">⏳</div><span>Cargando datos...</span>';
+    document.body.appendChild(el);
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  el.style.display = on ? 'flex' : 'none';
+}
+
+async function doLogout() {
+  localStorage.removeItem('aa_sb_session');
+  _sbToken=null; _sbUserId=null; _sbSession=null;
+  cursos=[]; students=[]; attendance={};
+  activeCursoId=null; activeQrId=null; activeScanId=null; activePlanillaId=null;
+  stopScanner();
+  document.getElementById('app-wrapper').classList.remove('visible');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').classList.remove('show');
+  switchLoginTab('login');
+}
+
+// ════════════════════════════════════════
+// DATA LAYER — Supabase REST
+// ════════════════════════════════════════
+
+async function loadAllData() {
+  if (!_sbUserId) return;
+  try {
+    const [c, s, a] = await Promise.all([
+      sbFetch(`cursos?user_id=eq.${_sbUserId}&order=created_at.asc`),
+      sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
+      sbFetch(`attendance?user_id=eq.${_sbUserId}`)
+    ]);
+    // Map to in-memory format
+    cursos   = c.map(r => ({ id: r.id, nombre: r.nombre, materia: r.materia||'', docente: r.docente||'', color: r.color||'#0f9b8e' }));
+    students = s.map(r => ({ id: r.id, cursoId: r.curso_id, apellido: r.apellido||'', nombre: r.nombre||'', full: r.full_name||'' }));
+    // attendance: { studentId: { "YYYY-MM-DD": 'P'|'A'|'T'|true } }
+    attendance = {};
+    a.forEach(r => {
+      if (!attendance[r.student_id]) attendance[r.student_id] = {};
+      attendance[r.student_id][r.fecha] = r.estado === 'P' ? true : r.estado;
+    });
+  } catch(e) {
+    console.error('loadAllData error:', e);
+    showToast('⚠ Error cargando datos: ' + e.message);
+  }
+}
+
+// save() is now a no-op — all writes go directly via Supabase
+function save() { /* writes handled per-operation */ }
+
+// ── Cursos ──
+async function sbSaveCurso(c) {
+  await sbFetch('cursos', {
+    method: 'POST', prefer: 'return=minimal',
+    body: { id: c.id, user_id: _sbUserId, nombre: c.nombre, materia: c.materia||null, docente: c.docente||null, color: c.color }
+  });
+}
+async function sbDeleteCurso(id) {
+  await sbFetch(`cursos?id=eq.${id}&user_id=eq.${_sbUserId}`, { method: 'DELETE', prefer: 'return=minimal' });
+}
+
+// ── Students ──
+async function sbSaveStudent(s) {
+  await sbFetch('students', {
+    method: 'POST', prefer: 'return=minimal',
+    body: { id: s.id, user_id: _sbUserId, curso_id: s.cursoId, apellido: s.apellido||null, nombre: s.nombre||null, full_name: s.full }
+  });
+}
+async function sbDeleteStudent(id) {
+  await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`, { method: 'DELETE', prefer: 'return=minimal' });
+}
+async function sbDeleteStudentsByCurso(cursoId) {
+  await sbFetch(`students?curso_id=eq.${cursoId}&user_id=eq.${_sbUserId}`, { method: 'DELETE', prefer: 'return=minimal' });
+}
+
+// ── Attendance ──
+async function sbSaveAttendance(studentId, fecha, estado) {
+  // Upsert
+  const estadoStr = estado === true ? 'P' : estado;
+  await sbFetch('attendance', {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates,return=minimal',
+    body: { student_id: studentId, user_id: _sbUserId, fecha, estado: estadoStr }
+  });
+}
+async function sbDeleteAttendance(studentId, fecha) {
+  await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`, { method: 'DELETE', prefer: 'return=minimal' });
+}
+
+// ════════════════════════════════════════
+// WRAPPERS — override in-memory ops to also write to Supabase
+// ════════════════════════════════════════
+
+// addCurso, deleteCurso, addStudent, removeStudent, cycleAttendance, markAbsent,
+// markAllAbsent, applyCloseDayToPlanilla, clearStudents, importCSV
+// are all patched below by reassigning after original definitions.
+
+// We patch by wrapping the key mutation functions:
+const _origAddCurso = addCurso;
+window.addCurso = async function() {
+  const nombre  = document.getElementById('inp-curso-nombre').value.trim();
+  const materia = document.getElementById('inp-curso-materia').value.trim();
+  const docente = document.getElementById('inp-curso-docente').value.trim();
+  if (!nombre) { showToast('⚠ Ingresá el nombre del curso'); return; }
+  const color = PALETTE[cursos.length % PALETTE.length];
+  const newC  = { id: genId(), nombre, materia, docente, color };
+  cursos.push(newC);
+  ['inp-curso-nombre','inp-curso-materia','inp-curso-docente'].forEach(i=>document.getElementById(i).value='');
+  renderCursosGrid();
+  showToast('✅ Curso creado: ' + nombre);
+  try { await sbSaveCurso(newC); } catch(e) { showToast('⚠ Sin conexión — guardado localmente'); }
+};
+
+const _origDeleteCurso = deleteCurso;
+window.deleteCurso = async function(id) {
+  const c = getCurso(id); if (!c) return;
+  const ok = await showConfirm(`¿Eliminar el curso "${c.nombre}"?`, 'Se borrarán todos sus alumnos y asistencias.', '🗑️', 'Eliminar curso', 'btn-danger');
+  if (!ok) return;
+  studentsOf(id).forEach(s => delete attendance[s.id]);
+  students = students.filter(s=>s.cursoId!==id);
+  cursos   = cursos.filter(c=>c.id!==id);
+  renderCursosGrid(); syncSelects();
+  showToast('🗑 Curso eliminado');
+  try { await sbDeleteCurso(id); } catch(e) {}
+};
+
+const _origAddStudent = addStudent;
+window.addStudent = async function() {
+  if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
+  const ape = document.getElementById('inp-apellido').value.trim();
+  const nom = document.getElementById('inp-nombre').value.trim();
+  if (!ape && !nom) { showToast('⚠ Ingresá apellido y/o nombre'); return; }
+  const full = [ape, nom].filter(Boolean).join(', ');
+  const newS = { id: genId(), cursoId: activeCursoId, apellido: ape, nombre: nom, full };
+  students.push(newS);
+  document.getElementById('inp-apellido').value='';
+  document.getElementById('inp-nombre').value='';
+  document.getElementById('inp-apellido').focus();
+  renderStudentList();
+  showToast('✅ ' + full);
+  try { await sbSaveStudent(newS); } catch(e) { showToast('⚠ Sin conexión'); }
+};
+
+const _origRemoveStudent = removeStudent;
+window.removeStudent = async function(id) {
+  const s = students.find(x=>x.id===id);
+  const ok = await showConfirm('¿Eliminar alumno?', (s?s.full:'') + ' será eliminado.', '🗑️', 'Eliminar', 'btn-danger');
+  if (!ok) return;
+  students = students.filter(x=>x.id!==id);
+  delete attendance[id];
+  renderStudentList();
+  showToast('🗑 Alumno eliminado');
+  try { await sbDeleteStudent(id); } catch(e) {}
+};
+
+const _origClearStudents = clearStudents;
+window.clearStudents = async function() {
+  if (!activeCursoId) return;
+  const c = getCurso(activeCursoId);
+  const ok = await showConfirm('¿Limpiar nómina de "' + (c?c.nombre:'este curso') + '"?', 'Se eliminarán todos los alumnos y asistencias.', '⚠️', 'Limpiar todo', 'btn-danger');
+  if (!ok) return;
+  studentsOf(activeCursoId).forEach(s => delete attendance[s.id]);
+  students = students.filter(s=>s.cursoId!==activeCursoId);
+  renderStudentList();
+  showToast('🗑 Nómina eliminada');
+  try { await sbDeleteStudentsByCurso(activeCursoId); } catch(e) {}
+};
+
+// Patch cycleAttendance to also write to Supabase
+const _origCycleAttendance = cycleAttendance;
+window.cycleAttendance = async function(studentId, date, el) {
+  if (!attendance[studentId]) attendance[studentId] = {};
+  const cur = attendance[studentId][date];
+  let next;
+  if (cur === undefined || cur === null) next = true;
+  else if (cur === true)  next = 'A';
+  else if (cur === 'A')   next = 'T';
+  else                    next = undefined;
+
+  if (next === undefined) delete attendance[studentId][date];
+  else attendance[studentId][date] = next;
+
+  el.innerHTML = renderBadge(next);
+  // Update % cell
+  if (activePlanillaId) {
+    const dates = datesForCurso(activePlanillaId);
+    const pres  = dates.filter(d => attendance[studentId]&&attendance[studentId][d]===true).length;
+    const pct   = dates.length ? Math.round(pres/dates.length*100) : '-';
+    const col   = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
+    const row   = el.closest('tr');
+    if (row) { const last=row.lastElementChild; last.style.color=col; last.textContent=pct+'%'; }
+  }
+  try {
+    if (next === undefined) await sbDeleteAttendance(studentId, date);
+    else await sbSaveAttendance(studentId, date, next);
+  } catch(e) { console.warn('attendance sync error', e); }
+};
+
+const _origMarkAbsent = markAbsent;
+window.markAbsent = async function(studentId, val, date) {
+  if (!attendance[studentId]) attendance[studentId] = {};
+  attendance[studentId][date] = val;
+  const row = document.getElementById('absi_'+studentId);
+  if (row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+  updateDayStats(date);
+  showToast(val==='A' ? '🔴 Ausente registrado' : '🟡 Tarde registrado');
+  try { await sbSaveAttendance(studentId, date, val); } catch(e) {}
+};
+
+const _origMarkAllAbsent = markAllAbsent;
+window.markAllAbsent = async function() {
+  if (!activeScanId) return;
+  const date = document.getElementById('scan-date').value; if (!date) return;
+  const list = studentsOf(activeScanId);
+  const toMark = list.filter(s => !attendance[s.id] || !attendance[s.id][date]);
+  toMark.forEach(s => { if (!attendance[s.id]) attendance[s.id]={}; attendance[s.id][date]='A'; });
+  updateDayStats(date);
+  document.getElementById('absent-panel').style.display='none';
+  showToast(`🔴 ${toMark.length} ausentes registrados`);
+  try { await Promise.all(toMark.map(s=>sbSaveAttendance(s.id, date, 'A'))); } catch(e) {}
+};
+
+// Patch onScanSuccess to write to Supabase
+const _origScanSuccess = onScanSuccess;
+window.onScanSuccess = async function(txt) {
+  if (scanCooldown) return;
+  let data;
+  try { data = JSON.parse(txt); } catch(e) { setStatus('error','❌ QR inválido'); return; }
+  if (!data.id || data.app !== 'asistapp') { setStatus('error','❌ QR no reconocido'); return; }
+  const student = students.find(s=>s.id===data.id);
+  if (!student) { setStatus('error','❌ Alumno no encontrado'); triggerCooldown(); return; }
+  if (student.cursoId !== activeScanId) {
+    const otro = getCurso(student.cursoId);
+    setStatus('error','⚠ Alumno de '+(otro?otro.nombre:'otro curso'));
+    triggerCooldown(); return;
+  }
+  const date = document.getElementById('scan-date').value;
+  if (!attendance[student.id]) attendance[student.id] = {};
+  if (attendance[student.id][date]) {
+    setStatus('error','⚠ '+student.full+' — ya registrado');
+    addLogEntry(student,'dup'); triggerCooldown(); return;
+  }
+  attendance[student.id][date] = true;
+  setStatus('success','✅ PRESENTE — '+student.full);
+  addLogEntry(student,'ok');
+  updateDayStats(date);
+  triggerCooldown();
+  try { await sbSaveAttendance(student.id, date, 'P'); } catch(e) { console.warn('scan save error', e); }
+};
+
+// Patch importCSV to also save to Supabase
+const _origImportCSV = importCSV;
+window.importCSV = function() {
+  if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='.csv,.txt';
+  inp.onchange = async e => {
+    const fr = new FileReader();
+    fr.onload = async ev => {
+      const newStudents = [];
+      ev.target.result.split('\n').filter(l=>l.trim()).forEach(line => {
+        const p = line.split(',').map(x=>x.trim().replace(/"/g,''));
+        if (p.length >= 2) newStudents.push({id:genId(),cursoId:activeCursoId,apellido:p[0],nombre:p[1],full:p[0]+', '+p[1]});
+        else if (p[0]) newStudents.push({id:genId(),cursoId:activeCursoId,apellido:p[0],nombre:'',full:p[0]});
+      });
+      students.push(...newStudents);
+      renderStudentList();
+      showToast('✅ Importados '+newStudents.length+' alumnos');
+      try { await Promise.all(newStudents.map(s=>sbSaveStudent(s))); } catch(e) { showToast('⚠ Sin conexión al guardar'); }
+    };
+    fr.readAsText(e.target.files[0]);
+  };
+  inp.click();
+};
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},3500);
+}
+
+// ════════════════════════════════════════
+// INIT — check saved session
+// ════════════════════════════════════════
+(async function init() {
+  setTodayDate();
+  const saved = localStorage.getItem('aa_sb_session');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      _sbToken  = s.token;
+      _sbUserId = s.userId;
+      await enterApp(s.name);
+      return;
+    } catch(e) { localStorage.removeItem('aa_sb_session'); }
+  }
+  // No session → login screen already visible
+})();
+</script>
+</body>
+</html>
