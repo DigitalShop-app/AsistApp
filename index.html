@@ -156,6 +156,14 @@
   .empty-state .ei { font-size: 3.5rem; margin-bottom: 1rem; }
   .empty-state p { font-weight: 600; }
 
+  .admin-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .admin-table th { background:var(--slate); color:white; padding:10px 14px; text-align:left; font-size:0.78rem; letter-spacing:0.4px; }
+  .admin-table td { padding:10px 14px; border-bottom:1px solid var(--paper); vertical-align:middle; }
+  .admin-table tr:hover td { background:var(--mist); }
+  .admin-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+  .badge-active { background:#d4edda; color:#155724; }
+  .badge-admin  { background:#fff3cd; color:#856404; }
+
   .print-area { display: none; }
   @media print {
     body > *:not(.print-area) { display: none !important; }
@@ -320,7 +328,10 @@
     .curso-card-actions .btn { width: 100%; }
   }
   /* LOGIN SCREEN */
-  .login-screen {
+  .pass-wrap { position: relative; }
+  .pass-wrap input { padding-right: 44px !important; }
+  .pass-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#9ca3af; font-size:1.1rem; padding:4px; line-height:1; transition:color 0.2s; }
+  .pass-toggle:hover { color: var(--teal); }
     position: fixed; inset: 0; z-index: 1000;
     background: var(--ink);
     display: flex; align-items: center; justify-content: center;
@@ -402,7 +413,10 @@
       </div>
       <div class="field">
         <label>Contraseña</label>
-        <input type="password" id="login-pass" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="pass-wrap">
+          <input type="password" id="login-pass" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="pass-toggle" type="button" onclick="togglePass('login-pass',this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:0.5rem">
         🔑 Ingresar
@@ -445,7 +459,10 @@
       </div>
       <div class="field">
         <label>Contraseña</label>
-        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+        <div class="pass-wrap">
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+          <button class="pass-toggle" type="button" onclick="togglePass('reg-pass',this)" tabindex="-1">👁</button>
+        </div>
       </div>
       <button class="btn btn-primary btn-full" onclick="doRegister()" style="margin-top:0.5rem">
         ✅ Crear cuenta
@@ -467,10 +484,27 @@
     <button class="nav-btn" onclick="showView('qr',this)">🔲 QR</button>
     <button class="nav-btn" onclick="showView('scanner',this)">📷 Escanear</button>
     <button class="nav-btn" onclick="showView('planilla',this)">📊 Planilla</button>
+    <button class="nav-btn" id="nav-admin" onclick="showView('admin',this)" style="display:none;background:rgba(245,166,35,0.2);color:var(--gold)">⚙️ Admin</button>
     <span id="header-user" style="display:none;color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:700;padding:0 8px;align-items:center"></span>
     <button id="btn-logout" onclick="doLogout()" style="display:none;background:rgba(232,93,117,0.25);color:#ff8fa3;border:none;padding:6px 12px;border-radius:8px;font-family:Nunito,sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(232,93,117,0.45)'" onmouseout="this.style.background='rgba(232,93,117,0.25)'">🚪 Salir</button>
   </nav>
 </header>
+
+<!-- ═══ ADMIN ═══ -->
+<div class="view" id="view-admin">
+  <div class="page-title">⚙️ Panel de Administración</div>
+  <p class="page-sub">Gestión de usuarios registrados en AsistApp — solo visible para Digital Shop</p>
+
+  <div class="card" style="max-width:900px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px">
+      <div class="card-title" style="margin:0">👥 Usuarios registrados</div>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()">🔄 Actualizar lista</button>
+    </div>
+    <div id="admin-users-list">
+      <div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">Cargando usuarios...</div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ CURSOS ═══ -->
 <div class="view active" id="view-cursos">
@@ -1655,7 +1689,8 @@ function showToast(msg) {
 // ════════════════════════════════════════
 // SUPABASE CONFIG
 // ════════════════════════════════════════
-const SUPA_URL = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
+const SUPA_URL    = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
+const ADMIN_EMAIL = 'soydigitalshop@gmail.com';
 const SUPA_KEY = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
 
 // Lightweight fetch wrapper for Supabase REST API
@@ -1697,6 +1732,14 @@ let _sbSession = null;
 // ════════════════════════════════════════
 // LOGIN UI
 // ════════════════════════════════════════
+function togglePass(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+
 function switchLoginTab(tab) {
   document.getElementById('tab-login').classList.toggle('active', tab==='login');
   document.getElementById('tab-register').classList.toggle('active', tab==='register');
@@ -1874,6 +1917,14 @@ async function enterApp(userName) {
   document.getElementById('btn-logout').style.display  = 'inline-flex';
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app-wrapper').classList.add('visible');
+
+  // Show admin button only for Digital Shop admin
+  const savedSession = localStorage.getItem('aa_sb_session');
+  const session = savedSession ? JSON.parse(savedSession) : null;
+  const isAdmin = session && (await getSessionEmail()) === ADMIN_EMAIL;
+  const adminBtn = document.getElementById('nav-admin');
+  if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+
   showAppLoading(true);
   await loadAllData();
   showAppLoading(false);
@@ -2219,6 +2270,122 @@ function showToast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
   setTimeout(()=>{t.style.display='none';},3500);
 }
+
+// ════════════════════════════════════════
+// ADMIN PANEL
+// ════════════════════════════════════════
+async function getSessionEmail() {
+  try {
+    // Get user info from Supabase using the current token
+    const res = await fetch(SUPA_URL + '/auth/v1/user', {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken }
+    });
+    const data = await res.json();
+    return data.email || '';
+  } catch(e) { return ''; }
+}
+
+async function loadAdminUsers() {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Cargando...</div>';
+  try {
+    // Get all profiles with user info
+    const profiles = await sbFetch('profiles?select=id,name,created_at&order=created_at.desc');
+
+    // Get stats per user
+    const cursosAll    = await sbFetch('cursos?select=id,user_id');
+    const studentsAll  = await sbFetch('students?select=id,user_id');
+
+    if (!profiles.length) {
+      el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">Sin usuarios registrados</div>';
+      return;
+    }
+
+    const rows = profiles.map(p => {
+      const nCursos   = cursosAll.filter(c=>c.user_id===p.id).length;
+      const nStudents = studentsAll.filter(s=>s.user_id===p.id).length;
+      const fecha     = p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—';
+      const isAdminUser = false; // Could check by email if stored in profile
+      return `<tr>
+        <td style="font-weight:700">${p.name||'—'}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:#6b7280">${p.id.substring(0,8)}...</td>
+        <td>${fecha}</td>
+        <td style="text-align:center"><strong>${nCursos}</strong></td>
+        <td style="text-align:center"><strong>${nStudents}</strong></td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${p.name||'este usuario'}')">🗑 Eliminar</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
+        <table class="admin-table">
+          <thead><tr>
+            <th>Nombre</th><th>ID</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acción</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem;color:#9ca3af;margin-top:0.8rem;font-weight:600">
+        Total: ${profiles.length} usuario${profiles.length!==1?'s':''}
+      </p>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error al cargar usuarios: ${e.message}</div>`;
+  }
+}
+
+async function adminDeleteUser(userId, userName) {
+  const ok = await showConfirm(
+    `¿Eliminar a "${userName}"?`,
+    'Se borrarán todos sus cursos, alumnos y asistencias. Esta acción es irreversible.',
+    '⚠️', 'Eliminar usuario', 'btn-danger'
+  );
+  if (!ok) return;
+
+  const el = document.getElementById('admin-users-list');
+  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Eliminando datos...</div>';
+
+  try {
+    // Delete all user data in order
+    await sbFetch(`attendance?user_id=eq.${userId}`, { method:'DELETE', prefer:'return=minimal' });
+    await sbFetch(`students?user_id=eq.${userId}`,   { method:'DELETE', prefer:'return=minimal' });
+    await sbFetch(`cursos?user_id=eq.${userId}`,     { method:'DELETE', prefer:'return=minimal' });
+    await sbFetch(`profiles?id=eq.${userId}`,        { method:'DELETE', prefer:'return=minimal' });
+
+    // Delete auth user using service role — requires admin endpoint
+    // Since we only have anon key, we show instructions for the last step
+    showToast('✅ Datos eliminados. Ahora borrá el usuario en Supabase Auth.');
+
+    // Show remaining step
+    el.innerHTML = `
+      <div style="background:#fff3cd;border-radius:12px;padding:1.2rem;border:1px solid #ffc107;margin-bottom:1rem">
+        <div style="font-weight:800;color:#856404;margin-bottom:0.5rem">⚠️ Último paso requerido</div>
+        <p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.8rem">
+          Los datos del usuario <strong>${userName}</strong> fueron eliminados correctamente.<br>
+          Para borrar su acceso al sistema, eliminá el usuario en Supabase:
+        </p>
+        <ol style="font-size:0.85rem;color:#6b7280;padding-left:1.2rem;line-height:2">
+          <li>Andá a <strong>supabase.com</strong> → tu proyecto</li>
+          <li>Authentication → Users</li>
+          <li>Buscá el usuario y hacé clic en ··· → <strong>Delete user</strong></li>
+          <li>Ahora sí va a funcionar sin errores ✅</li>
+        </ol>
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Actualizar lista</button>
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()">🔄 Reintentar</button>`;
+  }
+}
+
+// Override showView to load admin data when entering admin panel
+const _origShowView = showView;
+window.showView = function(id, btn) {
+  _origShowView(id, btn);
+  if (id === 'admin') loadAdminUsers();
+};
 
 // ════════════════════════════════════════
 // INIT — check saved session
