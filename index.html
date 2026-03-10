@@ -6,6 +6,8 @@
 <title>AsistApp — Sistema de Asistencia Docente</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('DTkSJR0L6SnnogCo6');</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&family=Barlow+Condensed:wght@600;700&family=Raleway:wght@400;500;700&display=swap');
 
@@ -512,8 +514,6 @@
         <div class="card-title">➕ Agregar Alumno</div>
         <div class="field"><label>Apellido/s</label><input type="text" id="inp-apellido" placeholder="Ej: García López" onkeydown="if(event.key==='Enter')addStudent()"></div>
         <div class="field"><label>Nombre/s</label><input type="text" id="inp-nombre" placeholder="Ej: Martina Belén" onkeydown="if(event.key==='Enter')addStudent()"></div>
-        <div class="field"><label>Email del alumno <span style="color:#9ca3af;font-weight:400;font-size:0.78rem">(opcional)</span></label><input type="text" id="inp-email-alumno" placeholder="alumno@email.com" onkeydown="if(event.key==='Enter')addStudent()"></div>
-        <div class="field"><label>Email del padre/madre/tutor <span style="color:#9ca3af;font-weight:400;font-size:0.78rem">(opcional)</span></label><input type="text" id="inp-email-padre" placeholder="padre@email.com" onkeydown="if(event.key==='Enter')addStudent()"></div>
         <button class="btn btn-primary btn-full" onclick="addStudent()">➕ Agregar</button>
         <div class="divider">importar</div>
         <button class="btn btn-secondary btn-full btn-sm" onclick="importCSV()">📤 Importar desde CSV</button>
@@ -577,6 +577,10 @@
       </div>
       <div>
         <div class="scan-status idle" id="scan-status">📡 Esperando escaneo...</div>
+        <div id="scan-name-display" style="display:none;text-align:center;padding:16px 12px;margin-bottom:1rem;border-radius:14px;background:var(--mist);border:2px solid var(--teal)">
+          <div style="font-family:'DM Serif Display',serif;font-size:1.9rem;color:var(--ink);line-height:1.2" id="scan-big-name"></div>
+          <div style="font-size:0.78rem;color:var(--teal);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px" id="scan-big-status"></div>
+        </div>
         <div class="card" style="margin-bottom:1rem">
           <div class="card-title">📋 Registro del día</div>
           <div class="scan-log" id="scan-log"><div style="color:#9ca3af;font-size:0.85rem;text-align:center;padding:1rem" data-placeholder>Los escaneos aparecerán aquí</div></div>
@@ -744,6 +748,20 @@
 </footer>
 
 </div><!-- end app-wrapper -->
+
+<!-- ═══ EDIT STUDENT MODAL ═══ -->
+<div class="modal-overlay" id="edit-student-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="card-title" style="font-size:1.1rem;margin-bottom:1.2rem">✏️ Editar Alumno</div>
+    <input type="hidden" id="edit-student-id">
+    <div class="field"><label>Apellido/s</label><input type="text" id="edit-apellido" placeholder="Apellido/s"></div>
+    <div class="field"><label>Nombre/s</label><input type="text" id="edit-nombre" placeholder="Nombre/s"></div>
+    <div style="display:flex;gap:10px;margin-top:1.2rem">
+      <button class="btn btn-primary" style="flex:1" onclick="saveEditStudent()">💾 Guardar</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('edit-student-modal').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ─── CONFIRM ───
@@ -940,6 +958,7 @@ function renderStudentList() {
     <div class="student-item">
       <span class="student-num">${String(i+1).padStart(2,'0')}</span>
       <span class="student-name">${s.apellido?`<strong>${s.apellido}</strong>, ${s.nombre}`:`<strong>${s.nombre}</strong>`}</span>
+      <button class="btn btn-secondary btn-sm" onclick="openEditStudent('${s.id}')" title="Editar" style="padding:5px 9px">✏️</button>
       <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">✕</button>
     </div>`).join('');
 }
@@ -1148,6 +1167,26 @@ function setStatus(type, msg) {
   const el = document.getElementById('scan-status');
   el.className = 'scan-status '+type; el.textContent = msg;
   if (type!=='idle') setTimeout(()=>{ el.className='scan-status idle'; el.textContent='📡 Esperando escaneo...'; }, 3000);
+}
+
+function showScanName(fullName, statusText, type) {
+  const panel  = document.getElementById('scan-name-display');
+  const nameEl = document.getElementById('scan-big-name');
+  const statEl = document.getElementById('scan-big-status');
+  if (!panel) return;
+  // Split apellido, nombre for display
+  const parts = fullName.split(',');
+  const apellido = parts[0]?.trim() || fullName;
+  const nombre   = parts[1]?.trim() || '';
+  nameEl.innerHTML = `<span style="color:var(--slate)">${apellido}</span>${nombre ? '<br><span style="font-size:1.4rem;color:#6b7280">'+nombre+'</span>' : ''}`;
+  const colors = { ok: 'var(--teal)', dup: 'var(--gold)', error: 'var(--rose)' };
+  statEl.textContent = statusText;
+  statEl.style.color = colors[type] || 'var(--teal)';
+  panel.style.display = 'block';
+  panel.style.borderColor = colors[type] || 'var(--teal)';
+  panel.style.background = type==='ok' ? 'var(--mist)' : type==='dup' ? '#fef9ec' : '#fde8ec';
+  clearTimeout(panel._hideTimer);
+  panel._hideTimer = setTimeout(() => { panel.style.display = 'none'; }, 4000);
 }
 
 function addLogEntry(s, type) {
@@ -1785,32 +1824,48 @@ async function doRegister() {
 }
 
 // ─── WELCOME EMAIL ───
-function sendWelcomeEmail(email, name, pass) {
+// ─── EDIT STUDENT ───
+function openEditStudent(id) {
+  const s = students.find(x=>x.id===id); if (!s) return;
+  document.getElementById('edit-student-id').value  = id;
+  document.getElementById('edit-apellido').value    = s.apellido||'';
+  document.getElementById('edit-nombre').value      = s.nombre||'';
+  document.getElementById('edit-student-modal').classList.add('open');
+}
+
+async function saveEditStudent() {
+  const id  = document.getElementById('edit-student-id').value;
+  const ape = document.getElementById('edit-apellido').value.trim();
+  const nom = document.getElementById('edit-nombre').value.trim();
+  if (!ape && !nom) { showToast('⚠ Ingresá al menos apellido o nombre'); return; }
+  const s = students.find(x=>x.id===id); if (!s) return;
+  s.apellido = ape;
+  s.nombre   = nom;
+  s.full     = [ape, nom].filter(Boolean).join(', ');
+  renderStudentList();
+  document.getElementById('edit-student-modal').classList.remove('open');
+  showToast('✅ Alumno actualizado');
   try {
-    const subject = encodeURIComponent('Bienvenido/a a AsistApp — Tus credenciales de acceso');
-    const body = encodeURIComponent(
-`Hola ${name},
+    await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: { apellido: ape||null, nombre: nom||null, full_name: s.full }
+    });
+  } catch(e) { showToast('⚠ Sin conexión al guardar'); }
+}
 
-¡Tu cuenta en AsistApp fue creada exitosamente!
-
-A continuación encontrás tus credenciales de acceso:
-
-  📧 Email:       ${email}
-  🔑 Contraseña:  ${pass}
-
-Para ingresar a la app, visitá:
-  https://digitalshop-app.github.io/AsistApp/
-
-Te recomendamos guardar esta información en un lugar seguro.
-
----
-AsistApp — Sistema de Asistencia Docente
-Desarrollado por Digital Shop
-https://digitalshop-app.github.io/AsistApp/`
-    );
-    // Open default mail client pre-filled — the browser handles the send
-    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
-  } catch(e) { /* silently ignore if mail client not available */ }
+function sendWelcomeEmail(email, name, pass) {
+  if (typeof emailjs === 'undefined') { console.warn('EmailJS no cargado'); return; }
+  emailjs.send('asistapp_service', 'asistapp_welcome', {
+    to_email:   email,
+    to_name:    name,
+    user_email: email,
+    user_pass:  pass,
+    app_url:    'https://digitalshop-app.github.io/AsistApp/'
+  }).then(() => {
+    showToast('📧 Email de bienvenida enviado a ' + email);
+  }).catch(err => {
+    console.warn('EmailJS error:', err);
+  });
 }
 
 async function enterApp(userName) {
@@ -1969,18 +2024,14 @@ window.deleteCurso = async function(id) {
 const _origAddStudent = addStudent;
 window.addStudent = async function() {
   if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
-  const ape        = document.getElementById('inp-apellido').value.trim();
-  const nom        = document.getElementById('inp-nombre').value.trim();
-  const emailAlumno = document.getElementById('inp-email-alumno').value.trim();
-  const emailPadre  = document.getElementById('inp-email-padre').value.trim();
+  const ape = document.getElementById('inp-apellido').value.trim();
+  const nom = document.getElementById('inp-nombre').value.trim();
   if (!ape && !nom) { showToast('⚠ Ingresá apellido y/o nombre'); return; }
   const full = [ape, nom].filter(Boolean).join(', ');
-  const newS = { id: genId(), cursoId: activeCursoId, apellido: ape, nombre: nom, full, emailAlumno, emailPadre };
+  const newS = { id: genId(), cursoId: activeCursoId, apellido: ape, nombre: nom, full };
   students.push(newS);
   document.getElementById('inp-apellido').value='';
   document.getElementById('inp-nombre').value='';
-  document.getElementById('inp-email-alumno').value='';
-  document.getElementById('inp-email-padre').value='';
   document.getElementById('inp-apellido').focus();
   renderStudentList();
   showToast('✅ ' + full);
@@ -2116,16 +2167,20 @@ window.onScanSuccess = async function(txt) {
   if (student.cursoId !== activeScanId) {
     const otro = getCurso(student.cursoId);
     setStatus('error','⚠ Alumno de '+(otro?otro.nombre:'otro curso'));
+    showScanName(student.full, '⚠ Pertenece a otro curso', 'error');
     playBeep('error'); triggerCooldown(); return;
   }
   const date = document.getElementById('scan-date').value;
   if (!attendance[student.id]) attendance[student.id] = {};
   if (attendance[student.id][date]) {
-    setStatus('error','⚠ '+student.full+' — ya registrado');
-    addLogEntry(student,'dup'); playBeep('dup'); triggerCooldown(); return;
+    // Already registered — show name in red, double beep, do NOT add to log again
+    setStatus('error','⚠ Ya registrado — ' + student.full);
+    showScanName(student.full, '⚠ Ya fue registrado hoy', 'dup');
+    playBeep('dup'); triggerCooldown(); return;
   }
   attendance[student.id][date] = true;
-  setStatus('success','✅ PRESENTE — '+student.full);
+  setStatus('success','✅ PRESENTE');
+  showScanName(student.full, '✅ Presente', 'ok');
   addLogEntry(student,'ok');
   updateDayStats(date);
   playBeep('ok');
