@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&family=Barlow+Condensed:wght@600;700&family=Raleway:wght@400;500;700&display=swap');
 
   :root {
     --ink: #1a1a2e; --slate: #2d3561; --teal: #0f9b8e; --teal-light: #1bc5b4;
@@ -171,14 +171,15 @@
   /* FOOTER */
   footer {
     text-align: center; padding: 20px 1rem 16px;
-    font-family: 'Barlow Condensed', 'Nunito', sans-serif;
-    font-size: 0.85rem; font-weight: 400;
-    color: #9ca3af; letter-spacing: 0.5px; text-transform: uppercase;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.82rem; font-weight: 400;
+    color: #9ca3af; letter-spacing: 0.3px; text-transform: none;
     border-top: 1px solid var(--border); margin-top: 3rem;
     background: var(--cream);
   }
   footer .brand {
-    color: var(--teal); font-weight: 700; letter-spacing: 1px;
+    color: var(--teal); font-weight: 700; letter-spacing: 0.5px;
+    font-size: 0.85rem; text-transform: uppercase;
   }
 
   /* EXPORT MODAL */
@@ -365,11 +366,11 @@
   }
   .login-footer {
     text-align: center; margin-top: 1.5rem;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.75rem; color: #9ca3af; letter-spacing: 0.5px;
-    text-transform: uppercase;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.82rem; color: #9ca3af; letter-spacing: 0.3px;
+    text-transform: none;
   }
-  .login-footer span { color: var(--teal); font-weight: 700; }
+  .login-footer span { color: var(--teal); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px; text-transform: uppercase; }
 
   /* APP WRAPPER */
   #app-wrapper { display: none; }
@@ -404,6 +405,30 @@
       <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:0.5rem">
         🔑 Ingresar
       </button>
+      <div style="text-align:center;margin-top:1rem">
+        <button onclick="showForgotPassword()" style="background:none;border:none;color:var(--teal);font-family:'Nunito',sans-serif;font-size:0.83rem;font-weight:700;cursor:pointer;text-decoration:underline;padding:0">
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD FORM -->
+    <div id="form-forgot" style="display:none">
+      <p style="font-size:0.85rem;color:#6b7280;font-weight:600;margin-bottom:1.2rem;text-align:center">
+        Ingresá tu email y te enviaremos un enlace para restablecer tu contraseña.
+      </p>
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="forgot-email" placeholder="tucorreo@email.com" onkeydown="if(event.key==='Enter')doForgotPassword()">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doForgotPassword()" style="margin-top:0.5rem">
+        📧 Enviar enlace
+      </button>
+      <div style="text-align:center;margin-top:1rem">
+        <button onclick="showForgotPassword(false)" style="background:none;border:none;color:#9ca3af;font-family:'Nunito',sans-serif;font-size:0.83rem;font-weight:700;cursor:pointer;text-decoration:underline;padding:0">
+          ← Volver al inicio de sesión
+        </button>
+      </div>
     </div>
 
     <!-- REGISTER FORM -->
@@ -487,6 +512,8 @@
         <div class="card-title">➕ Agregar Alumno</div>
         <div class="field"><label>Apellido/s</label><input type="text" id="inp-apellido" placeholder="Ej: García López" onkeydown="if(event.key==='Enter')addStudent()"></div>
         <div class="field"><label>Nombre/s</label><input type="text" id="inp-nombre" placeholder="Ej: Martina Belén" onkeydown="if(event.key==='Enter')addStudent()"></div>
+        <div class="field"><label>Email del alumno <span style="color:#9ca3af;font-weight:400;font-size:0.78rem">(opcional)</span></label><input type="text" id="inp-email-alumno" placeholder="alumno@email.com" onkeydown="if(event.key==='Enter')addStudent()"></div>
+        <div class="field"><label>Email del padre/madre/tutor <span style="color:#9ca3af;font-weight:400;font-size:0.78rem">(opcional)</span></label><input type="text" id="inp-email-padre" placeholder="padre@email.com" onkeydown="if(event.key==='Enter')addStudent()"></div>
         <button class="btn btn-primary btn-full" onclick="addStudent()">➕ Agregar</button>
         <div class="divider">importar</div>
         <button class="btn btn-secondary btn-full btn-sm" onclick="importCSV()">📤 Importar desde CSV</button>
@@ -1636,7 +1663,47 @@ function switchLoginTab(tab) {
   document.getElementById('tab-register').classList.toggle('active', tab==='register');
   document.getElementById('form-login').style.display    = tab==='login'    ? 'block' : 'none';
   document.getElementById('form-register').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('form-forgot').style.display   = 'none';
   document.getElementById('login-error').classList.remove('show');
+}
+
+function showForgotPassword(show = true) {
+  document.getElementById('form-login').style.display    = show ? 'none' : 'block';
+  document.getElementById('form-forgot').style.display   = show ? 'block' : 'none';
+  document.getElementById('login-error').classList.remove('show');
+  if (show) {
+    // Pre-fill email if already typed
+    const email = document.getElementById('login-user').value.trim();
+    if (email) document.getElementById('forgot-email').value = email;
+    document.getElementById('forgot-email').focus();
+  }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email || !email.includes('@')) { showLoginError('⚠ Ingresá un email válido'); return; }
+  const btn = document.querySelector('#form-forgot .btn');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    const redirectUrl = window.location.href.split('?')[0];
+    const res = await fetch(`${SUPA_URL}/auth/v1/recover`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, options: { redirectTo: redirectUrl } })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.msg || err.message || 'Error al enviar el email');
+    }
+    // Show success — always show this even if email doesn't exist (security best practice)
+    document.getElementById('login-error').style.background = '#e8f8f0';
+    document.getElementById('login-error').style.color = '#27ae60';
+    showLoginError('✅ Si ese email existe, recibirás un enlace en tu casilla. Revisá también el spam.');
+  } catch(e) {
+    showLoginError('❌ ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '📧 Enviar enlace';
+  }
 }
 
 function showLoginError(msg) {
@@ -1707,11 +1774,43 @@ async function doRegister() {
     try {
       await sbFetch('profiles', { method:'POST', body: { id: _sbUserId, name }, prefer: 'return=minimal' });
     } catch(e) { /* profile may already exist */ }
+    // Send welcome email via Supabase Edge Function or direct SMTP not available from client —
+    // we use a mailto fallback that pre-fills a welcome message the user can review & send
+    sendWelcomeEmail(email, name, pass);
     await enterApp(name);
   } catch(e) {
     const msg = e.message||'';
     showLoginError('❌ ' + (msg.includes('already')||msg.includes('registered') ? 'Ese email ya está registrado' : msg || 'Error al crear la cuenta'));
   } finally { setLoginLoading(false); }
+}
+
+// ─── WELCOME EMAIL ───
+function sendWelcomeEmail(email, name, pass) {
+  try {
+    const subject = encodeURIComponent('Bienvenido/a a AsistApp — Tus credenciales de acceso');
+    const body = encodeURIComponent(
+`Hola ${name},
+
+¡Tu cuenta en AsistApp fue creada exitosamente!
+
+A continuación encontrás tus credenciales de acceso:
+
+  📧 Email:       ${email}
+  🔑 Contraseña:  ${pass}
+
+Para ingresar a la app, visitá:
+  https://digitalshop-app.github.io/AsistApp/
+
+Te recomendamos guardar esta información en un lugar seguro.
+
+---
+AsistApp — Sistema de Asistencia Docente
+Desarrollado por Digital Shop
+https://digitalshop-app.github.io/AsistApp/`
+    );
+    // Open default mail client pre-filled — the browser handles the send
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+  } catch(e) { /* silently ignore if mail client not available */ }
 }
 
 async function enterApp(userName) {
@@ -1771,7 +1870,7 @@ async function loadAllData() {
     ]);
     // Map to in-memory format
     cursos   = c.map(r => ({ id: r.id, nombre: r.nombre, materia: r.materia||'', docente: r.docente||'', color: r.color||'#0f9b8e' }));
-    students = s.map(r => ({ id: r.id, cursoId: r.curso_id, apellido: r.apellido||'', nombre: r.nombre||'', full: r.full_name||'' }));
+    students = s.map(r => ({ id: r.id, cursoId: r.curso_id, apellido: r.apellido||'', nombre: r.nombre||'', full: r.full_name||'', emailAlumno: r.email_alumno||'', emailPadre: r.email_padre||'' }));
     // attendance: { studentId: { "YYYY-MM-DD": 'P'|'A'|'T'|true } }
     attendance = {};
     a.forEach(r => {
@@ -1802,7 +1901,11 @@ async function sbDeleteCurso(id) {
 async function sbSaveStudent(s) {
   await sbFetch('students', {
     method: 'POST', prefer: 'return=minimal',
-    body: { id: s.id, user_id: _sbUserId, curso_id: s.cursoId, apellido: s.apellido||null, nombre: s.nombre||null, full_name: s.full }
+    body: {
+      id: s.id, user_id: _sbUserId, curso_id: s.cursoId,
+      apellido: s.apellido||null, nombre: s.nombre||null, full_name: s.full,
+      email_alumno: s.emailAlumno||null, email_padre: s.emailPadre||null
+    }
   });
 }
 async function sbDeleteStudent(id) {
@@ -1866,14 +1969,18 @@ window.deleteCurso = async function(id) {
 const _origAddStudent = addStudent;
 window.addStudent = async function() {
   if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
-  const ape = document.getElementById('inp-apellido').value.trim();
-  const nom = document.getElementById('inp-nombre').value.trim();
+  const ape        = document.getElementById('inp-apellido').value.trim();
+  const nom        = document.getElementById('inp-nombre').value.trim();
+  const emailAlumno = document.getElementById('inp-email-alumno').value.trim();
+  const emailPadre  = document.getElementById('inp-email-padre').value.trim();
   if (!ape && !nom) { showToast('⚠ Ingresá apellido y/o nombre'); return; }
   const full = [ape, nom].filter(Boolean).join(', ');
-  const newS = { id: genId(), cursoId: activeCursoId, apellido: ape, nombre: nom, full };
+  const newS = { id: genId(), cursoId: activeCursoId, apellido: ape, nombre: nom, full, emailAlumno, emailPadre };
   students.push(newS);
   document.getElementById('inp-apellido').value='';
   document.getElementById('inp-nombre').value='';
+  document.getElementById('inp-email-alumno').value='';
+  document.getElementById('inp-email-padre').value='';
   document.getElementById('inp-apellido').focus();
   renderStudentList();
   showToast('✅ ' + full);
