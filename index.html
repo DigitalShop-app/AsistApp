@@ -897,7 +897,13 @@ async function removeStudent(id) {
 
 function renderStudentList() {
   const el = document.getElementById('student-list'); if (!el) return;
-  const list = activeCursoId ? studentsOf(activeCursoId) : [];
+  const list = activeCursoId
+    ? studentsOf(activeCursoId).slice().sort((a,b) => {
+        const fa = (a.apellido||a.nombre||'').toLowerCase();
+        const fb = (b.apellido||b.nombre||'').toLowerCase();
+        return fa.localeCompare(fb, 'es');
+      })
+    : [];
   document.getElementById('student-count').textContent = list.length + ' alumnos';
   if (list.length === 0) {
     el.innerHTML = '<div class="empty-state" style="padding:1.5rem 1rem"><div class="ei" style="font-size:2rem">🎒</div><p>Sin alumnos aún</p></div>';
@@ -1026,7 +1032,16 @@ function printQRs() {
 let activeScanId = null, html5Scanner = null, scanCooldown = false;
 
 function setTodayDate() {
-  document.getElementById('scan-date').value = new Date().toISOString().split('T')[0];
+  // Use Intl to get the correct local date in the device's timezone (e.g. Argentina UTC-3)
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', { // en-CA gives YYYY-MM-DD format
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  }).formatToParts(now);
+  const y = parts.find(p=>p.type==='year').value;
+  const m = parts.find(p=>p.type==='month').value;
+  const d = parts.find(p=>p.type==='day').value;
+  document.getElementById('scan-date').value = `${y}-${m}-${d}`;
 }
 
 function onScannerCursoChange() {
@@ -1519,6 +1534,52 @@ function printReport() {
   window.print();
 }
 
+// ─── BEEP SOUND ───
+function playBeep(type = 'ok') {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === 'ok') {
+      // Éxito: pitido corto y agudo (escáner de supermercado)
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1200, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.12);
+    } else if (type === 'dup') {
+      // Ya registrado: dos pitidos cortos
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(700, ctx.currentTime);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.08);
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2); gain2.connect(ctx.destination);
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(700, ctx.currentTime + 0.13);
+      gain2.gain.setValueAtTime(0.2, ctx.currentTime + 0.13);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.21);
+      osc2.start(ctx.currentTime + 0.13);
+      osc2.stop(ctx.currentTime + 0.21);
+    } else {
+      // Error: buzz grave
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+    ctx.close && setTimeout(() => ctx.close(), 500);
+  } catch(e) { /* Audio API no disponible */ }
+}
+
 // ─── TOAST ───
 function showToast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
@@ -1899,29 +1960,68 @@ window.markAllAbsent = async function() {
 };
 
 // Patch onScanSuccess to write to Supabase
+// ─── SONIDOS DE ESCÁNER ───
+function beep(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'ok') {
+      // Pitido corto y agudo — escáner de supermercado
+      osc.frequency.setValueAtTime(1400, ctx.currentTime);
+      osc.frequency.setValueAtTime(1800, ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.18);
+    } else if (type === 'dup') {
+      // Pitido doble — ya registrado
+      osc.frequency.setValueAtTime(900, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.setValueAtTime(0.001, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.13);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.22);
+    } else if (type === 'error') {
+      // Pitido grave — error
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.type = 'sawtooth';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch(e) { /* AudioContext not available */ }
+}
+
 const _origScanSuccess = onScanSuccess;
 window.onScanSuccess = async function(txt) {
   if (scanCooldown) return;
   let data;
-  try { data = JSON.parse(txt); } catch(e) { setStatus('error','❌ QR inválido'); return; }
-  if (!data.id || data.app !== 'asistapp') { setStatus('error','❌ QR no reconocido'); return; }
+  try { data = JSON.parse(txt); } catch(e) { setStatus('error','❌ QR inválido'); playBeep('error'); return; }
+  if (!data.id || data.app !== 'asistapp') { setStatus('error','❌ QR no reconocido'); playBeep('error'); return; }
   const student = students.find(s=>s.id===data.id);
-  if (!student) { setStatus('error','❌ Alumno no encontrado'); triggerCooldown(); return; }
+  if (!student) { setStatus('error','❌ Alumno no encontrado'); playBeep('error'); triggerCooldown(); return; }
   if (student.cursoId !== activeScanId) {
     const otro = getCurso(student.cursoId);
     setStatus('error','⚠ Alumno de '+(otro?otro.nombre:'otro curso'));
-    triggerCooldown(); return;
+    playBeep('error'); triggerCooldown(); return;
   }
   const date = document.getElementById('scan-date').value;
   if (!attendance[student.id]) attendance[student.id] = {};
   if (attendance[student.id][date]) {
     setStatus('error','⚠ '+student.full+' — ya registrado');
-    addLogEntry(student,'dup'); triggerCooldown(); return;
+    addLogEntry(student,'dup'); playBeep('dup'); triggerCooldown(); return;
   }
   attendance[student.id][date] = true;
   setStatus('success','✅ PRESENTE — '+student.full);
   addLogEntry(student,'ok');
   updateDayStats(date);
+  playBeep('ok');
   triggerCooldown();
   try { await sbSaveAttendance(student.id, date, 'P'); } catch(e) { console.warn('scan save error', e); }
 };
