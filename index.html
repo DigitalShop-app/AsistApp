@@ -25,9 +25,9 @@
   .logo span { color: var(--teal-light); }
   .logo-badge { background: var(--gold); color: var(--ink); font-family: 'DM Mono', monospace; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; font-weight: 500; letter-spacing: 1px; }
   nav { display: flex; gap: 4px; }
-  .nav-btn { background: transparent; color: rgba(255,255,255,0.6); border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
-  .nav-btn:hover { background: rgba(255,255,255,0.08); color: white; }
-  .nav-btn.active { background: var(--teal); color: white; }
+  .nav-btn { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
+  .nav-btn:hover { background: rgba(255,255,255,0.14); color: white; }
+  .nav-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
 
   .view { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
   .view.active { display: block; }
@@ -163,6 +163,23 @@
   .admin-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
   .badge-active { background:#d4edda; color:#155724; }
   .badge-admin  { background:#fff3cd; color:#856404; }
+
+  /* OFFLINE INDICATOR */
+  .offline-banner { display:none; position:fixed; bottom:0; left:0; right:0; background:#f59e0b; color:#1a1a2e; text-align:center; padding:8px; font-weight:800; font-size:0.82rem; z-index:999; }
+  .offline-banner.show { display:block; }
+  .pending-badge { display:inline-block; background:var(--gold); color:var(--ink); border-radius:10px; font-size:0.68rem; font-weight:800; padding:1px 6px; margin-left:4px; }
+
+  /* CONSECUTIVE ABSENCES */
+  .student-item.alert-absent .student-name::after { content:'⚠️'; margin-left:6px; font-size:0.85rem; }
+  .absent-alert-badge { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:8px; padding:2px 8px; font-size:0.72rem; font-weight:800; margin-left:6px; }
+
+  /* OBSERVATIONS MODAL */
+  .obs-entry { background:var(--paper); border-radius:10px; padding:12px 14px; margin-bottom:10px; border-left:3px solid var(--teal); }
+  .obs-entry-date { font-size:0.72rem; color:#9ca3af; font-weight:700; margin-bottom:4px; font-family:'DM Mono',monospace; }
+  .obs-entry-text { font-size:0.88rem; color:var(--ink); white-space:pre-wrap; }
+  .obs-entry-files { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .obs-file-thumb { width:56px; height:56px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid var(--border); }
+  .obs-file-doc { display:flex; align-items:center; gap:4px; background:white; border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:0.75rem; font-weight:700; cursor:pointer; color:var(--slate); }
 
   .print-area { display: none; }
   @media print {
@@ -511,8 +528,7 @@
 <div class="view active" id="view-cursos">
   <div class="page-title">🏫 Mis Cursos</div>
   <p class="page-sub">Creá un curso por cada división o materia. Cada uno tiene su propia nómina y planilla.</p>
-  <div class="cursos-grid" id="cursos-grid"></div>
-  <div class="card" style="max-width:560px">
+  <div class="card" style="max-width:560px;margin-bottom:1.5rem">
     <div class="card-title">➕ Crear Nuevo Curso</div>
     <div class="grid-2">
       <div class="field">
@@ -530,6 +546,7 @@
     </div>
     <button class="btn btn-primary btn-full" onclick="addCurso()">🏫 Crear Curso</button>
   </div>
+  <div class="cursos-grid" id="cursos-grid"></div>
 </div>
 
 <!-- ═══ NÓMINA ═══ -->
@@ -612,9 +629,9 @@
       </div>
       <div>
         <div class="scan-status idle" id="scan-status">📡 Esperando escaneo...</div>
-        <div id="scan-name-display" style="display:none;text-align:center;padding:16px 12px;margin-bottom:1rem;border-radius:14px;background:var(--mist);border:2px solid var(--teal)">
-          <div style="font-family:'DM Serif Display',serif;font-size:1.9rem;color:var(--ink);line-height:1.2" id="scan-big-name"></div>
-          <div style="font-size:0.78rem;color:var(--teal);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px" id="scan-big-status"></div>
+        <div id="scan-name-display" style="display:none;text-align:center;padding:20px 16px;margin-bottom:1rem;border-radius:16px;background:var(--mist);border:3px solid var(--teal)">
+          <div style="font-family:'DM Serif Display',serif;font-size:2.4rem;color:var(--ink);line-height:1.1;letter-spacing:-0.5px" id="scan-big-name"></div>
+          <div style="font-size:0.9rem;color:var(--teal);font-weight:800;margin-top:6px;text-transform:uppercase;letter-spacing:1px" id="scan-big-status"></div>
         </div>
         <div class="card" style="margin-bottom:1rem">
           <div class="card-title">📋 Registro del día</div>
@@ -777,12 +794,46 @@
   </div>
 </div>
 
+<!-- ═══ OBSERVATIONS MODAL ═══ -->
+<div class="modal-overlay" id="obs-modal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div class="card-title" style="font-size:1.1rem;margin:0">📝 Observaciones</div>
+      <button onclick="document.getElementById('obs-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div id="obs-student-name" style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--slate);margin-bottom:1.2rem"></div>
+
+    <!-- Nueva observación -->
+    <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.2rem;border:1.5px solid rgba(15,155,142,0.3)">
+      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">✏️ Nueva observación</div>
+      <textarea id="obs-text-input" placeholder="Escribí la observación o seguimiento del alumno..." style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+          📎 Adjuntar archivo
+          <input type="file" id="obs-file-input" multiple accept="image/*,.pdf,.doc,.docx,audio/*" style="display:none" onchange="obsPreviewFiles(this)">
+        </label>
+        <div id="obs-file-preview" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="saveObservation()">💾 Guardar observación</button>
+    </div>
+
+    <!-- Lista de observaciones -->
+    <div id="obs-list">
+      <div style="text-align:center;color:#9ca3af;font-size:0.85rem;padding:1rem">Sin observaciones registradas</div>
+    </div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer>
   Desarrollado por &nbsp;<span class="brand">Digital Shop</span>
 </footer>
 
-</div><!-- end app-wrapper -->
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offline-banner">
+  📡 Sin conexión — Los registros se guardan localmente y se sincronizarán al reconectarse
+  <span id="pending-count-banner"></span>
+</div>
 
 <!-- ═══ EDIT STUDENT MODAL ═══ -->
 <div class="modal-overlay" id="edit-student-modal">
@@ -989,13 +1040,22 @@ function renderStudentList() {
     el.innerHTML = '<div class="empty-state" style="padding:1.5rem 1rem"><div class="ei" style="font-size:2rem">🎒</div><p>Sin alumnos aún</p></div>';
     return;
   }
-  el.innerHTML = list.map((s,i) => `
-    <div class="student-item">
-      <span class="student-num">${String(i+1).padStart(2,'0')}</span>
-      <span class="student-name">${s.apellido?`<strong>${s.apellido}</strong>, ${s.nombre}`:`<strong>${s.nombre}</strong>`}</span>
+  el.innerHTML = list.map((s,i) => {
+    const consec = getConsecutiveAbsences(s.id);
+    const alert  = consec >= 3;
+    const obsCount = getObservationCount(s.id);
+    return `
+    <div class="student-item${alert?' alert-absent':''}">
+      <span class="student-num" onclick="openObservations('${s.id}')" title="Ver observaciones" style="cursor:pointer">${String(i+1).padStart(2,'0')}</span>
+      <span class="student-name" onclick="openObservations('${s.id}')" style="cursor:pointer" title="Ver observaciones">
+        ${s.apellido?`<strong>${s.apellido}</strong>, ${s.nombre}`:`<strong>${s.nombre}</strong>`}
+        ${alert?`<span class="absent-alert-badge">⚠️ ${consec} ausentes</span>`:''}
+        ${obsCount>0?`<span style="background:var(--teal);color:white;border-radius:10px;font-size:0.68rem;font-weight:800;padding:1px 6px;margin-left:4px">📝 ${obsCount}</span>`:''}
+      </span>
       <button class="btn btn-secondary btn-sm" onclick="openEditStudent('${s.id}')" title="Editar" style="padding:5px 9px">✏️</button>
       <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function clearStudents() {
@@ -1092,21 +1152,43 @@ function downloadQR() {
 
 function printQRs() {
   if (!activeQrId) return;
-  const list = studentsOf(activeQrId); const c = getCurso(activeQrId);
+  const list = studentsOf(activeQrId);
+  const c = getCurso(activeQrId);
   if (!list.length) { showToast('⚠ No hay alumnos'); return; }
-  const pa = document.getElementById('print-area');
-  pa.innerHTML = `<p style="font-family:Arial;padding:1rem 1rem 0;font-size:13px;font-weight:bold">${c?c.nombre+(c.materia?' — '+c.materia:''):''}</p><div class="print-qr-grid" id="pqg"></div>`;
-  const grid = document.getElementById('pqg');
-  list.forEach((s,i) => {
-    const d = document.createElement('div'); d.className='print-qr-item';
-    const qd = document.createElement('div'); qd.id='pqr_'+s.id;
-    const p = document.createElement('p'); p.textContent = s.full;
-    const sm = document.createElement('small'); sm.textContent = c?c.nombre:'';
-    d.appendChild(qd); d.appendChild(p); d.appendChild(sm);
-    grid.appendChild(d);
-    setTimeout(()=>{ new QRCode(qd,{text:JSON.stringify({id:s.id,name:s.full,cursoId:s.cursoId,app:'asistapp'}),width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }, i*20);
-  });
-  setTimeout(()=>window.print(), list.length*25+600);
+
+  // Build print content in a new window to avoid blank page issues
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>QR — ${c?c.nombre:''}</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 1rem; background: white; }
+    h2 { font-size: 14px; margin-bottom: 1rem; }
+    .grid { display: flex; flex-wrap: wrap; gap: 12px; }
+    .item { text-align: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 150px; page-break-inside: avoid; }
+    .item p { font-size: 11px; font-weight: bold; margin-top: 6px; margin-bottom: 2px; }
+    .item small { font-size: 9px; color: #666; }
+    @media print { body { margin: 0; } }
+  </style></head><body>
+  <h2>${c ? c.nombre + (c.materia?' — '+c.materia:'') : ''}</h2>
+  <div class="grid" id="qr-grid"></div>
+  <script>
+    const students = ${JSON.stringify(list.map(s=>({id:s.id,full:s.full,cursoId:s.cursoId})))};
+    const grid = document.getElementById('qr-grid');
+    students.forEach((s,i) => {
+      const item = document.createElement('div'); item.className='item';
+      const qd = document.createElement('div'); qd.id='q'+i;
+      const p = document.createElement('p'); p.textContent = s.full;
+      const sm = document.createElement('small'); sm.textContent = '${c?c.nombre:''}';
+      item.appendChild(qd); item.appendChild(p); item.appendChild(sm);
+      grid.appendChild(item);
+      setTimeout(()=>{
+        new QRCode(qd,{text:JSON.stringify({id:s.id,name:s.full,cursoId:s.cursoId,app:'asistapp'}),width:120,height:120,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+      }, i*30);
+    });
+    setTimeout(()=>{ window.print(); }, students.length*35+800);
+  <\/script></body></html>`);
+  win.document.close();
 }
 
 // ─── SCANNER ───
@@ -1328,6 +1410,19 @@ function cycleAttendance(studentId, date, el) {
   else attendance[studentId][date] = next;
   save();
   el.innerHTML = renderBadge(next);
+
+  // Offline-aware save
+  const estado = next === true ? 'P' : next || null;
+  if (isOnline) {
+    if (next === undefined) {
+      sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${date}&user_id=eq.${_sbUserId}`, { method:'DELETE', prefer:'return=minimal' }).catch(()=>queueSync(studentId,date,estado));
+    } else {
+      sbSaveAttendance(studentId, date, estado).catch(()=>queueSync(studentId,date,estado));
+    }
+  } else {
+    queueSync(studentId, date, estado);
+  }
+
   // Update % cell in same row
   if (activePlanillaId) {
     const dates = datesForCurso(activePlanillaId);
@@ -1336,7 +1431,6 @@ function cycleAttendance(studentId, date, el) {
     const col   = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
     const row   = el.closest('tr');
     if (row) { const last = row.lastElementChild; last.style.color=col; last.textContent=pct+'%'; }
-    // Refresh global stats
     const list_ = studentsOf(activePlanillaId);
     const totalPres = list_.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length,0);
     const totalPoss = list_.length*dates.length;
@@ -1382,6 +1476,16 @@ function markAbsent(studentId, val, date) {
   if (row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
   updateDayStats(date);
   showToast(val==='A' ? '🔴 Ausente registrado' : '🟡 Tarde registrado');
+  // Check for 3 consecutive absences
+  if (val === 'A') {
+    const consec = getConsecutiveAbsences(studentId);
+    if (consec >= 3) {
+      const s = students.find(x=>x.id===studentId);
+      showToast(`⚠️ ${s?s.full:'Alumno'} tiene ${consec} ausentes consecutivos`);
+    }
+  }
+  if (isOnline) sbSaveAttendance(studentId, date, val).catch(()=>queueSync(studentId,date,val));
+  else queueSync(studentId, date, val);
 }
 
 function markAllAbsent() {
@@ -1644,38 +1748,35 @@ function playBeep(type = 'ok') {
     osc.connect(gain);
     gain.connect(ctx.destination);
     if (type === 'ok') {
-      // Éxito: pitido corto y agudo (escáner de supermercado)
       osc.type = 'square';
       osc.frequency.setValueAtTime(1200, ctx.currentTime);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.8, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.12);
+      osc.stop(ctx.currentTime + 0.18);
     } else if (type === 'dup') {
-      // Ya registrado: dos pitidos cortos
       osc.type = 'square';
       osc.frequency.setValueAtTime(700, ctx.currentTime);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.7, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.08);
+      osc.stop(ctx.currentTime + 0.1);
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.connect(gain2); gain2.connect(ctx.destination);
       osc2.type = 'square';
-      osc2.frequency.setValueAtTime(700, ctx.currentTime + 0.13);
-      gain2.gain.setValueAtTime(0.2, ctx.currentTime + 0.13);
-      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.21);
-      osc2.start(ctx.currentTime + 0.13);
-      osc2.stop(ctx.currentTime + 0.21);
+      osc2.frequency.setValueAtTime(700, ctx.currentTime + 0.15);
+      gain2.gain.setValueAtTime(0.7, ctx.currentTime + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc2.start(ctx.currentTime + 0.15);
+      osc2.stop(ctx.currentTime + 0.25);
     } else {
-      // Error: buzz grave
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(200, ctx.currentTime);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.8, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
+      osc.stop(ctx.currentTime + 0.35);
     }
     ctx.close && setTimeout(() => ctx.close(), 500);
   } catch(e) { /* Audio API no disponible */ }
@@ -2237,7 +2338,11 @@ window.onScanSuccess = async function(txt) {
   updateDayStats(date);
   playBeep('ok');
   triggerCooldown();
-  try { await sbSaveAttendance(student.id, date, 'P'); } catch(e) { console.warn('scan save error', e); }
+  if (isOnline) {
+    try { await sbSaveAttendance(student.id, date, 'P'); } catch(e) { queueSync(student.id, date, 'P'); }
+  } else {
+    queueSync(student.id, date, 'P');
+  }
 };
 
 // Patch importCSV to also save to Supabase
@@ -2270,6 +2375,204 @@ window.importCSV = function() {
 function showToast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
   setTimeout(()=>{t.style.display='none';},3500);
+}
+
+// ════════════════════════════════════════
+// ════════════════════════════════════════
+// OFFLINE MODE & SYNC
+// ════════════════════════════════════════
+let isOnline = navigator.onLine;
+let pendingSync = []; // [{type, studentId, fecha, estado}]
+
+function initOfflineMode() {
+  // Load pending queue from localStorage
+  try { pendingSync = JSON.parse(localStorage.getItem('aa_pending_sync')||'[]'); } catch(e) { pendingSync = []; }
+  updateOfflineBanner();
+
+  window.addEventListener('online',  () => { isOnline = true;  updateOfflineBanner(); syncPending(); });
+  window.addEventListener('offline', () => { isOnline = false; updateOfflineBanner(); });
+}
+
+function updateOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  if (!isOnline) {
+    banner.classList.add('show');
+    const pc = document.getElementById('pending-count-banner');
+    if (pc && pendingSync.length > 0) pc.textContent = ` (${pendingSync.length} pendientes)`;
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function queueSync(studentId, fecha, estado) {
+  // Remove any existing entry for same student+date
+  pendingSync = pendingSync.filter(p => !(p.studentId===studentId && p.fecha===fecha));
+  pendingSync.push({ studentId, fecha, estado, ts: Date.now() });
+  localStorage.setItem('aa_pending_sync', JSON.stringify(pendingSync));
+  updateOfflineBanner();
+}
+
+async function syncPending() {
+  if (!isOnline || pendingSync.length === 0) return;
+  const queue = [...pendingSync];
+  let synced = 0;
+  for (const item of queue) {
+    try {
+      if (item.estado === null) {
+        await sbFetch(`attendance?student_id=eq.${item.studentId}&fecha=eq.${item.fecha}&user_id=eq.${_sbUserId}`, { method:'DELETE', prefer:'return=minimal' });
+      } else {
+        await sbSaveAttendance(item.studentId, item.fecha, item.estado);
+      }
+      pendingSync = pendingSync.filter(p => !(p.studentId===item.studentId && p.fecha===item.fecha));
+      synced++;
+    } catch(e) { /* leave in queue */ }
+  }
+  localStorage.setItem('aa_pending_sync', JSON.stringify(pendingSync));
+  if (synced > 0) showToast(`✅ ${synced} registro${synced!==1?'s':''} sincronizado${synced!==1?'s':''}`);
+}
+
+// ════════════════════════════════════════
+// CONSECUTIVE ABSENCES
+// ════════════════════════════════════════
+function getConsecutiveAbsences(studentId) {
+  const att = attendance[studentId] || {};
+  const dates = Object.keys(att).sort().reverse(); // most recent first
+  let count = 0;
+  for (const d of dates) {
+    if (att[d] === 'A') count++;
+    else break;
+  }
+  return count;
+}
+
+// ════════════════════════════════════════
+// OBSERVATIONS
+// ════════════════════════════════════════
+// observations stored in localStorage: {studentId: [{id, date, text, files:[{name,type,data}]}]}
+let observations = {};
+
+function loadObservations() {
+  try { observations = JSON.parse(localStorage.getItem('aa_observations')||'{}'); } catch(e) { observations = {}; }
+}
+
+function saveObservations() {
+  localStorage.setItem('aa_observations', JSON.stringify(observations));
+}
+
+function getObservationCount(studentId) {
+  return (observations[studentId]||[]).length;
+}
+
+let obsCurrentStudentId = null;
+let obsCurrentFiles = []; // [{name, type, dataUrl}]
+
+function openObservations(studentId) {
+  const s = students.find(x=>x.id===studentId); if (!s) return;
+  obsCurrentStudentId = studentId;
+  obsCurrentFiles = [];
+  document.getElementById('obs-student-name').textContent = s.full;
+  document.getElementById('obs-text-input').value = '';
+  document.getElementById('obs-file-preview').innerHTML = '';
+  renderObsList(studentId);
+  document.getElementById('obs-modal').classList.add('open');
+}
+
+function renderObsList(studentId) {
+  const list = (observations[studentId]||[]).slice().reverse(); // newest first
+  const el = document.getElementById('obs-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;color:#9ca3af;font-size:0.85rem;padding:1rem">Sin observaciones registradas</div>';
+    return;
+  }
+  el.innerHTML = list.map((obs, idx) => {
+    const realIdx = (observations[studentId]||[]).length - 1 - idx;
+    const filesHtml = (obs.files||[]).map(f => {
+      if (f.type && f.type.startsWith('image/')) {
+        return `<img src="${f.data}" class="obs-file-thumb" onclick="window.open('${f.data}','_blank')" title="${f.name}">`;
+      } else if (f.type && f.type.startsWith('audio/')) {
+        return `<div class="obs-file-doc">🎵 ${f.name}<audio controls src="${f.data}" style="height:24px;margin-left:6px"></audio></div>`;
+      } else {
+        return `<div class="obs-file-doc" onclick="downloadObsFile('${studentId}',${realIdx},'${f.name}')">📄 ${f.name}</div>`;
+      }
+    }).join('');
+    return `<div class="obs-entry">
+      <div class="obs-entry-date">${obs.date} ${obs.time||''} &nbsp;
+        <button onclick="deleteObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:#e85d75;font-size:0.75rem;font-weight:700">✕ Eliminar</button>
+        <button onclick="editObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--teal);font-size:0.75rem;font-weight:700">✏️ Editar</button>
+      </div>
+      <div class="obs-entry-text" id="obs-text-${realIdx}">${obs.text||''}</div>
+      ${filesHtml ? `<div class="obs-entry-files">${filesHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function obsPreviewFiles(input) {
+  const preview = document.getElementById('obs-file-preview');
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      obsCurrentFiles.push({ name: file.name, type: file.type, data: e.target.result });
+      if (file.type.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'obs-file-thumb';
+        preview.appendChild(img);
+      } else {
+        const d = document.createElement('div');
+        d.className = 'obs-file-doc';
+        d.textContent = (file.type.startsWith('audio/') ? '🎵 ' : '📄 ') + file.name;
+        preview.appendChild(d);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function saveObservation() {
+  const text = document.getElementById('obs-text-input').value.trim();
+  if (!text && obsCurrentFiles.length === 0) { showToast('⚠ Escribí una observación o adjuntá un archivo'); return; }
+  if (!observations[obsCurrentStudentId]) observations[obsCurrentStudentId] = [];
+  const now = new Date();
+  observations[obsCurrentStudentId].push({
+    id: Date.now(),
+    date: now.toLocaleDateString('es-AR'),
+    time: now.toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}),
+    text,
+    files: [...obsCurrentFiles]
+  });
+  saveObservations();
+  obsCurrentFiles = [];
+  document.getElementById('obs-text-input').value = '';
+  document.getElementById('obs-file-preview').innerHTML = '';
+  renderObsList(obsCurrentStudentId);
+  renderStudentList(); // update badge
+  showToast('✅ Observación guardada');
+}
+
+function deleteObservation(studentId, idx) {
+  if (!observations[studentId]) return;
+  observations[studentId].splice(idx, 1);
+  saveObservations();
+  renderObsList(studentId);
+  renderStudentList();
+}
+
+function editObservation(studentId, idx) {
+  const obs = (observations[studentId]||[])[idx]; if (!obs) return;
+  const newText = prompt('Editá la observación:', obs.text);
+  if (newText === null) return;
+  observations[studentId][idx].text = newText.trim();
+  saveObservations();
+  renderObsList(studentId);
+}
+
+function downloadObsFile(studentId, idx, fileName) {
+  const obs = (observations[studentId]||[])[idx]; if (!obs) return;
+  const file = (obs.files||[]).find(f=>f.name===fileName); if (!file) return;
+  const a = document.createElement('a'); a.href = file.data; a.download = file.name; a.click();
 }
 
 // ════════════════════════════════════════
@@ -2390,6 +2693,8 @@ window.showView = function(id, btn) {
 // ════════════════════════════════════════
 (async function init() {
   setTodayDate();
+  initOfflineMode();
+  loadObservations();
   const saved = localStorage.getItem('aa_sb_session');
   if (saved) {
     try {
