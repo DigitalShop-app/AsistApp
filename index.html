@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script>emailjs.init('DTkSJR0L6SnnogCo6');</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800&family=Barlow+Condensed:wght@600;700&family=Raleway:wght@400;500;700&display=swap');
@@ -94,8 +95,10 @@
   .qr-card { background: white; border-radius: 12px; padding: 1.2rem; text-align: center; border: 2px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
   .qr-card:hover { border-color: var(--teal); box-shadow: var(--shadow); transform: translateY(-2px); }
   .qr-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg,var(--teal),var(--teal-light)); }
-  .qr-name { font-weight: 800; font-size: 1rem; color: var(--ink); margin-top: 10px; line-height: 1.3; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; }
-  .qr-id { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--teal); background: var(--mist); padding: 3px 10px; border-radius: 20px; margin-top: 6px; display: inline-block; font-weight: 700; }
+  .qr-apellido { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-top: 10px; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.8px; }
+  .qr-nombre   { font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 400; color: var(--slate); line-height: 1.2; margin-top: 2px; }
+  .qr-meta     { font-size: 0.72rem; color: #6b7280; margin-top: 5px; line-height: 1.4; }
+  .qr-id       { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--teal); margin-top: 4px; display: block; font-weight: 700; text-align: center; }
   .qr-container { margin: 0 auto; width: fit-content; }
   .qr-container canvas, .qr-container img { border-radius: 6px; }
 
@@ -117,33 +120,40 @@
   .log-time { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #6b7280; min-width: 48px; }
 
   /* PLANILLA - sticky first columns */
-  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); width: 100%; }
+  .table-wrap table { min-width: max-content; width: auto; }
+  table { border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
   thead tr { background: var(--slate); color: white; }
   th { padding: 10px 14px; text-align: left; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.5px; white-space: nowrap; }
   th.date-col { text-align: center; min-width: 68px; }
   td { padding: 9px 14px; border-bottom: 1px solid var(--paper); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--mist); }
-  td.name-cell { font-weight: 700; white-space: nowrap; }
+  td.name-cell { font-weight: 700; white-space: nowrap; max-width: 220px; }
   td.name-cell:hover { color: var(--teal); text-decoration: underline; }
   td.num-cell { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
   td.att-cell { text-align: center; }
 
   /* Sticky columns for planilla */
   .att-table th:nth-child(1), .att-table td:nth-child(1) {
-    position: sticky; left: 0; z-index: 2;
-    background: var(--slate);
+    position: sticky; left: 0; z-index: 3;
+    background: var(--slate); min-width: 44px; max-width: 44px;
   }
   .att-table td:nth-child(1) { background: var(--paper); }
   .att-table tr:hover td:nth-child(1) { background: #dde0f0; }
   .att-table th:nth-child(2), .att-table td:nth-child(2) {
-    position: sticky; left: 44px; z-index: 2;
-    background: var(--slate);
-    box-shadow: 2px 0 6px rgba(0,0,0,0.08);
+    position: sticky; left: 44px; z-index: 3;
+    background: var(--slate); min-width: 190px;
+    box-shadow: 3px 0 8px rgba(0,0,0,0.12);
   }
   .att-table td:nth-child(2) { background: white; }
   .att-table tr:hover td:nth-child(2) { background: var(--mist); }
+  /* Separador visual después de la columna fija */
+  .att-table th:nth-child(2)::after, .att-table td:nth-child(2)::after {
+    content:''; position:absolute; right:0; top:0; bottom:0; width:3px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.08), transparent);
+  }
+  .att-table th:nth-child(2), .att-table td:nth-child(2) { position:sticky; left:44px; }
 
   .badge-p { display: inline-block; background: var(--success); color: white; width: 26px; height: 26px; line-height: 26px; border-radius: 6px; font-weight: 800; font-size: 0.85rem; text-align: center; }
   .badge-empty { display: inline-block; width: 26px; height: 26px; border-radius: 6px; border: 2px dashed #d1d5db; }
@@ -209,10 +219,10 @@
   /* OBSERVATIONS MODAL */
   .obs-entry { background: var(--paper); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
   .obs-entry-date { 
-    font-family: 'DM Mono', monospace; font-size: 0.75rem; 
-    color: var(--slate); font-weight: 700; margin-bottom: 6px; 
-    background: rgba(15,155,142,0.1); display: inline-block;
-    padding: 2px 8px; border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 0.88rem; font-weight: 600;
+    color: white; letter-spacing: 0.5px;
+    background: var(--teal); display: inline-block;
+    padding: 2px 10px; border-radius: 6px;
   }
   .obs-entry-text { font-size: 0.88rem; color: var(--ink); white-space: pre-wrap; margin-top: 4px; }
   .obs-entry-files { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
@@ -720,11 +730,11 @@
   </div>
   <div id="planilla-content" style="display:none">
     <div class="curso-bar" id="planilla-bar"></div>
-    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="renderAttendanceTable()">🔄 Actualizar</button>
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" onclick="openAddDayModal()">📅 Agregar día</button>
       <button class="btn btn-secondary" onclick="openExportModal()">📥 Exportar / Informe</button>
       <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
-      <button class="btn btn-gold" onclick="window.print()">🖨 Imprimir</button>
+      <button class="btn btn-gold" onclick="printPlanilla()">🖨 Imprimir</button>
     </div>
     <div class="stat-chips" id="global-stats" style="margin-bottom:1.5rem"></div>
     <div class="table-wrap">
@@ -735,6 +745,25 @@
     </div>
   </div>
   <div id="planilla-empty" class="empty-state"><div class="ei">📊</div><p>Seleccioná un curso para ver su planilla</p></div>
+</div>
+
+<!-- MODAL AGREGAR DÍA -->
+<div class="modal-overlay" id="add-day-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:360px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;color:var(--slate);letter-spacing:0.5px">📅 Agregar día de clase</h3>
+      <button onclick="document.getElementById('add-day-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div class="field">
+      <label>Seleccioná la fecha</label>
+      <input type="date" id="add-day-date">
+    </div>
+    <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem">Se agregará una columna vacía para esa fecha. Podés pasar asistencia tocando cada celda.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="document.getElementById('add-day-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmAddDay()">✅ Agregar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL QR -->
@@ -796,7 +825,7 @@
     <div class="export-section">
       <div class="export-section-title">📤 Acciones disponibles</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary" onclick="exportCSV()">📄 Exportar CSV básico</button>
+        <button class="btn btn-secondary" onclick="exportXLSX()">📊 Exportar Excel</button>
         <button class="btn btn-primary" onclick="generateReport()">📊 Generar informe estadístico</button>
       </div>
     </div>
@@ -843,20 +872,7 @@
 
     <!-- Nueva observación -->
     <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.2rem;border:1.5px solid rgba(15,155,142,0.3)">
-      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">✏️ Nueva observación</div>
-
-      <!-- Category selector -->
-      <div style="margin-bottom:10px">
-        <div style="font-size:0.78rem;font-weight:700;color:#6b7280;margin-bottom:8px">Categoría</div>
-        <div class="cat-selector" id="cat-selector">
-          <div class="cat-opt cat-general selected" onclick="selectCat('general',this)" data-cat="general">📋 General</div>
-          <div class="cat-opt cat-academico" onclick="selectCat('academico',this)" data-cat="academico">📚 Académico</div>
-          <div class="cat-opt cat-conducta" onclick="selectCat('conducta',this)" data-cat="conducta">⚠️ Conducta</div>
-          <div class="cat-opt cat-salud" onclick="selectCat('salud',this)" data-cat="salud">🏥 Salud</div>
-          <div class="cat-opt cat-logro" onclick="selectCat('logro',this)" data-cat="logro">⭐ Logro</div>
-          <div class="cat-opt cat-familia" onclick="selectCat('familia',this)" data-cat="familia">👨‍👩‍👧 Familia</div>
-        </div>
-      </div>
+      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">✏️ Nueva observación</div>
 
       <textarea id="obs-text-input" placeholder="Escribí la observación o seguimiento del alumno..." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
 
@@ -1101,16 +1117,16 @@ function renderStudentList() {
     const hasAlert = consec >= 3 && !isDismissedAlert(s.id);
     const notified = isDismissedAlert(s.id) === 'notified';
     return `
-    <div class="student-item" style="${hasAlert?'border-color:#ffc107;background:#fffdf0;':''}">
-      <span class="student-num" onclick="openObservations('${s.id}')" title="Ver observaciones" style="cursor:pointer">${String(i+1).padStart(2,'0')}</span>
-      <span class="student-name" onclick="openObservations('${s.id}')" style="cursor:pointer" title="Ver observaciones">
+    <div class="student-item" onclick="openObservations('${s.id}')" title="Ver observaciones" style="cursor:pointer;${hasAlert?'border-color:#ffc107;background:#fffdf0;':''}">
+      <span class="student-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="student-name">
         ${s.apellido?`<strong>${s.apellido}</strong>, ${s.nombre}`:`<strong>${s.nombre}</strong>`}
         ${hasAlert?`<span class="absent-alert-badge">⚠️ ${consec} ausencias</span>`:''}
         ${notified?`<span style="background:#e8f4f2;color:var(--teal);border-radius:8px;font-size:0.68rem;font-weight:800;padding:2px 8px;margin-left:6px;border:1px solid var(--teal)">✅ Avisado</span>`:''}
         ${obsCount>0?`<span style="background:var(--teal);color:white;border-radius:10px;font-size:0.68rem;font-weight:800;padding:1px 6px;margin-left:4px">📝 ${obsCount}</span>`:''}
       </span>
-      <button class="btn btn-secondary btn-sm" onclick="openEditStudent('${s.id}')" title="Editar" style="padding:5px 9px">✏️</button>
-      <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}')">✕</button>
+      <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openEditStudent('${s.id}')" title="Editar" style="padding:5px 9px">✏️</button>
+      <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeStudent('${s.id}')">✕</button>
     </div>`;
   }).join('');
   renderNominaAlerts(list);
@@ -1228,12 +1244,15 @@ function generateQRs() {
   list.forEach((s,i) => {
     const shortId = s.id.slice(-6).toUpperCase();
     const card = document.createElement('div'); card.className = 'qr-card'; card.onclick = () => openModal(s);
-    const apellidoDisplay = (s.apellido || '').toUpperCase();
-    const nombreDisplay = (s.nombre || '').toUpperCase();
+    const apellido = (s.apellido || s.nombre || '').toUpperCase();
+    const nombre   = s.apellido ? s.nombre || '' : '';
+    const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
     card.innerHTML = `
       <div class="qr-container" id="qr_${s.id}"></div>
-      <div class="qr-name">${apellidoDisplay}${apellidoDisplay&&nombreDisplay?'<br>':''}${nombreDisplay}</div>
-      <div class="qr-id">${c?c.nombre:''} · ID: ${shortId}</div>`;
+      <div class="qr-apellido">${apellido}</div>
+      ${nombre ? `<div class="qr-nombre">${nombre}</div>` : ''}
+      ${metaLine ? `<div class="qr-meta">${metaLine}</div>` : ''}
+      <span class="qr-id">ID: ${shortId}</span>`;
     grid.appendChild(card);
     setTimeout(() => {
       const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
@@ -1276,67 +1295,96 @@ function printQRs() {
   const c = getCurso(activeQrId);
   if (!list.length) { showToast('⚠ No hay alumnos'); return; }
 
-  const printArea = document.getElementById('print-area');
-  printArea.innerHTML = '';
+  showToast('⏳ Generando QRs para impresión...');
 
-  // Build print layout in the print area (no new tab)
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'font-family: Arial, sans-serif; padding: 1rem;';
-
-  // Header with logo
-  const header = document.createElement('div');
-  header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;border-bottom:3px solid #0f9b8e;padding-bottom:10px;';
-  header.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:1.6rem">📋</span>
-      <div>
-        <div style="font-size:1.3rem;font-weight:bold;color:#1a1a2e;font-family:'Georgia',serif">Asist<span style="color:#0f9b8e">App</span></div>
-        <div style="font-size:0.75rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:1px">SISTEMA DE ASISTENCIA DOCENTE</div>
-      </div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:0.9rem;font-weight:800;color:#1a1a2e">${c ? c.nombre + (c.materia?' — '+c.materia:'') : ''}</div>
-      ${c&&c.docente?`<div style="font-size:0.75rem;color:#6b7280">${c.docente}</div>`:''}
-    </div>`;
-  wrapper.appendChild(header);
-
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:12px;';
-  wrapper.appendChild(grid);
-
-  // Footer
-  const footer = document.createElement('div');
-  footer.style.cssText = 'margin-top:1.5rem;border-top:1px solid #e0e0e0;padding-top:8px;text-align:center;font-size:0.7rem;color:#9ca3af;font-family:Raleway,Arial,sans-serif;';
-  footer.innerHTML = 'Desarrollado por <strong style="color:#0f9b8e;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:0.5px">Digital Shop</strong>';
-  wrapper.appendChild(footer);
-
-  printArea.appendChild(wrapper);
-
-  let loaded = 0;
-  list.forEach((s, i) => {
-    const item = document.createElement('div');
-    item.style.cssText = 'text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px;page-break-inside:avoid;border-top:4px solid #0f9b8e;';
-    const qDiv = document.createElement('div');
-    qDiv.id = 'pqr_' + i;
-    const shortId = s.id.slice(-6).toUpperCase();
-    const apellido = (s.apellido||'').toUpperCase();
-    const nombre = (s.nombre||'').toUpperCase();
-    item.appendChild(qDiv);
-    item.innerHTML += `
-      <p style="font-family:'Arial',sans-serif;font-size:12px;margin-top:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.3px;color:#1a1a2e;line-height:1.3">${apellido}${apellido&&nombre?'<br>':' '}${nombre}</p>
-      <div class="qr-id-print" style="font-family:monospace;font-size:9px;color:#0f9b8e;background:#e8f4f2;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:3px">ID: ${shortId}</div>`;
-    grid.appendChild(item);
-
+  // Primero generar todos los QR como imágenes base64 en canvas temporales
+  const qrPromises = list.map((s, i) => new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
+    new QRCode(tempDiv, {
+      text: qrData, width: 130, height: 130,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
     setTimeout(() => {
-      const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
-      new QRCode(document.getElementById('pqr_'+i), {
-        text: qrData, width:110, height:110, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M
-      });
-      loaded++;
-      if (loaded === list.length) {
-        setTimeout(() => { window.print(); printArea.innerHTML = ''; }, 600);
-      }
-    }, i * 30);
+      const canvas = tempDiv.querySelector('canvas');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+      document.body.removeChild(tempDiv);
+      resolve({ s, dataUrl });
+    }, 80 + i * 20);
+  }));
+
+  Promise.all(qrPromises).then(results => {
+    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+    const docenteStr  = c && c.docente ? c.docente : '';
+
+    const cardsHTML = results.map(({ s, dataUrl }) => {
+      const shortId  = s.id.slice(-6).toUpperCase();
+      const apellido = (s.apellido || s.nombre || '').toUpperCase();
+      const nombre   = s.apellido ? (s.nombre || '') : '';
+      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+      return `
+        <div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+          ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+          ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+          ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Alumnos — ${cursoNombre}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: white; color: #1a1a2e; }
+    .page { padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0f9b8e; padding-bottom: 12px; margin-bottom: 1.2rem; }
+    .logo-text { font-size: 1.5rem; font-weight: 900; color: #1a1a2e; font-family: 'Barlow Condensed', Georgia, serif; letter-spacing: 0.5px; }
+    .logo-text span { color: #0f9b8e; }
+    .logo-sub { font-size: 0.6rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; font-family: 'Nunito', sans-serif; }
+    .header-right { text-align: right; font-size: 12px; color: #6b7280; font-family: 'Nunito', sans-serif; }
+    .header-right strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; font-weight: 800; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
+    .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
+    @media print { @page { margin: 1cm; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div class="logo-text">📋 Asist<span>App</span></div>
+      <div class="logo-sub">Sistema de Asistencia Docente</div>
+    </div>
+    <div class="header-right">
+      <strong>${cursoNombre}</strong>
+      ${docenteStr ? docenteStr : ''}
+    </div>
+  </div>
+  <div class="grid">${cardsHTML}</div>
+  <div class="footer">
+    Desarrollado por <strong>Digital Shop</strong> &nbsp;·&nbsp; AsistApp Sistema de Asistencia Docente
+  </div>
+</div>
+<script>
+  // Esperar a que las fuentes carguen antes de imprimir
+  document.fonts.ready.then(function(){ window.print(); });
+<\/script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=960,height=700');
+    if (w) { w.document.write(html); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes en tu navegador para imprimir');
   });
 }
 
@@ -1590,12 +1638,40 @@ function onPlanillaCursoChange() {
 
 function datesForCurso(cid) {
   const set = new Set();
-  studentsOf(cid).forEach(s => { if(attendance[s.id]) Object.keys(attendance[s.id]).forEach(d=>set.add(d)); });
+  studentsOf(cid).forEach(s => {
+    if (attendance[s.id]) Object.keys(attendance[s.id]).forEach(d => set.add(d));
+  });
   return Array.from(set).sort();
 }
 function fmt(d) { const [y,m,day]=d.split('-'); return `${day}/${m}`; }
 
-function renderAttendanceTable() {
+// ─── AGREGAR DÍA MANUAL ───
+function openAddDayModal() {
+  if (!activePlanillaId) return;
+  const today = new Date().toLocaleDateString('en-CA');
+  document.getElementById('add-day-date').value = today;
+  document.getElementById('add-day-modal').classList.add('open');
+}
+
+async function confirmAddDay() {
+  const date = document.getElementById('add-day-date').value;
+  if (!date) { showToast('⚠ Seleccioná una fecha'); return; }
+  const list = studentsOf(activePlanillaId);
+  const existing = datesForCurso(activePlanillaId);
+  if (existing.includes(date)) { showToast('⚠ Ese día ya existe en la planilla'); return; }
+  // Crear una entrada vacía para cada alumno para que la fecha quede registrada
+  // Usamos un marcador especial 'X' que renderBadge convierte en celda vacía clicable
+  list.forEach(s => {
+    if (!attendance[s.id]) attendance[s.id] = {};
+    if (attendance[s.id][date] === undefined) attendance[s.id][date] = null;
+  });
+  document.getElementById('add-day-modal').classList.remove('open');
+  renderAttendanceTable(true); // true = scroll al final
+  showToast(`✅ Día ${fmt(date)} agregado — tocá las celdas para registrar asistencia`);
+}
+
+
+function renderAttendanceTable(scrollToEnd = false) {
   if (!activePlanillaId) return;
   const list  = studentsOf(activePlanillaId);
   const dates = datesForCurso(activePlanillaId);
@@ -1640,6 +1716,12 @@ function renderAttendanceTable() {
     <div class="chip chip-slate">👥 Alumnos: <strong>${list.length}</strong></div>
     <div class="chip chip-gold">📊 Asistencia global: <strong>${gPct}%</strong></div>
     <div style="margin-left:auto;font-size:0.75rem;color:#9ca3af;font-weight:700;align-self:center">Tocá una celda para cambiar · P → A → T → vacío</div>`;
+
+  // Auto-scroll a la última columna (más reciente) siempre que haya fechas
+  setTimeout(() => {
+    const wrap = document.querySelector('.table-wrap');
+    if (wrap) wrap.scrollLeft = wrap.scrollWidth;
+  }, 60);
 }
 
 function renderBadge(val) {
@@ -1774,31 +1856,183 @@ function updatePeriodPreview() {
   if (el) el.addEventListener('change', updatePeriodPreview);
 });
 
-function exportCSV() {
+function exportCSV() { exportXLSX(); } // alias por compatibilidad
+
+function exportXLSX() {
   if (!activePlanillaId) return;
+  if (typeof XLSX === 'undefined') { showToast('⚠ Librería Excel no cargada, intentá de nuevo'); return; }
+
   const c     = getCurso(activePlanillaId);
   const list  = studentsOf(activePlanillaId);
   const dates = getFilteredDates();
   if (!dates.length) { showToast('⚠ Sin clases en el período seleccionado'); return; }
-  const hdr  = ['#','Apellido','Nombre',...dates.map(fmt),'Presencias','Ausencias','% Asistencia'].join(',');
-  const rows = list.map((s,i) => {
-    const cells = dates.map(d => attendance[s.id]&&attendance[s.id][d]?'P':'');
-    const pres  = dates.filter(d => attendance[s.id]&&attendance[s.id][d]).length;
-    const aus   = dates.length - pres;
-    const pct   = dates.length ? Math.round(pres/dates.length*100)+'%' : '0%';
-    return [i+1, s.apellido, s.nombre, ...cells, pres, aus, pct].join(',');
+
+  const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : 'Curso';
+  const docenteStr  = c && c.docente ? 'Prof. ' + c.docente : '';
+  const periodo     = exportPeriod==='all'?'Ciclo completo':exportPeriod==='month'?'Este mes':exportPeriod==='trimestre'?'Último trimestre':`${document.getElementById('exp-from').value||'inicio'} al ${document.getElementById('exp-to').value||'hoy'}`;
+  const totalPres   = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length,0);
+  const totalPoss   = list.length * dates.length;
+  const gPct        = totalPoss > 0 ? Math.round(totalPres/totalPoss*100) : 0;
+
+  // ── Construir datos como array de arrays ──
+  const headerRow1 = ['AsistApp — Sistema de Asistencia Docente'];
+  const headerRow2 = [cursoNombre + (docenteStr ? ' · ' + docenteStr : '')];
+  const headerRow3 = [`Período: ${periodo} · ${dates.length} clase${dates.length!==1?'s':''} · Asistencia global: ${gPct}%`];
+  const emptyRow   = [''];
+  const colHeaders = ['#', 'Apellido', 'Nombre', ...dates.map(fmt), 'Presencias', 'Ausencias', '% Asistencia'];
+
+  const dataRows = list.map((s, i) => {
+    const pres = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length;
+    const aus  = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]==='A').length;
+    const tard = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]==='T').length;
+    const pct  = dates.length ? Math.round(pres/dates.length*100) : 0;
+    const attCells = dates.map(d => {
+      const v = attendance[s.id] && attendance[s.id][d];
+      return v===true?'P':v==='A'?'A':v==='T'?'T':'';
+    });
+    return [String(i+1).padStart(2,'0'), s.apellido||'', s.nombre||'', ...attCells, pres, aus, pct+'%'];
   });
-  const totalPres = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]).length,0);
-  const totalPoss = list.length*dates.length;
-  const gPct = totalPoss>0?Math.round(totalPres/totalPoss*100):0;
-  const periodo = exportPeriod==='all'?'Ciclo completo':exportPeriod==='month'?'Este mes':exportPeriod==='trimestre'?'Último trimestre':`${document.getElementById('exp-from').value||'inicio'} a ${document.getElementById('exp-to').value||'hoy'}`;
-  const summary = ['',['RESUMEN GRUPAL'].join(','),[periodo].join(','),['Total clases','','',dates.length].join(','),['Total alumnos','','',list.length].join(','),['Asistencia global','','','','','',gPct+'%'].join(',')];
-  const csv = [hdr, ...rows, ...summary].join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = `asistencia_${c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso'}_${exportPeriod}.csv`;
-  a.click();
-  showToast('✅ CSV exportado');
+
+  const summaryRows = [
+    [''],
+    ['RESUMEN GRUPAL'],
+    ['Período:', periodo],
+    ['Total clases:', dates.length],
+    ['Total alumnos:', list.length],
+    ['Asistencia global:', gPct+'%'],
+    [''],
+    ['Desarrollado por Digital Shop · AsistApp Sistema de Asistencia Docente'],
+  ];
+
+  const wsData = [headerRow1, headerRow2, headerRow3, emptyRow, colHeaders, ...dataRows, ...summaryRows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // ── Anchos de columna ──
+  ws['!cols'] = [
+    {wch:5}, {wch:22}, {wch:18},
+    ...dates.map(()=>({wch:8})),
+    {wch:12}, {wch:12}, {wch:14}
+  ];
+
+  // ── Estilos por celda usando SheetJS con xlsx-style opcional, o via fills ──
+  // Aplicar color de fondo a encabezado principal
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Función helper para crear celda con estilo
+  const styleCell = (addr, fillColor, fontColor, bold, fontSize) => {
+    if (!ws[addr]) ws[addr] = { t:'s', v:'' };
+    ws[addr].s = {
+      fill:  { fgColor: { rgb: fillColor || 'FFFFFF' } },
+      font:  { bold: bold||false, color: { rgb: fontColor||'1a1a2e' }, sz: fontSize||11, name:'Calibri' },
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: false },
+      border: { bottom:{style:'thin',color:{rgb:'d4cfc4'}}, right:{style:'thin',color:{rgb:'d4cfc4'}} }
+    };
+  };
+
+  // Fila 0: título
+  styleCell('A1', '0f9b8e', 'FFFFFF', true, 14);
+  // Fila 1: subtítulo
+  styleCell('A2', 'E8F4F2', '1a1a2e', false, 11);
+  // Fila 2: período
+  styleCell('A3', 'E8F4F2', '2d3561', false, 10);
+
+  // Fila 4 (índice 4): headers de columnas
+  const headerRowIdx = 4;
+  for (let col = range.s.c; col <= Math.min(range.e.c, 2 + dates.length + 3); col++) {
+    const addr = XLSX.utils.encode_cell({r: headerRowIdx, c: col});
+    if (!ws[addr]) ws[addr] = {t:'s',v:''};
+    ws[addr].s = {
+      fill: { fgColor: { rgb: '2d3561' } },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' },
+      alignment: { horizontal: col > 2 ? 'center' : 'left', vertical: 'center' },
+      border: { bottom:{style:'medium',color:{rgb:'0f9b8e'}} }
+    };
+  }
+
+  // Filas de datos (desde fila índice 5)
+  list.forEach((s, i) => {
+    const rowIdx = 5 + i;
+    const pres = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length;
+    const pct  = dates.length ? Math.round(pres/dates.length*100) : 0;
+    const rowBg = i%2===0 ? 'FFFFFF' : 'F0EDE4';
+    const pctColor = pct>=75?'27ae60':pct>=50?'E67E22':'E74C3C';
+
+    // # y nombre
+    for (let col=0; col<=2; col++) {
+      const addr = XLSX.utils.encode_cell({r:rowIdx, c:col});
+      if (!ws[addr]) ws[addr] = {t:'s',v:''};
+      ws[addr].s = {
+        fill: { fgColor: { rgb: rowBg } },
+        font: { bold: col===1, color: { rgb: '1a1a2e' }, sz: 11, name:'Calibri' },
+        alignment: { horizontal: 'left', vertical: 'center' },
+        border: { bottom:{style:'thin',color:{rgb:'e8e8e8'}} }
+      };
+    }
+
+    // Celdas de asistencia
+    dates.forEach((d, di) => {
+      const v   = attendance[s.id] && attendance[s.id][d];
+      const col = 3 + di;
+      const addr = XLSX.utils.encode_cell({r:rowIdx, c:col});
+      if (!ws[addr]) ws[addr] = {t:'s',v:''};
+      const bg = v===true?'E8F7EF':v==='A'?'FDE8EC':v==='T'?'FFF3CD':rowBg;
+      const fc = v===true?'27AE60':v==='A'?'E85D75':v==='T'?'856404':'9ca3af';
+      ws[addr].s = {
+        fill: { fgColor: { rgb: bg } },
+        font: { bold: true, color: { rgb: fc }, sz: 11, name:'Calibri' },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: { bottom:{style:'thin',color:{rgb:'e8e8e8'}}, right:{style:'thin',color:{rgb:'e8e8e8'}} }
+      };
+    });
+
+    // Presencias, Ausencias, %
+    const lastCols = [3+dates.length, 4+dates.length, 5+dates.length];
+    const lastColors = ['27AE60', 'E85D75', pctColor];
+    lastCols.forEach((col, ci) => {
+      const addr = XLSX.utils.encode_cell({r:rowIdx, c:col});
+      if (!ws[addr]) ws[addr] = {t:'s',v:''};
+      ws[addr].s = {
+        fill: { fgColor: { rgb: rowBg } },
+        font: { bold: true, color: { rgb: lastColors[ci] }, sz: 11, name:'Calibri' },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: { bottom:{style:'thin',color:{rgb:'e8e8e8'}} }
+      };
+    });
+  });
+
+  // ── Crear libro y descargar ──
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Asistencia');
+
+  // Hoja de resumen
+  const summaryData = [
+    ['AsistApp — Resumen de Asistencia'],
+    [cursoNombre],
+    [''],
+    ['Período', periodo],
+    ['Total clases', dates.length],
+    ['Total alumnos', list.length],
+    ['Asistencia global', gPct+'%'],
+    [''],
+    ['Alumno', 'Presencias', 'Ausencias', 'Tardanzas', '% Asistencia', 'Estado'],
+    ...list.map(s => {
+      const pres = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length;
+      const aus  = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]==='A').length;
+      const tard = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]==='T').length;
+      const pct  = dates.length ? Math.round(pres/dates.length*100) : 0;
+      const estado = pct===100?'Perfecta':pct>=90?'Excelente':pct>=75?'Regular':pct>=50?'En riesgo':'Crítica';
+      return [(s.apellido?s.apellido+', ':'')+s.nombre, pres, aus, tard, pct+'%', estado];
+    }),
+    [''],
+    ['Desarrollado por Digital Shop · AsistApp']
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(summaryData);
+  ws2['!cols'] = [{wch:28},{wch:12},{wch:12},{wch:12},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+  const fname = `asistencia_${c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso'}_${exportPeriod}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showToast('✅ Excel exportado correctamente');
   document.getElementById('export-modal').classList.remove('open');
 }
 
@@ -1863,11 +2097,141 @@ function exportReportCSV() {
   a.click();
 }
 
+function buildPrintHeader(cursoNombre, docenteStr, periodoStr) {
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0f9b8e;padding-bottom:12px;margin-bottom:1.2rem;">
+      <div>
+        <div style="font-family:'Barlow Condensed',Georgia,serif;font-size:1.5rem;font-weight:900;color:#1a1a2e;">📋 Asist<span style="color:#0f9b8e;">App</span></div>
+        <div style="font-size:0.6rem;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;font-family:sans-serif;">Sistema de Asistencia Docente</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#6b7280;font-family:sans-serif;">
+        <div style="font-weight:800;color:#1a1a2e;font-size:14px;">${cursoNombre}</div>
+        ${docenteStr ? `<div>${docenteStr}</div>` : ''}
+        ${periodoStr ? `<div style="color:#0f9b8e;font-weight:700">${periodoStr}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+function buildPrintFooter() {
+  return `<div style="margin-top:1.5rem;border-top:1px solid #e0e0e0;padding-top:8px;text-align:center;font-size:10px;color:#9ca3af;font-family:sans-serif;">
+    Desarrollado por <strong style="color:#0f9b8e;text-transform:uppercase;letter-spacing:0.5px;">Digital Shop</strong> &nbsp;·&nbsp; AsistApp Sistema de Asistencia Docente
+  </div>`;
+}
+
+function buildPrintFonts() {
+  return `<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">`;
+}
+
+function printPlanilla() {
+  if (!activePlanillaId) return;
+  const c     = getCurso(activePlanillaId);
+  const list  = studentsOf(activePlanillaId);
+  const dates = datesForCurso(activePlanillaId);
+  if (!list.length) { showToast('⚠ Sin alumnos'); return; }
+  const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+  const docenteStr  = c && c.docente ? c.docente : '';
+  const totalPres   = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length,0);
+  const totalPoss   = list.length * dates.length;
+  const gPct        = totalPoss > 0 ? Math.round(totalPres/totalPoss*100) : 0;
+
+  const dateHeaders = dates.map(d=>`<th style="background:#2d3561;color:white;padding:7px 10px;text-align:center;font-size:11px;white-space:nowrap;">${fmt(d)}</th>`).join('');
+  const pctHeader   = dates.length ? `<th style="background:#2d3561;color:white;padding:7px 10px;text-align:center;font-size:11px;">%</th>` : '';
+
+  const rows = list.map((s,i) => {
+    const pres = dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length;
+    const pct  = dates.length ? Math.round(pres/dates.length*100) : '-';
+    const col  = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
+    const cells = dates.map(d=>{
+      const v = attendance[s.id] && attendance[s.id][d];
+      const bg = v===true?'#e8f7ef':v==='A'?'#fde8ec':v==='T'?'#fff3cd':'#f9f9f9';
+      const txt = v===true?'P':v==='A'?'A':v==='T'?'T':'';
+      const fc  = v===true?'#27ae60':v==='A'?'#e85d75':v==='T'?'#856404':'#ccc';
+      return `<td style="text-align:center;background:${bg};color:${fc};font-weight:800;font-size:12px;padding:6px;">${txt}</td>`;
+    }).join('');
+    const pctCell = dates.length ? `<td style="text-align:center;font-weight:800;color:${col};font-size:12px;padding:6px;">${pct}%</td>` : '';
+    const bg = i%2===0?'white':'#f9f8f5';
+    return `<tr style="background:${bg}">
+      <td style="font-family:monospace;font-size:11px;color:#9ca3af;padding:6px 10px;">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:700;font-size:12px;white-space:nowrap;padding:6px 12px;">${s.apellido?s.apellido+', '+s.nombre:s.nombre}</td>
+      ${cells}${pctCell}
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Planilla — ${cursoNombre}</title>
+  ${buildPrintFonts()}
+  <style>* { box-sizing:border-box; margin:0; padding:0; } body { font-family:'Nunito',Arial,sans-serif; background:white; } .page { padding:1.5rem 2rem; max-width:100%; } @media print { @page { margin:1cm; size:landscape; } }</style>
+  </head><body><div class="page">
+  ${buildPrintHeader(cursoNombre, docenteStr, `${dates.length} clase${dates.length!==1?'s':''} · Asistencia global: ${gPct}%`)}
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead><tr>
+      <th style="background:#2d3561;color:white;padding:7px 10px;text-align:left;font-size:11px;">#</th>
+      <th style="background:#2d3561;color:white;padding:7px 12px;text-align:left;font-size:11px;min-width:160px;">Apellido y Nombre</th>
+      ${dateHeaders}${pctHeader}
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  ${buildPrintFooter()}
+  </div>
+  <script>document.fonts.ready.then(()=>window.print());<\/script>
+  </body></html>`;
+  const w = window.open('','_blank','width=1100,height=750');
+  if (w) { w.document.write(html); w.document.close(); }
+  else showToast('⚠ Activá las ventanas emergentes para imprimir');
+}
+
 function printReport() {
-  const pa = document.getElementById('print-area');
-  const content = document.getElementById('report-modal').querySelector('.modal').innerHTML;
-  pa.innerHTML = `<div style="font-family:Arial,sans-serif;padding:1rem">${content}</div>`;
-  window.print();
+  if (!_reportData) return;
+  const { c, stats, dates, gPct, periodo } = _reportData;
+  const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+  const docenteStr  = c && c.docente ? c.docente : '';
+  const perfect = stats.filter(x=>x.pct===100).length;
+  const risk    = stats.filter(x=>x.pct<75).length;
+
+  const rows = stats.map((x,i) => {
+    const barColor = x.pct>=75?'#27ae60':x.pct>=50?'#e67e22':'#e74c3c';
+    const estado   = x.pct===100?'⭐ Perfecta':x.pct>=90?'✅ Excelente':x.pct>=75?'✅ Regular':x.pct>=50?'⚠️ En riesgo':'🚨 Crítica';
+    const bg       = i%2===0?'white':'#f9f8f5';
+    return `<tr style="background:${bg}">
+      <td style="font-family:monospace;font-size:11px;color:#9ca3af;padding:7px 10px;">${String(i+1).padStart(2,'0')}</td>
+      <td style="font-weight:700;padding:7px 12px;">${x.s.apellido?x.s.apellido+', '+x.s.nombre:x.s.nombre}</td>
+      <td style="text-align:center;color:#27ae60;font-weight:800;padding:7px;">${x.pres}</td>
+      <td style="text-align:center;color:#e85d75;font-weight:800;padding:7px;">${x.aus}</td>
+      <td style="text-align:center;color:#856404;font-weight:800;padding:7px;">${x.tard}</td>
+      <td style="text-align:center;font-weight:800;color:${barColor};padding:7px;">${x.pct}%</td>
+      <td style="padding:7px 10px;min-width:110px;">
+        <div style="background:#eee;border-radius:4px;height:10px;overflow:hidden;">
+          <div style="background:${barColor};width:${x.pct}%;height:100%;border-radius:4px;"></div>
+        </div>
+      </td>
+      <td style="font-size:12px;padding:7px 10px;">${estado}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Informe — ${cursoNombre}</title>
+  ${buildPrintFonts()}
+  <style>* { box-sizing:border-box; margin:0; padding:0; } body { font-family:'Nunito',Arial,sans-serif; background:white; } .page { padding:1.5rem 2rem; } table { border-collapse:collapse; width:100%; font-size:13px; } th { background:#2d3561;color:white;padding:8px 12px;text-align:left;font-size:12px; } @media print { @page { margin:1cm; } }</style>
+  </head><body><div class="page">
+  ${buildPrintHeader(cursoNombre, docenteStr, `Período: ${periodo} · ${dates.length} clase${dates.length!==1?'s':''}`)}
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem;">
+    <div style="background:#e8f7ef;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:1.6rem;font-weight:900;color:#0f9b8e;">${gPct}%</div><div style="font-size:11px;color:#6b7280;margin-top:4px;">Asistencia global</div></div>
+    <div style="background:#e8f7ef;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:1.6rem;font-weight:900;color:#27ae60;">${perfect}</div><div style="font-size:11px;color:#6b7280;margin-top:4px;">Asistencia perfecta</div></div>
+    <div style="background:#fde8ec;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:1.6rem;font-weight:900;color:#e85d75;">${risk}</div><div style="font-size:11px;color:#6b7280;margin-top:4px;">Alumnos en riesgo</div></div>
+    <div style="background:#eef0f8;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:1.6rem;font-weight:900;color:#2d3561;">${stats.length}</div><div style="font-size:11px;color:#6b7280;margin-top:4px;">Total alumnos</div></div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Alumno</th><th>Presentes</th><th>Ausentes</th><th>Tarde</th><th>% Asist.</th><th style="min-width:110px;">Nivel</th><th>Estado</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  ${buildPrintFooter()}
+  </div>
+  <script>document.fonts.ready.then(()=>window.print());<\/script>
+  </body></html>`;
+  const w = window.open('','_blank','width=960,height=700');
+  if (w) { w.document.write(html); w.document.close(); }
+  else showToast('⚠ Activá las ventanas emergentes para imprimir');
 }
 
 // ─── BEEP ───
@@ -2329,12 +2693,7 @@ function openObservations(studentId) {
   document.getElementById('obs-student-name').textContent = s.full;
   document.getElementById('obs-text-input').value = '';
   document.getElementById('obs-file-preview').innerHTML = '';
-  // Reset category to general
-  document.querySelectorAll('.cat-opt').forEach(e => e.classList.remove('selected'));
-  const genOpt = document.querySelector('.cat-opt[data-cat="general"]');
-  if (genOpt) genOpt.classList.add('selected');
   renderObsList(studentId);
-  initEmojiPicker();
   document.getElementById('obs-modal').classList.add('open');
 }
 
@@ -2357,10 +2716,9 @@ function renderObsList(studentId) {
         return `<div class="obs-file-doc" onclick="downloadObsFile('${studentId}',${realIdx},'${f.name}')">📄 ${f.name}</div>`;
       }
     }).join('');
-    return `<div class="obs-entry ${cat.cls}">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+    return `<div class="obs-entry">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <span class="obs-entry-date">${obs.date}${obs.time?' · '+obs.time:''}</span>
-        <span class="obs-cat-badge ${cat.cls}">${cat.label}</span>
         <span style="margin-left:auto;display:flex;gap:6px">
           <button onclick="editObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--teal);font-size:0.75rem;font-weight:700">✏️ Editar</button>
           <button onclick="deleteObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--rose);font-size:0.75rem;font-weight:700">✕ Eliminar</button>
@@ -2447,29 +2805,18 @@ function exportObsPDF() {
   if (!list.length) { showToast('⚠ Sin observaciones para exportar'); return; }
 
   const now = new Date().toLocaleDateString('es-AR');
-  const catColors = {
-    general:'#2d3561', academico:'#0f9b8e', conducta:'#e85d75',
-    salud:'#e07020', logro:'#f5a623', familia:'#7c3aed'
-  };
-  const catLabels = {
-    general:'📋 General', academico:'📚 Académico', conducta:'⚠️ Conducta',
-    salud:'🏥 Salud', logro:'⭐ Logro', familia:'👨‍👩‍👧 Familia'
-  };
 
   const obsHTML = list.map((obs, i) => {
-    const cat = obs.category || 'general';
-    const color = catColors[cat] || '#0f9b8e';
-    const label = catLabels[cat] || 'General';
     const fileImgs = (obs.files||[]).filter(f=>f.type&&f.type.startsWith('image/')).map(f=>
       `<img src="${f.data}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:3px">`
     ).join('');
-    return `<div style="border-left:4px solid ${color};background:#fafafa;border-radius:6px;padding:12px 16px;margin-bottom:14px;page-break-inside:avoid">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
-        <span style="background:${color}18;color:${color};font-family:monospace;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px">${obs.date}${obs.time?' · '+obs.time:''}</span>
-        <span style="font-size:11px;font-weight:800;color:${color}">${label}</span>
-        <span style="margin-left:auto;font-size:10px;color:#aaa">#${list.length - i}</span>
+    const safeText = (obs.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div style="border-left:4px solid #0f9b8e;background:#fafafa;border-radius:6px;padding:12px 16px;margin-bottom:14px;page-break-inside:avoid">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="background:#0f9b8e;color:white;font-family:'Barlow Condensed',Arial,sans-serif;font-size:13px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:0.3px">${obs.date}${obs.time?' · '+obs.time:''}</span>
+        <span style="margin-left:auto;font-size:10px;color:#aaa;font-weight:700">Registro #${list.length - i}</span>
       </div>
-      <p style="margin:0;font-size:13px;line-height:1.65;color:#1a1a2e;white-space:pre-wrap">${(obs.text||'').replace(/</g,'&lt;')}</p>
+      <p style="margin:0;font-size:13px;line-height:1.65;color:#1a1a2e;white-space:pre-wrap">${safeText}</p>
       ${fileImgs?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${fileImgs}</div>`:''}
     </div>`;
   }).join('');
@@ -2626,6 +2973,14 @@ window.showView = function(id, btn) {
       return;
     } catch(e) { localStorage.removeItem('aa_sb_session'); }
   }
+  // ── AUTO-LOGIN TEMPORAL (solo para pruebas — quitar antes de publicar) ──
+  try {
+    const data = await sbAuth('token?grant_type=password', {email:'soydigitalshop@gmail.com', password:'Asistencia2026'});
+    _sbToken = data.access_token; _sbUserId = data.user.id;
+    localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken, userId:_sbUserId, name:data.user.user_metadata?.name||'Admin', refresh:data.refresh_token}));
+    await enterApp(data.user.user_metadata?.name || 'Admin');
+  } catch(e) { console.warn('Auto-login falló:', e.message); }
+  // ── FIN AUTO-LOGIN TEMPORAL ──
 })();
 </script>
 </body>
