@@ -2291,31 +2291,28 @@ async function loadAdminUsers() {
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Cargando...</div>';
   try {
-    // Get all profiles with user info
-    const profiles = await sbFetch('profiles?select=id,name,created_at&order=created_at.desc');
+    const users      = await sbFetch('admin_users?select=id,name,email,created_at&order=created_at.desc');
+    const cursosAll  = await sbFetch('cursos?select=id,user_id');
+    const studentsAll= await sbFetch('students?select=id,user_id');
 
-    // Get stats per user
-    const cursosAll    = await sbFetch('cursos?select=id,user_id');
-    const studentsAll  = await sbFetch('students?select=id,user_id');
-
-    if (!profiles.length) {
+    if (!users.length) {
       el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">Sin usuarios registrados</div>';
       return;
     }
 
-    const rows = profiles.map(p => {
+    const rows = users.map(p => {
       const nCursos   = cursosAll.filter(c=>c.user_id===p.id).length;
       const nStudents = studentsAll.filter(s=>s.user_id===p.id).length;
       const fecha     = p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—';
-      const isAdminUser = false; // Could check by email if stored in profile
+      const esAdmin   = p.email === ADMIN_EMAIL;
       return `<tr>
-        <td style="font-weight:700">${p.name||'—'}</td>
-        <td style="font-family:'DM Mono',monospace;font-size:0.78rem;color:#6b7280">${p.id.substring(0,8)}...</td>
+        <td style="font-weight:700">${p.name||'—'} ${esAdmin?'<span class="admin-badge badge-admin">ADMIN</span>':''}</td>
+        <td style="font-size:0.8rem;color:#6b7280">${p.email||'—'}</td>
         <td>${fecha}</td>
         <td style="text-align:center"><strong>${nCursos}</strong></td>
         <td style="text-align:center"><strong>${nStudents}</strong></td>
-        <td>
-          <button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${p.name||'este usuario'}')">🗑 Eliminar</button>
+        <td>${esAdmin ? '<span style="color:#9ca3af;font-size:0.8rem">—</span>' :
+          `<button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}')">🗑 Eliminar</button>`}
         </td>
       </tr>`;
     }).join('');
@@ -2324,16 +2321,16 @@ async function loadAdminUsers() {
       <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
         <table class="admin-table">
           <thead><tr>
-            <th>Nombre</th><th>ID</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acción</th>
+            <th>Nombre</th><th>Email</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acción</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
       <p style="font-size:0.78rem;color:#9ca3af;margin-top:0.8rem;font-weight:600">
-        Total: ${profiles.length} usuario${profiles.length!==1?'s':''}
+        Total: ${users.length} usuario${users.length!==1?'s':''}
       </p>`;
   } catch(e) {
-    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error al cargar usuarios: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div>`;
   }
 }
 
