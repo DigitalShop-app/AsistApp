@@ -71,9 +71,9 @@
   .curso-add-card:hover { border-color: var(--teal); color: var(--teal); background: var(--mist); }
 
   /* NEW CURSO FORM - shown at bottom when cursos exist */
-  .new-curso-form { background: white; border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); max-width: 560px; margin-top: 1rem; }
-  .new-curso-form .form-toggle-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-  .new-curso-form .form-toggle-header h3 { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--slate); }
+  .new-curso-form { background: white; border-radius: var(--radius); padding: 1.5rem; border: 1px solid var(--border); max-width: 560px; margin-top: 1.5rem; }
+  .new-curso-form .form-toggle-header { display: flex; align-items: center; justify-content: space-between; cursor: default; }
+  .new-curso-form .form-toggle-header h3 { font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 800; color: var(--slate); letter-spacing: 0; }
   .new-curso-form .form-body { margin-top: 1rem; }
 
   /* CURSO HEADER BAR */
@@ -126,6 +126,7 @@
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--mist); }
   td.name-cell { font-weight: 700; white-space: nowrap; }
+  td.name-cell:hover { color: var(--teal); text-decoration: underline; }
   td.num-cell { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
   td.att-cell { text-align: center; }
 
@@ -235,18 +236,13 @@
   .obs-entry.cat-logro     { border-left-color: var(--gold); }
   .obs-entry.cat-familia   { border-left-color: #7c3aed; }
 
-  /* Emoji picker */
-  .emoji-picker { display: none; position: absolute; z-index: 600; background: white; border: 2px solid var(--border); border-radius: 14px; padding: 10px; box-shadow: var(--shadow); width: 280px; flex-wrap: wrap; gap: 4px; }
-  .emoji-picker.open { display: flex; }
-  .emoji-btn-item { font-size: 1.3rem; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background 0.15s; border: none; background: none; }
-  .emoji-btn-item:hover { background: var(--mist); }
-  .emoji-trigger { cursor: pointer; background: var(--paper); border: 2px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 1rem; transition: all 0.15s; }
-  .emoji-trigger:hover { border-color: var(--teal); background: var(--mist); }
+  /* Emoji picker — disabled */
+  .emoji-picker, .emoji-picker.open, .emoji-btn-item, .emoji-trigger, .emoji-trigger:hover { display: none !important; }
 
   /* Category selector */
   .cat-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .cat-opt { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; opacity: 0.65; }
-  .cat-opt:hover { opacity: 0.85; }
+  .cat-opt { padding: 8px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; opacity: 0.65; }
+  .cat-opt:hover { opacity: 0.9; }
   .cat-opt.selected { opacity: 1; border-color: currentColor; }
   .cat-opt.cat-general   { background: #eef0f8; color: #2d3561; }
   .cat-opt.cat-academico { background: #e8f4f2; color: #0f9b8e; }
@@ -556,11 +552,10 @@
 
   <!-- Formulario nuevo curso al final, colapsable -->
   <div class="new-curso-form" id="new-curso-form">
-    <div class="form-toggle-header" onclick="toggleNuevoCursoForm()">
+    <div class="form-toggle-header">
       <h3>➕ Crear Nuevo Curso</h3>
-      <span id="nuevo-curso-toggle-icon" style="font-size:1.2rem;color:#9ca3af;transition:transform 0.2s">▼</span>
     </div>
-    <div class="form-body" id="nuevo-curso-form-body" style="display:none">
+    <div class="form-body" id="nuevo-curso-form-body" style="display:block">
       <div class="grid-2" style="margin-top:1rem">
         <div class="field">
           <label>Curso / División</label>
@@ -840,7 +835,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
       <div class="card-title" style="font-size:1.1rem;margin:0">📝 Observaciones</div>
       <div style="display:flex;gap:8px">
-        <button onclick="exportObsPDF()" style="background:var(--teal);color:white;border:none;border-radius:8px;padding:6px 12px;font-family:Nunito,sans-serif;font-weight:800;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:5px">📄 PDF</button>
+        <button onclick="exportObsPDF()" style="background:var(--teal);color:white;border:none;border-radius:8px;padding:6px 14px;font-family:Nunito,sans-serif;font-weight:800;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;gap:6px">📄 PDF ↓</button>
         <button onclick="document.getElementById('obs-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">✕</button>
       </div>
     </div>
@@ -851,8 +846,8 @@
       <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">✏️ Nueva observación</div>
 
       <!-- Category selector -->
-      <div style="margin-bottom:8px">
-        <div style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Categoría</div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:0.78rem;font-weight:700;color:#6b7280;margin-bottom:8px">Categoría</div>
         <div class="cat-selector" id="cat-selector">
           <div class="cat-opt cat-general selected" onclick="selectCat('general',this)" data-cat="general">📋 General</div>
           <div class="cat-opt cat-academico" onclick="selectCat('academico',this)" data-cat="academico">📚 Académico</div>
@@ -863,20 +858,11 @@
         </div>
       </div>
 
-      <!-- Text area + emoji -->
-      <div style="position:relative">
-        <textarea id="obs-text-input" placeholder="Escribí la observación o seguimiento del alumno..." style="width:100%;min-height:80px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none"></textarea>
-        <!-- Emoji picker popup -->
-        <div class="emoji-picker" id="obs-emoji-picker">
-          😊 😄 😃 🎉 ✅ ⚠️ ❌ 📚 📋 💡 🌟 ⭐ 🏆 👍 👎 👏 🙌 😢 😔 😤 🤒 🏥 👨‍👩‍👧 💬 📝 🔔 📌 🔴 🟡 🟢
-          <!-- Split into buttons by JS -->
-        </div>
-      </div>
+      <textarea id="obs-text-input" placeholder="Escribí la observación o seguimiento del alumno..." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
 
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
-        <button class="emoji-trigger" onclick="toggleEmojiPicker(event)" title="Insertar emoji">😊</button>
-        <label class="btn btn-secondary btn-sm" style="cursor:pointer">
-          📎 Adjuntar
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0">
+          📎 Adjuntar archivo
           <input type="file" id="obs-file-input" multiple accept="image/*,.pdf,.doc,.docx,audio/*" style="display:none" onchange="obsPreviewFiles(this)">
         </label>
         <div id="obs-file-preview" style="display:flex;gap:6px;flex-wrap:wrap"></div>
@@ -945,12 +931,8 @@ const studentsOf = cid => students.filter(s=>s.cursoId===cid);
 
 // ─── NUEVO CURSO FORM TOGGLE ───
 function toggleNuevoCursoForm() {
-  const body = document.getElementById('nuevo-curso-form-body');
-  const icon = document.getElementById('nuevo-curso-toggle-icon');
-  const open = body.style.display === 'none';
-  body.style.display = open ? 'block' : 'none';
-  icon.textContent = open ? '▲' : '▼';
-  if (open) document.getElementById('inp-curso-nombre').focus();
+  // Form is always visible — no toggle needed
+  document.getElementById('inp-curso-nombre').focus();
 }
 
 // ─── NAV ───
@@ -1013,10 +995,7 @@ function renderCursosGrid() {
     d.className = 'empty-state'; d.style.gridColumn = '1/-1';
     d.innerHTML = '<div class="ei">🏫</div><p>Aún no tenés cursos. ¡Creá el primero abajo!</p>';
     grid.appendChild(d);
-    // Auto-open form if no courses
-    const body = document.getElementById('nuevo-curso-form-body');
-    const icon = document.getElementById('nuevo-curso-toggle-icon');
-    if (body.style.display === 'none') { body.style.display = 'block'; icon.textContent = '▲'; }
+    // Form always open
     return;
   }
   cursos.forEach(c => {
@@ -1126,7 +1105,7 @@ function renderStudentList() {
       <span class="student-num" onclick="openObservations('${s.id}')" title="Ver observaciones" style="cursor:pointer">${String(i+1).padStart(2,'0')}</span>
       <span class="student-name" onclick="openObservations('${s.id}')" style="cursor:pointer" title="Ver observaciones">
         ${s.apellido?`<strong>${s.apellido}</strong>, ${s.nombre}`:`<strong>${s.nombre}</strong>`}
-        ${hasAlert?`<span class="absent-alert-badge">⚠️ ${consec} ausentes</span>`:''}
+        ${hasAlert?`<span class="absent-alert-badge">⚠️ ${consec} ausencias</span>`:''}
         ${notified?`<span style="background:#e8f4f2;color:var(--teal);border-radius:8px;font-size:0.68rem;font-weight:800;padding:2px 8px;margin-left:6px;border:1px solid var(--teal)">✅ Avisado</span>`:''}
         ${obsCount>0?`<span style="background:var(--teal);color:white;border-radius:10px;font-size:0.68rem;font-weight:800;padding:1px 6px;margin-left:4px">📝 ${obsCount}</span>`:''}
       </span>
@@ -1643,8 +1622,13 @@ function renderAttendanceTable() {
     const pct  = dates.length ? Math.round(pres/dates.length*100) : '-';
     const col  = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
     const pctCell = dates.length ? `<td class="att-cell" style="font-weight:800;color:${col}">${pct}%</td>` : '';
-    return `<tr><td class="num-cell">${String(i+1).padStart(2,'0')}</td>
-      <td class="name-cell">${s.apellido?s.apellido+', '+s.nombre:s.nombre}</td>
+    const consec = getConsecutiveAbsences(s.id);
+    const warnIcon = (consec >= 3 && !isDismissedAlert(s.id)) ? ' <span title="'+consec+' ausentes consecutivos" style="font-size:0.85rem">⚠️</span>' : '';
+    const obsCount = getObservationCount(s.id);
+    const obsBadge = obsCount > 0 ? ` <span style="background:var(--teal);color:white;border-radius:8px;font-size:0.65rem;font-weight:800;padding:1px 5px;vertical-align:middle">📝${obsCount}</span>` : '';
+    return `<tr>
+      <td class="num-cell">${String(i+1).padStart(2,'0')}</td>
+      <td class="name-cell" onclick="openObservations('${s.id}')" title="📝 Ver/agregar observaciones" style="cursor:pointer">${s.apellido?s.apellido+', '+s.nombre:s.nombre}${warnIcon}${obsBadge}</td>
       ${cells}${pctCell}</tr>`;
   }).join('');
 
@@ -1932,17 +1916,42 @@ const SUPA_KEY    = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
 
 async function sbFetch(path, options={}) {
   const url = SUPA_URL + '/rest/v1/' + path;
-  const headers = {
+  const makeHeaders = () => ({
     'apikey':        SUPA_KEY,
     'Authorization': 'Bearer ' + (_sbToken || SUPA_KEY),
     'Content-Type':  'application/json',
     'Prefer':        options.prefer || 'return=representation',
     ...options.headers
-  };
-  const res = await fetch(url, { method: options.method||'GET', headers, body: options.body ? JSON.stringify(options.body) : undefined });
+  });
+  let res = await fetch(url, { method: options.method||'GET', headers: makeHeaders(), body: options.body ? JSON.stringify(options.body) : undefined });
+  // Auto-refresh on JWT expired
+  if (res.status === 401 || res.status === 403) {
+    const refreshed = await sbRefreshToken();
+    if (refreshed) {
+      res = await fetch(url, { method: options.method||'GET', headers: makeHeaders(), body: options.body ? JSON.stringify(options.body) : undefined });
+    }
+  }
   if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.message || err.hint || res.statusText); }
   const text = await res.text();
   return text ? JSON.parse(text) : [];
+}
+
+async function sbRefreshToken() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('aa_sb_session') || '{}');
+    if (!saved.refresh) return false;
+    const res = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: saved.refresh })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data.access_token) return false;
+    _sbToken = data.access_token;
+    localStorage.setItem('aa_sb_session', JSON.stringify({ ...saved, token: _sbToken, refresh: data.refresh_token || saved.refresh }));
+    return true;
+  } catch(e) { return false; }
 }
 
 async function sbAuth(action, payload) {
@@ -2015,7 +2024,7 @@ async function doLogin() {
   try {
     const data = await sbAuth('token?grant_type=password', {email, password:pass});
     _sbToken  = data.access_token; _sbUserId = data.user.id; _sbSession = data;
-    localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name:data.user.user_metadata?.name||email}));
+    localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name:data.user.user_metadata?.name||email,refresh:data.refresh_token}));
     await enterApp(data.user.user_metadata?.name || email);
   } catch(e) {
     showLoginError('❌ ' + (e.message.includes('Invalid')||e.message.includes('invalid') ? 'Email o contraseña incorrectos' : e.message));
@@ -2434,57 +2443,74 @@ function exportObsPDF() {
   if (!obsCurrentStudentId) return;
   const s = students.find(x=>x.id===obsCurrentStudentId);
   const c = s ? getCurso(s.cursoId) : null;
-  const list = observations[obsCurrentStudentId]||[];
+  const list = (observations[obsCurrentStudentId]||[]).slice().reverse(); // newest first
   if (!list.length) { showToast('⚠ Sin observaciones para exportar'); return; }
 
-  const printArea = document.getElementById('print-area');
   const now = new Date().toLocaleDateString('es-AR');
+  const catColors = {
+    general:'#2d3561', academico:'#0f9b8e', conducta:'#e85d75',
+    salud:'#e07020', logro:'#f5a623', familia:'#7c3aed'
+  };
+  const catLabels = {
+    general:'📋 General', academico:'📚 Académico', conducta:'⚠️ Conducta',
+    salud:'🏥 Salud', logro:'⭐ Logro', familia:'👨‍👩‍👧 Familia'
+  };
 
-  const obsHTML = list.map(obs => {
-    const cat = CAT_INFO[obs.category||'general'] || CAT_INFO.general;
-    const catColors = {
-      general:'#2d3561', academico:'#0f9b8e', conducta:'#e85d75',
-      salud:'#e07020', logro:'#f5a623', familia:'#7c3aed'
-    };
-    const borderColor = catColors[obs.category||'general'] || '#0f9b8e';
-    const fileImgs = (obs.files||[]).filter(f=>f.type&&f.type.startsWith('image/')).map(f=>`<img src="${f.data}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;margin-right:6px">`).join('');
-    return `
-      <div style="border-left:4px solid ${borderColor};background:#f9f9f9;border-radius:6px;padding:10px 14px;margin-bottom:12px;page-break-inside:avoid">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-          <span style="font-family:monospace;font-size:11px;font-weight:700;color:${borderColor};background:${borderColor}20;padding:2px 8px;border-radius:4px">${obs.date}${obs.time?' · '+obs.time:''}</span>
-          <span style="font-size:11px;font-weight:800;color:${borderColor}">${cat.label}</span>
-        </div>
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#1a1a2e;white-space:pre-wrap">${obs.text||''}</p>
-        ${fileImgs?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${fileImgs}</div>`:''}
-      </div>`;
+  const obsHTML = list.map((obs, i) => {
+    const cat = obs.category || 'general';
+    const color = catColors[cat] || '#0f9b8e';
+    const label = catLabels[cat] || 'General';
+    const fileImgs = (obs.files||[]).filter(f=>f.type&&f.type.startsWith('image/')).map(f=>
+      `<img src="${f.data}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:3px">`
+    ).join('');
+    return `<div style="border-left:4px solid ${color};background:#fafafa;border-radius:6px;padding:12px 16px;margin-bottom:14px;page-break-inside:avoid">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="background:${color}18;color:${color};font-family:monospace;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px">${obs.date}${obs.time?' · '+obs.time:''}</span>
+        <span style="font-size:11px;font-weight:800;color:${color}">${label}</span>
+        <span style="margin-left:auto;font-size:10px;color:#aaa">#${list.length - i}</span>
+      </div>
+      <p style="margin:0;font-size:13px;line-height:1.65;color:#1a1a2e;white-space:pre-wrap">${(obs.text||'').replace(/</g,'&lt;')}</p>
+      ${fileImgs?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${fileImgs}</div>`:''}
+    </div>`;
   }).join('');
 
-  printArea.innerHTML = `
-    <div style="font-family:Arial,sans-serif;max-width:780px;margin:0 auto;padding:1rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0f9b8e;padding-bottom:12px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:1.8rem">📋</span>
-          <div>
-            <div style="font-size:1.3rem;font-weight:bold;color:#1a1a2e">Asist<span style="color:#0f9b8e">App</span></div>
-            <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;letter-spacing:1px">REGISTRO DE OBSERVACIONES</div>
-          </div>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Observaciones — ${s?s.full:''}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #1a1a2e; }
+    .page { max-width: 800px; margin: 0 auto; padding: 2rem 2.5rem; }
+    @media print { body { margin: 0; } .no-print { display: none; } }
+  </style>
+  </head><body>
+  <div class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0f9b8e;padding-bottom:14px;margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:2rem">📋</span>
+        <div>
+          <div style="font-size:1.4rem;font-weight:900;color:#1a1a2e">Asist<span style="color:#0f9b8e">App</span></div>
+          <div style="font-size:0.68rem;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px">Registro de Observaciones</div>
         </div>
-        <div style="text-align:right;font-size:12px;color:#6b7280">
-          <div style="font-weight:800;color:#1a1a2e;font-size:14px">${s?s.full:''}</div>
-          ${c?`<div>${c.nombre}${c.materia?' — '+c.materia:''}</div>`:''}
-          <div>Emitido: ${now}</div>
-        </div>
       </div>
-      <div style="margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap">
-        <span style="background:#e8f4f2;color:#0f9b8e;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700">${list.length} registro${list.length!==1?'s':''}</span>
+      <div style="text-align:right;font-size:12px;color:#6b7280;line-height:1.6">
+        <div style="font-weight:800;color:#1a1a2e;font-size:15px">${s?s.full:''}</div>
+        ${c?`<div style="color:#0f9b8e;font-weight:700">${c.nombre}${c.materia?' — '+c.materia:''}</div>`:''}
+        <div>Emitido: ${now}</div>
       </div>
-      ${obsHTML}
-      <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:8px;text-align:center;font-size:10px;color:#9ca3af">
-        Desarrollado por <strong style="color:#0f9b8e;text-transform:uppercase;letter-spacing:0.5px">Digital Shop</strong>
-      </div>
-    </div>`;
-  window.print();
-  setTimeout(()=>{ printArea.innerHTML = ''; }, 2000);
+    </div>
+    <div style="margin-bottom:16px;display:flex;gap:10px">
+      <span style="background:#e8f4f2;color:#0f9b8e;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid #0f9b8e40">${list.length} registro${list.length!==1?'s':''}</span>
+    </div>
+    ${obsHTML}
+    <div style="margin-top:2.5rem;border-top:1px solid #e0e0e0;padding-top:10px;text-align:center;font-size:10px;color:#9ca3af">
+      Desarrollado por <strong style="color:#0f9b8e;text-transform:uppercase">Digital Shop</strong> &nbsp;·&nbsp; AsistApp Sistema de Asistencia Docente
+    </div>
+  </div>
+  <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`;
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  if (w) { w.document.write(html); w.document.close(); }
+  else showToast('⚠ Activá las ventanas emergentes para exportar el PDF');
 }
 
 // ════════════════════════════════════════
@@ -2502,6 +2528,8 @@ async function loadAdminUsers() {
   const el = document.getElementById('admin-users-list'); if (!el) return;
   el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Cargando...</div>';
   try {
+    // Try to refresh token first if needed
+    await sbRefreshToken();
     const users       = await sbFetch('admin_users?select=id,name,email,created_at&order=created_at.desc');
     const cursosAll   = await sbFetch('cursos?select=id,user_id');
     const studentsAll = await sbFetch('students?select=id,user_id');
@@ -2511,36 +2539,69 @@ async function loadAdminUsers() {
       const nStudents = studentsAll.filter(s=>s.user_id===p.id).length;
       const fecha     = p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—';
       const esAdmin   = p.email === ADMIN_EMAIL;
+      const acciones = esAdmin
+        ? '<span style="color:#9ca3af;font-size:0.8rem">— Admin —</span>'
+        : `<div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}','${p.email||''}')">🗑 Eliminar datos</button>
+           </div>`;
       return `<tr>
         <td style="font-weight:700">${p.name||'—'} ${esAdmin?'<span class="admin-badge badge-admin">ADMIN</span>':''}</td>
         <td style="font-size:0.8rem;color:#6b7280">${p.email||'—'}</td>
         <td>${fecha}</td>
         <td style="text-align:center"><strong>${nCursos}</strong></td>
         <td style="text-align:center"><strong>${nStudents}</strong></td>
-        <td>${esAdmin ? '<span style="color:#9ca3af;font-size:0.8rem">—</span>' : `<button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}')">🗑 Eliminar</button>`}</td>
+        <td>${acciones}</td>
       </tr>`;
     }).join('');
-    el.innerHTML = `<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)"><table class="admin-table"><thead><tr><th>Nombre</th><th>Email</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table></div><p style="font-size:0.78rem;color:#9ca3af;margin-top:0.8rem;font-weight:600">Total: ${users.length} usuario${users.length!==1?'s':''}</p>`;
+    el.innerHTML = `
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
+        <table class="admin-table">
+          <thead><tr><th>Nombre</th><th>Email</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acciones</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem;color:#9ca3af;margin-top:0.8rem;font-weight:600">Total: ${users.length} usuario${users.length!==1?'s':''} &nbsp;·&nbsp; Para desactivar el acceso de un usuario, eliminá sus datos y luego eliminalo en Supabase Auth.</p>`;
   } catch(e) {
-    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div>
+      <div style="margin-top:0.5rem;font-size:0.85rem;color:#6b7280">Si el error es de autenticación, intentá cerrar sesión y volver a ingresar.</div>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Reintentar</button>`;
   }
 }
 
-async function adminDeleteUser(userId, userName) {
-  const ok = await showConfirm(`¿Eliminar a "${userName}"?`,'Se borrarán todos sus cursos, alumnos y asistencias. Esta acción es irreversible.','⚠️','Eliminar usuario','btn-danger');
+async function adminDeleteUser(userId, userName, userEmail) {
+  const ok = await showConfirm(
+    `¿Eliminar todos los datos de "${userName}"?`,
+    `Se borrarán cursos, nóminas y asistencias de ${userEmail}. Su acceso al sistema permanece hasta que lo elimines en Supabase Auth.`,
+    '⚠️', 'Eliminar datos', 'btn-danger'
+  );
   if (!ok) return;
   const el = document.getElementById('admin-users-list');
-  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Eliminando datos...</div>';
-  try {
-    await sbFetch(`attendance?user_id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'});
-    await sbFetch(`students?user_id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'});
-    await sbFetch(`cursos?user_id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'});
-    await sbFetch(`profiles?id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'});
-    showToast('✅ Datos eliminados.');
-    el.innerHTML = `<div style="background:#fff3cd;border-radius:12px;padding:1.2rem;border:1px solid #ffc107;margin-bottom:1rem"><div style="font-weight:800;color:#856404;margin-bottom:0.5rem">⚠️ Último paso requerido</div><p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.8rem">Los datos del usuario <strong>${userName}</strong> fueron eliminados. Para borrar su acceso, eliminá el usuario en Supabase Auth.</p><button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Actualizar lista</button></div>`;
-  } catch(e) {
-    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div><button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()">🔄 Reintentar</button>`;
+  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Eliminando datos de '+userName+'...</div>';
+  const errors = [];
+  try { await sbFetch(`attendance?user_id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'}); } catch(e) { errors.push('asistencias'); }
+  try { await sbFetch(`students?user_id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'}); } catch(e) { errors.push('alumnos'); }
+  try { await sbFetch(`cursos?user_id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'}); } catch(e) { errors.push('cursos'); }
+  try { await sbFetch(`profiles?id=eq.${userId}`,{method:'DELETE',prefer:'return=minimal'}); } catch(e) { errors.push('perfil'); }
+
+  if (errors.length) {
+    el.innerHTML = `<div style="background:#fde8ec;border-radius:12px;padding:1.2rem;border:1px solid var(--rose);margin-bottom:1rem">
+      <div style="font-weight:800;color:var(--rose);margin-bottom:0.5rem">⚠️ Error parcial</div>
+      <p style="font-size:0.85rem;color:#6b7280">No se pudieron eliminar: ${errors.join(', ')}. Puede ser un problema de permisos RLS en Supabase.</p>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Actualizar lista</button>
+    </div>`;
+    return;
   }
+
+  showToast('✅ Datos eliminados correctamente');
+  el.innerHTML = `<div style="background:#fff3cd;border-radius:12px;padding:1.2rem;border:1px solid #ffc107;margin-bottom:1rem">
+    <div style="font-weight:800;color:#856404;margin-bottom:0.5rem">✅ Datos eliminados — Último paso</div>
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.8rem">
+      Los datos de <strong>${userName}</strong> (${userEmail}) fueron eliminados.<br>
+      Para revocar su acceso definitivamente, eliminá el usuario en:<br>
+      <strong>Supabase → Authentication → Users → buscar ${userEmail} → Delete</strong>
+    </p>
+    <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Actualizar lista</button>
+  </div>`;
 }
 
 const _origShowView = showView;
