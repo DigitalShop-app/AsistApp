@@ -25986,6 +25986,16 @@ async function doLogin() {
   try {
     const data = await sbAuth('token?grant_type=password', {email, password:pass});
     _sbToken  = data.access_token; _sbUserId = data.user.id; _sbSession = data;
+    // Verificar suspensión antes de entrar
+    const profileRes = await fetch(SUPA_URL + '/rest/v1/profiles?id=eq.' + data.user.id + '&select=suspended', {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken }
+    });
+    const profileData = await profileRes.json();
+    if (profileData && profileData[0] && profileData[0].suspended === true) {
+      _sbToken = null; _sbUserId = null;
+      showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
+      return;
+    }
     localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name:data.user.user_metadata?.name||email,refresh:data.refresh_token}));
     await enterApp(data.user.user_metadata?.name || email);
   } catch(e) {
@@ -26055,6 +26065,21 @@ async function saveEditStudent() {
 }
 
 async function enterApp(userName) {
+  // Verificar suspensión también al retomar sesión guardada
+  if (_sbUserId) {
+    try {
+      const profileRes = await fetch(SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended', {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken }
+      });
+      const profileData = await profileRes.json();
+      if (profileData && profileData[0] && profileData[0].suspended === true) {
+        localStorage.removeItem('aa_sb_session');
+        _sbToken = null; _sbUserId = null;
+        showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
+        return;
+      }
+    } catch(e) { /* si falla el chequeo, dejar pasar */ }
+  }
   document.getElementById('header-user').textContent = '👤 ' + userName;
   document.getElementById('header-user').style.display = 'inline-flex';
   document.getElementById('btn-logout').style.display  = 'inline-flex';
@@ -26547,11 +26572,21 @@ async function adminToggleSuspend(userId, userName, suspend) {
   );
   if (!ok) return;
   try {
-    await sbFetch(`profiles?id=eq.${userId}`, {
-      method: 'PATCH',
-      prefer: 'return=minimal',
-      body: { suspended: suspend }
+    // Llamar a función RPC que ejecuta con privilegios elevados
+    const res = await fetch(SUPA_URL + '/rest/v1/rpc/admin_set_suspended', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + _sbToken,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ target_user_id: userId, suspended_val: suspend })
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.hint || 'Error desconocido');
+    }
     showToast(suspend ? `🚫 ${userName} suspendido` : `✅ ${userName} reactivado`);
     loadAdminUsers();
   } catch(e) {
