@@ -23496,7 +23496,10 @@ var __async = (__this, __arguments, generator) => {
         <button onclick="document.getElementById('obs-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">✕</button>
       </div>
     </div>
-    <div id="obs-student-name" style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--slate);margin-bottom:1.2rem"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+      <div id="obs-student-name" style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--slate)"></div>
+      <span id="obs-count-badge" style="display:none;background:var(--teal);color:white;border-radius:20px;font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;padding:3px 12px;white-space:nowrap"></span>
+    </div>
 
     <!-- Nueva observación -->
     <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.2rem;border:1.5px solid rgba(15,155,142,0.3)">
@@ -26318,6 +26321,15 @@ function openObservations(studentId) {
   document.getElementById('obs-text-input').value = '';
   document.getElementById('obs-file-preview').innerHTML = '';
   renderObsList(studentId);
+  // Mostrar contador de observaciones
+  const obsTotal = (observations[studentId]||[]).length;
+  const badge = document.getElementById('obs-count-badge');
+  if (obsTotal > 0) {
+    badge.textContent = '📝 ' + obsTotal;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
   document.getElementById('obs-modal').classList.add('open');
 }
 
