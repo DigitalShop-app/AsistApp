@@ -22713,7 +22713,7 @@ var __async = (__this, __arguments, generator) => {
   td { padding: 9px 14px; border-bottom: 1px solid var(--paper); }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--mist); }
-  td.name-cell { font-weight: 700; white-space: nowrap; max-width: 220px; }
+  td.name-cell { font-weight: 700; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   td.name-cell:hover { color: var(--teal); text-decoration: underline; }
   td.num-cell { font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
   td.att-cell { text-align: center; }
@@ -22881,6 +22881,13 @@ var __async = (__this, __arguments, generator) => {
     color: var(--teal); font-weight: 700; letter-spacing: 0.5px;
     font-size: 0.85rem; text-transform: uppercase;
   }
+
+  /* ── QR SELECCIÓN ── */
+  .qr-card.selected { border-color: var(--teal); background: var(--mist); }
+  .qr-card.selected::after { content:'✓'; position:absolute; top:6px; right:8px; background:var(--teal); color:white; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; }
+  .qr-sel-bar { display:none; align-items:center; gap:10px; flex-wrap:wrap; background:var(--mist); border:1.5px solid var(--teal); border-radius:12px; padding:10px 14px; margin-bottom:1rem; }
+  .qr-sel-bar.visible { display:flex; }
+  .qr-sel-count { font-family:'DM Mono',monospace; font-size:0.82rem; font-weight:700; color:var(--teal); flex:1; }
 
   /* EXPORT MODAL */
   .export-modal { max-width: 560px; }
@@ -23220,7 +23227,7 @@ var __async = (__this, __arguments, generator) => {
   </div>
   <div id="nomina-content" style="display:none">
     <div class="curso-bar" id="nomina-bar"></div>
-    <div class="grid-2">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem">
       <div class="card">
         <div class="card-title">➕ Agregar Alumno</div>
         <div class="field"><label>Apellido/s</label><input type="text" id="inp-apellido" placeholder="Ej: García López" onkeydown="if(event.key==='Enter')addStudent()"></div>
@@ -23265,9 +23272,17 @@ var __async = (__this, __arguments, generator) => {
   </div>
   <div id="qr-content" style="display:none">
     <div class="curso-bar" id="qr-bar"></div>
-    <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap">
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="generateQRs()">🔄 Generar / Actualizar QRs</button>
       <button class="btn btn-gold" onclick="printQRs()">🖨 Imprimir todos</button>
+      <button class="btn btn-secondary" onclick="qrToggleSelectMode()">☑️ Seleccionar</button>
+    </div>
+    <div class="qr-sel-bar" id="qr-sel-bar">
+      <span class="qr-sel-count" id="qr-sel-count">Ninguno seleccionado</span>
+      <button class="btn btn-secondary btn-sm" onclick="qrSelectAll()">Seleccionar todos</button>
+      <button class="btn btn-secondary btn-sm" onclick="qrDeselectAll()">Limpiar</button>
+      <button class="btn btn-primary btn-sm" onclick="previewQRsSelected()" id="btn-preview-qr" disabled>📄 Ver seleccionados</button>
+      <button class="btn btn-secondary btn-sm" onclick="qrToggleSelectMode()">✕ Cancelar</button>
     </div>
     <div class="qr-grid" id="qr-grid"></div>
   </div>
@@ -23304,7 +23319,7 @@ var __async = (__this, __arguments, generator) => {
       <div>
         <div class="scan-status idle" id="scan-status">📡 Esperando escaneo...</div>
         <div id="scan-name-display" style="display:none;text-align:center;padding:20px 16px;margin-bottom:1rem;border-radius:16px;background:var(--mist);border:3px solid var(--teal)">
-          <div style="font-family:'DM Serif Display',serif;font-size:2.4rem;color:var(--ink);line-height:1.1;letter-spacing:-0.5px" id="scan-big-name"></div>
+          <div style="font-family:'DM Serif Display',serif;font-size:3.5rem;color:#6b7280;line-height:1.1;letter-spacing:-0.5px" id="scan-big-name"></div>
           <div style="font-size:0.9rem;color:var(--teal);font-weight:800;margin-top:6px;text-transform:uppercase;letter-spacing:1px" id="scan-big-status"></div>
         </div>
         <div class="card" style="margin-bottom:1rem">
@@ -23361,6 +23376,7 @@ var __async = (__this, __arguments, generator) => {
       <button class="btn btn-primary" onclick="openAddDayModal()">📅 Agregar día</button>
       <button class="btn btn-secondary" onclick="openExportModal()">📥 Exportar / Informe</button>
       <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
+      <button class="btn btn-danger btn-sm" onclick="openDeleteDayModal()">🗑 Eliminar día</button>
       <button class="btn btn-gold" onclick="printPlanilla()">🖨 Imprimir</button>
     </div>
     <div class="stat-chips" id="global-stats" style="margin-bottom:1.5rem"></div>
@@ -23406,6 +23422,25 @@ var __async = (__this, __arguments, generator) => {
     </div>
     <div class="modal-qr" id="modal-qr-container"></div>
     <button class="btn btn-gold btn-full" onclick="downloadQR()">⬇ Descargar QR</button>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR DÍA -->
+<div class="modal-overlay" id="delete-day-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:400px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--rose)">🗑 Eliminar día</h3>
+      <button onclick="document.getElementById('delete-day-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem">Seleccioná el día que querés eliminar. Se borrarán <strong>todos los registros de asistencia</strong> de ese día para todos los alumnos.</p>
+    <div class="field">
+      <label>Fecha a eliminar</label>
+      <select id="delete-day-select" style="width:100%"><option value="">— Seleccioná una fecha —</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:1.2rem">
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('delete-day-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" style="flex:2" onclick="confirmDeleteDay()">🗑 Eliminar día</button>
+    </div>
   </div>
 </div>
 
@@ -23916,7 +23951,9 @@ function generateQRs() {
   }
   list.forEach((s,i) => {
     const shortId = s.id.slice(-6).toUpperCase();
-    const card = document.createElement('div'); card.className = 'qr-card'; card.onclick = () => openModal(s);
+    const card = document.createElement('div'); card.className = 'qr-card';
+    card.dataset.sid = s.id;
+    card.onclick = () => { if (_qrSelectMode) { qrToggleCard(card, s.id); } else { openModal(s); } };
     const apellido = (s.apellido || s.nombre || '').toUpperCase();
     const nombre   = s.apellido ? s.nombre || '' : '';
     const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
@@ -23937,6 +23974,151 @@ function generateQRs() {
   });
 }
 
+
+// ════════════════════════════════════════════════════
+// QR — SELECCIÓN Y PREVISUALIZACIÓN
+// ════════════════════════════════════════════════════
+let _qrSelectMode = false;
+let _qrSelected   = new Set();
+
+function qrToggleSelectMode() {
+  _qrSelectMode = !_qrSelectMode;
+  _qrSelected.clear();
+  document.querySelectorAll('.qr-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('qr-sel-bar').classList.toggle('visible', _qrSelectMode);
+  qrUpdateCount();
+}
+
+function qrToggleCard(card, sid) {
+  if (_qrSelected.has(sid)) {
+    _qrSelected.delete(sid);
+    card.classList.remove('selected');
+  } else {
+    _qrSelected.add(sid);
+    card.classList.add('selected');
+  }
+  qrUpdateCount();
+}
+
+function qrSelectAll() {
+  document.querySelectorAll('.qr-card').forEach(c => {
+    const sid = c.dataset.sid;
+    if (sid) { _qrSelected.add(sid); c.classList.add('selected'); }
+  });
+  qrUpdateCount();
+}
+
+function qrDeselectAll() {
+  _qrSelected.clear();
+  document.querySelectorAll('.qr-card').forEach(c => c.classList.remove('selected'));
+  qrUpdateCount();
+}
+
+function qrUpdateCount() {
+  const n = _qrSelected.size;
+  document.getElementById('qr-sel-count').textContent = n === 0 ? 'Ninguno seleccionado' : n + ' seleccionado' + (n !== 1 ? 's' : '');
+  const btn = document.getElementById('btn-preview-qr');
+  if (btn) btn.disabled = n === 0;
+}
+
+function previewQRsSelected() {
+  if (!_qrSelected.size) { showToast('⚠ Seleccioná al menos un alumno'); return; }
+  const c = getCurso(activeQrId);
+  const list = studentsOf(activeQrId).filter(s => _qrSelected.has(s.id));
+  if (!list.length) return;
+
+  showToast('⏳ Generando vista previa...');
+
+  const qrPromises = list.map((s, i) => new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
+    new QRCode(tempDiv, { text: qrData, width: 130, height: 130, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    setTimeout(() => {
+      const canvas = tempDiv.querySelector('canvas');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+      document.body.removeChild(tempDiv);
+      resolve({ s, dataUrl });
+    }, 80 + i * 20);
+  }));
+
+  Promise.all(qrPromises).then(results => {
+    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+    const docenteStr  = c && c.docente ? c.docente : '';
+    const fechaGen    = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+    const n           = list.length;
+
+    const cardsHTML = results.map(({ s, dataUrl }) => {
+      const shortId  = s.id.slice(-6).toUpperCase();
+      const apellido = (s.apellido || s.nombre || '').toUpperCase();
+      const nombre   = s.apellido ? (s.nombre || '') : '';
+      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+      return `<div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+        ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+        ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+        ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+      </div>`;
+    }).join('');
+
+    const pageHTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Seleccionados — ${cursoNombre}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Raleway:wght@400;700&family=Barlow+Condensed:wght@700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Nunito',Arial,sans-serif; background:#f5f5f0; color:#1a1a2e; }
+    .toolbar { background:#1a1a2e; color:white; padding:12px 24px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10; }
+    .toolbar .info { flex:1; font-family:'DM Mono',monospace; font-size:0.78rem; color:rgba(255,255,255,0.6); }
+    .toolbar button { padding:8px 20px; border:none; border-radius:8px; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.85rem; cursor:pointer; }
+    .btn-print { background:#0f9b8e; color:white; }
+    .btn-close { background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2) !important; }
+    .page { padding:1.5rem 2rem; max-width:960px; margin:0 auto; }
+    .header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #0f9b8e; padding-bottom:12px; margin-bottom:1.4rem; }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .footer { margin-top:2rem; border-top:1px solid #e0e0e0; padding-top:10px; display:flex; align-items:center; justify-content:space-between; font-family:'Raleway',sans-serif; font-size:0.82rem; color:#9ca3af; }
+    @media print { .toolbar { display:none !important; } body { background:white; } @page { margin:1cm; } }
+    @media (max-width:600px) { .grid { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="info">${n} QR seleccionado${n !== 1 ? 's' : ''} &nbsp;·&nbsp; ${cursoNombre}</div>
+    <button class="btn-print" onclick="window.print()">&#128424; Imprimir</button>
+    <button class="btn-close" onclick="window.close()">&#x2715; Cerrar</button>
+  </div>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">&#128203; Asist<span style="color:#1bc5b4">App</span></div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Códigos QR de Alumnos</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#6b7280;font-family:'Nunito',sans-serif;line-height:1.6">
+        <div style="font-weight:800;color:#1a1a2e;font-size:14px">${cursoNombre}</div>
+        ${docenteStr ? `<div style="color:#2d3561;font-weight:700">${docenteStr}</div>` : ''}
+        <div style="color:#0f9b8e;font-weight:700">${fechaGen}</div>
+      </div>
+    </div>
+    <div class="grid">${cardsHTML}</div>
+    <div class="footer">
+      <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e">Asist<span style="color:#1bc5b4">App</span></span>
+      <span>Sistema de Asistencia Docente</span>
+      <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;font-family:'Century Gothic',sans-serif">DIGITAL SHOP</span></span>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=980,height=750');
+    if (w) { w.document.write(pageHTML); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes en tu navegador');
+  });
+}
+
 function openModal(s) {
   currentModalStudent = s;
   const c = getCurso(s.cursoId);
@@ -23952,14 +24134,91 @@ function openModal(s) {
 
 function downloadQR() {
   if (!currentModalStudent) return;
+  const s = currentModalStudent;
+  const c = getCurso(s.cursoId);
+
   setTimeout(() => {
-    const canvas = document.querySelector('#modal-qr-container canvas');
-    if (!canvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+    const qrCanvas = document.querySelector('#modal-qr-container canvas');
+    if (!qrCanvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+
+    // Datos del alumno
+    const apellido  = (s.apellido || s.nombre || '').toUpperCase();
+    const nombre    = s.apellido ? (s.nombre || '') : '';
+    const shortId   = s.id.slice(-6).toUpperCase();
+    const metaLine  = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+
+    // Canvas compuesto
+    const W = 220, PAD = 16;
+    const QR = 180;
+    // Calcular altura dinámica según líneas de texto
+    const lines = [apellido, nombre, metaLine, 'ID: ' + shortId].filter(Boolean);
+    const H = PAD + QR + PAD + lines.length * 22 + PAD;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Barra superior teal
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillRect(0, 0, W, 5);
+
+    // QR centrado
+    const qrX = (W - QR) / 2;
+    ctx.drawImage(qrCanvas, qrX, PAD + 5, QR, QR);
+
+    // Textos
+    let y = PAD + 5 + QR + 14;
+
+    // Apellido — bold grande
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = 'bold 14px "Barlow Condensed", Arial';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '0.8px';
+    ctx.fillText(apellido, W / 2, y);
+    y += 18;
+
+    if (nombre) {
+      ctx.fillStyle = '#2d3561';
+      ctx.font = '600 11px Nunito, Arial';
+      ctx.fillText(nombre, W / 2, y);
+      y += 17;
+    }
+
+    if (metaLine) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '500 9px Nunito, Arial';
+      ctx.fillText(metaLine, W / 2, y);
+      y += 15;
+    }
+
+    // ID en teal con fondo
+    const idText = 'ID: ' + shortId;
+    ctx.font = 'bold 9px "DM Mono", monospace';
+    const idW = ctx.measureText(idText).width + 16;
+    const idX = (W - idW) / 2;
+    ctx.fillStyle = '#e8f4f2';
+    ctx.beginPath();
+    ctx.roundRect(idX, y - 11, idW, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillText(idText, W / 2, y);
+
+    // Borde gris
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    // Descargar
     const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
-    a.download = 'QR_'+currentModalStudent.full.replace(/[^a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9]/gi,'_')+'.png';
+    a.href = cv.toDataURL('image/png');
+    a.download = 'QR_' + s.full.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
     a.click();
-  }, 200);
+    showToast('✅ QR descargado');
+  }, 300);
 }
 
 function printQRs() {
@@ -24321,6 +24580,46 @@ function datesForCurso(cid) {
 function fmt(d) { const [y,m,day]=d.split('-'); return `${day}/${m}`; }
 
 // ─── AGREGAR DÍA MANUAL ───
+
+// ─── ELIMINAR DÍA ───
+function openDeleteDayModal() {
+  if (!activePlanillaId) return;
+  const dates = datesForCurso(activePlanillaId);
+  if (!dates.length) { showToast('⚠ No hay días registrados'); return; }
+  const sel = document.getElementById('delete-day-select');
+  sel.innerHTML = '<option value="">— Seleccioná una fecha —</option>' +
+    dates.map(d => {
+      const [y,m,day] = d.split('-');
+      return `<option value="${d}">${day}/${m}/${y}</option>`;
+    }).join('');
+  document.getElementById('delete-day-modal').classList.add('open');
+}
+
+async function confirmDeleteDay() {
+  const date = document.getElementById('delete-day-select').value;
+  if (!date) { showToast('⚠ Seleccioná una fecha'); return; }
+  const [y,m,day] = date.split('-');
+  const ok = await showConfirm(
+    `¿Eliminar el día ${day}/${m}/${y}?`,
+    'Se borrarán todos los registros de asistencia de ese día para todos los alumnos.',
+    '⚠️', 'Eliminar día', 'btn-danger'
+  );
+  if (!ok) return;
+  document.getElementById('delete-day-modal').classList.remove('open');
+  const list = studentsOf(activePlanillaId);
+  list.forEach(s => {
+    if (attendance[s.id] && attendance[s.id][date] !== undefined) {
+      delete attendance[s.id][date];
+    }
+  });
+  renderAttendanceTable();
+  showToast(`✅ Día ${day}/${m}/${y} eliminado`);
+  // Sincronizar con Supabase
+  try {
+    await Promise.all(list.map(s => sbDeleteAttendance(s.id, date)));
+  } catch(e) { showToast('⚠ Guardado local — sin conexión'); }
+}
+
 function openAddDayModal() {
   if (!activePlanillaId) return;
   const today = new Date().toLocaleDateString('en-CA');
@@ -24369,10 +24668,11 @@ function renderAttendanceTable(scrollToEnd = false) {
       const val = attendance[s.id] && attendance[s.id][d];
       return `<td class="att-cell"><span class="att-toggle" onclick="cycleAttendance('${s.id}','${d}',this)">${renderBadge(val)}</span></td>`;
     }).join('');
-    const pres = dates.filter(d => attendance[s.id] && attendance[s.id][d] === true).length;
-    const jCount = dates.filter(d => attendance[s.id] && attendance[s.id][d] === 'J').length;
-    const effDates = dates.length - jCount;
-    const pct  = effDates > 0 ? Math.round(pres/effDates*100) : (dates.length ? '-' : '-');
+    const TIENE_VALOR = v => v === true || v === 'T' || v === 'A' || v === 'J';
+    const pres     = dates.filter(d => { const v = attendance[s.id]?.[d]; return v === true || v === 'T'; }).length;
+    const jCount   = dates.filter(d => attendance[s.id]?.[d] === 'J').length;
+    const effDates = dates.filter(d => TIENE_VALOR(attendance[s.id]?.[d])).length - jCount;
+    const pct      = effDates > 0 ? Math.round(pres / effDates * 100) : '-';
     const col  = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
     const pctCell = dates.length ? `<td class="att-cell" style="font-weight:800;color:${col}">${pct}%</td>` : '';
     const consec = getConsecutiveAbsences(s.id);
@@ -24385,9 +24685,13 @@ function renderAttendanceTable(scrollToEnd = false) {
       ${cells}${pctCell}</tr>`;
   }).join('');
 
-  const totalPres = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]===true).length,0);
+  const totalPres = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&(attendance[s.id][d]===true||attendance[s.id][d]==='T')).length,0);
   const totalJust = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]==='J').length,0);
-  const totalPoss = list.length*dates.length - totalJust;
+  const totalPoss = list.reduce((a,s) => {
+    const reg = dates.filter(d => { const v = attendance[s.id]?.[d]; return v === true || v === 'T' || v === 'A' || v === 'J'; }).length;
+    const j   = dates.filter(d => attendance[s.id]?.[d] === 'J').length;
+    return a + reg - j;
+  }, 0);
   const gPct = totalPoss>0?Math.round(totalPres/totalPoss*100):0;
   document.getElementById('global-stats').innerHTML=`
     <div class="chip chip-teal">📅 Clases: <strong>${dates.length}</strong></div>
@@ -24427,13 +24731,14 @@ async function cycleAttendance(studentId, date, el) {
 
   if (activePlanillaId) {
     const dates = datesForCurso(activePlanillaId);
-    const pres  = dates.filter(d => attendance[studentId]&&attendance[studentId][d]===true).length;
-    const jCnt  = dates.filter(d => attendance[studentId]&&attendance[studentId][d]==='J').length;
-    const effD  = dates.length - jCnt;
+    const TIENE_VALOR = v => v === true || v === 'T' || v === 'A' || v === 'J';
+    const pres  = dates.filter(d => { const v = attendance[studentId]?.[d]; return v === true || v === 'T'; }).length;
+    const jCnt  = dates.filter(d => attendance[studentId]?.[d] === 'J').length;
+    const effD  = dates.filter(d => TIENE_VALOR(attendance[studentId]?.[d])).length - jCnt;
     const pct   = effD > 0 ? Math.round(pres/effD*100) : '-';
     const col   = typeof pct==='number'?(pct>=75?'#27ae60':pct>=50?'#e67e22':'#e74c3c'):'#9ca3af';
     const row   = el.closest('tr');
-    if (row) { const last=row.lastElementChild; last.style.color=col; last.textContent=pct+'%'; }
+    if (row) { const last=row.lastElementChild; last.style.color=col; last.textContent=pct!=='-'?pct+'%':'-'; }
   }
   try {
     if (next === undefined) await sbDeleteAttendance(studentId, date);
@@ -25837,30 +26142,40 @@ function printReport() {
 function beep(type) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
+
+    const tone = (freq, start, dur, vol, shape='sine') => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = shape;
+      o.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      g.gain.setValueAtTime(vol, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur + 0.02);
+    };
+
     if (type === 'ok') {
-      osc.frequency.setValueAtTime(1400, ctx.currentTime);
-      osc.frequency.setValueAtTime(1800, ctx.currentTime + 0.05);
-      gain.gain.setValueAtTime(0.4, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.18);
+      // Original ascendente, volumen máximo
+      tone(1400, 0,    0.05, 1.0);
+      tone(1800, 0.05, 0.18, 1.0);
     } else if (type === 'dup') {
-      osc.frequency.setValueAtTime(900, ctx.currentTime);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.setValueAtTime(0.001, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.13);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.22);
+      // Duplicado: dos bips medios
+      tone(700, 0,    0.09, 0.9);
+      tone(700, 0.13, 0.09, 0.9);
     } else {
-      osc.frequency.setValueAtTime(300, ctx.currentTime);
-      osc.type = 'sawtooth';
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3);
+      // Error: bip grave descendente
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(400, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.35);
+      g.gain.setValueAtTime(1.0, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.37);
     }
-    setTimeout(() => ctx.close && ctx.close(), 500);
+    setTimeout(() => ctx.close && ctx.close(), 800);
   } catch(e) {}
 }
 
@@ -26097,6 +26412,7 @@ async function enterApp(userName) {
   setTodayDate();
   renderCursosGrid();
   syncSelects();
+
 }
 
 function showAppLoading(on) {
