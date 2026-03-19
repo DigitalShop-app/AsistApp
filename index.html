@@ -23190,19 +23190,45 @@ var __async = (__this, __arguments, generator) => {
       <h3>➕ Crear Nuevo Curso</h3>
     </div>
     <div class="form-body" id="nuevo-curso-form-body" style="display:block">
-      <div class="grid-2" style="margin-top:1rem">
-        <div class="field">
-          <label>Curso / División</label>
-          <input type="text" id="inp-curso-nombre" placeholder="Ej: 3° A" onkeydown="if(event.key==='Enter')addCurso()">
+      <!-- MODO PROFESOR -->
+      <div id="form-profesor" style="display:block">
+        <div class="grid-2" style="margin-top:1rem">
+          <div class="field">
+            <label>Curso / División</label>
+            <input type="text" id="inp-curso-nombre" placeholder="Ej: 3° A" onkeydown="if(event.key==='Enter')addCurso()">
+          </div>
+          <div class="field">
+            <label>Materia</label>
+            <input type="text" id="inp-curso-materia" placeholder="Ej: Matemática" onkeydown="if(event.key==='Enter')addCurso()">
+          </div>
         </div>
         <div class="field">
-          <label id="lbl-nuevo-materia">Materia (opcional)</label>
-          <input type="text" id="inp-curso-materia" placeholder="Ej: Matemática" onkeydown="if(event.key==='Enter')addCurso()">
+          <label>Docente a cargo</label>
+          <input type="text" id="inp-curso-docente" placeholder="Ej: Prof. Ana Pérez" onkeydown="if(event.key==='Enter')addCurso()">
         </div>
       </div>
-      <div class="field">
-        <label id="lbl-nuevo-docente">Docente a cargo</label>
-        <input type="text" id="inp-curso-docente" placeholder="Ej: Prof. Ana Pérez" onkeydown="if(event.key==='Enter')addCurso()">
+      <!-- MODO PRECEPTOR -->
+      <div id="form-preceptor" style="display:none">
+        <div class="grid-2" style="margin-top:1rem">
+          <div class="field">
+            <label>Curso / División</label>
+            <input type="text" id="inp-prec-nombre" placeholder="Ej: 3° A" onkeydown="if(event.key==='Enter')addCurso()">
+          </div>
+          <div class="field">
+            <label>Turno</label>
+            <select id="inp-prec-turno" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:0.95rem;background:var(--surface);color:var(--ink)">
+              <option value="">Seleccioná el turno</option>
+              <option value="Mañana">Mañana</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noche">Noche</option>
+              <option value="Vespertino">Vespertino</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Preceptor/a a cargo</label>
+          <input type="text" id="inp-prec-docente" placeholder="Ej: Prof. García" onkeydown="if(event.key==='Enter')addCurso()">
+        </div>
       </div>
       <button class="btn btn-primary btn-full" onclick="addCurso()">🏫 Crear Curso</button>
     </div>
@@ -23220,13 +23246,33 @@ var __async = (__this, __arguments, generator) => {
       <label>Curso / División</label>
       <input type="text" id="edit-curso-nombre" placeholder="Ej: 3° A">
     </div>
-    <div class="field">
-      <label id="lbl-edit-materia">Materia (opcional)</label>
-      <input type="text" id="edit-curso-materia" placeholder="Ej: Matemática">
+    <!-- MODO PROFESOR -->
+    <div id="edit-form-profesor">
+      <div class="field">
+        <label>Materia</label>
+        <input type="text" id="edit-curso-materia" placeholder="Ej: Matemática">
+      </div>
+      <div class="field">
+        <label>Docente a cargo</label>
+        <input type="text" id="edit-curso-docente" placeholder="Ej: Prof. Ana Pérez">
+      </div>
     </div>
-    <div class="field">
-      <label id="lbl-edit-docente">Docente a cargo</label>
-      <input type="text" id="edit-curso-docente" placeholder="Ej: Prof. Ana Pérez">
+    <!-- MODO PRECEPTOR -->
+    <div id="edit-form-preceptor" style="display:none">
+      <div class="field">
+        <label>Turno</label>
+        <select id="edit-prec-turno" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:0.95rem;background:var(--surface);color:var(--ink)">
+          <option value="">Seleccioná el turno</option>
+          <option value="Mañana">Mañana</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noche">Noche</option>
+          <option value="Vespertino">Vespertino</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Preceptor/a a cargo</label>
+        <input type="text" id="edit-prec-docente" placeholder="Ej: Prof. García">
+      </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:1.2rem">
       <button class="btn btn-secondary" style="flex:1" onclick="closeEditCurso()">Cancelar</button>
@@ -23742,14 +23788,25 @@ function buildBar(cid) {
 
 // ─── CURSOS ───
 function addCurso() {
-  const nombre  = document.getElementById('inp-curso-nombre').value.trim();
-  const materia = document.getElementById('inp-curso-materia').value.trim();
-  const docente = document.getElementById('inp-curso-docente').value.trim();
-  if (!nombre) { showToast('⚠ Ingresá el nombre del curso'); return; }
+  let nombre, materia, docente;
+  if (isPreceptor()) {
+    nombre  = document.getElementById('inp-prec-nombre').value.trim();
+    const turno = document.getElementById('inp-prec-turno').value;
+    materia = turno; // guardamos turno en campo materia
+    docente = document.getElementById('inp-prec-docente').value.trim();
+    if (!nombre) { showToast('⚠ Ingresá el curso / división'); return; }
+    ['inp-prec-nombre','inp-prec-docente'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('inp-prec-turno').value = '';
+  } else {
+    nombre  = document.getElementById('inp-curso-nombre').value.trim();
+    materia = document.getElementById('inp-curso-materia').value.trim();
+    docente = document.getElementById('inp-curso-docente').value.trim();
+    if (!nombre) { showToast('⚠ Ingresá el nombre del curso'); return; }
+    ['inp-curso-nombre','inp-curso-materia','inp-curso-docente'].forEach(i=>document.getElementById(i).value='');
+  }
   const color = PALETTE[cursos.length % PALETTE.length];
-  const newC  = { id: genId(), nombre, materia, docente, color };
+  const newC  = { id: genId(), nombre, materia, docente, color, rol: _userRole };
   cursos.push(newC);
-  ['inp-curso-nombre','inp-curso-materia','inp-curso-docente'].forEach(i=>document.getElementById(i).value='');
   renderCursosGrid();
   showToast('✅ Curso creado: ' + nombre);
   try { sbSaveCurso(newC); } catch(e) {}
@@ -23805,10 +23862,16 @@ function closeEditCurso() {
 
 async function saveEditCurso() {
   if (!_editCursoId) return;
-  const nombre  = document.getElementById('edit-curso-nombre').value.trim();
-  const materia = document.getElementById('edit-curso-materia').value.trim();
-  const docente = document.getElementById('edit-curso-docente').value.trim();
+  const nombre = document.getElementById('edit-curso-nombre').value.trim();
   if (!nombre) { showToast('⚠ El nombre del curso es obligatorio'); return; }
+  let materia, docente;
+  if (isPreceptor()) {
+    materia = document.getElementById('edit-prec-turno').value;
+    docente = document.getElementById('edit-prec-docente').value.trim();
+  } else {
+    materia = document.getElementById('edit-curso-materia').value.trim();
+    docente = document.getElementById('edit-curso-docente').value.trim();
+  }
   const c = getCurso(_editCursoId); if (!c) return;
   c.nombre  = nombre;
   c.materia = materia;
@@ -24376,7 +24439,7 @@ function printQRs() {
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
     .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
-    @media print { @page { margin: 1cm; } }
+    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
@@ -24518,7 +24581,7 @@ function showScanName(fullName, statusText, type) {
   const parts = fullName.split(',');
   const apellido = parts[0]?.trim() || fullName;
   const nombre   = parts[1]?.trim() || '';
-  nameEl.innerHTML = `<span style="color:var(--slate)">${apellido}</span>${nombre ? '<br><span style="font-size:1.4rem;color:#6b7280">'+nombre+'</span>' : ''}`;
+  nameEl.innerHTML = `<span style="color:var(--slate)">${apellido}</span>${nombre ? '<span style="font-size:1.4rem;color:#6b7280;display:block;margin-top:-2px;line-height:1.1">'+nombre+'</span>' : ''}`;
   const colors = { ok: 'var(--teal)', dup: 'var(--gold)', error: 'var(--rose)' };
   statEl.textContent = statusText;
   statEl.style.color = colors[type] || 'var(--teal)';
@@ -24759,35 +24822,15 @@ function applyRoleUI() {
     document.querySelector('nav').appendChild(cfgBtn);
   }
 
-  // Labels dinámicos según rol en formulario de cursos
-  const lblNuevoMateria = document.getElementById('lbl-nuevo-materia');
-  const lblNuevoDocente = document.getElementById('lbl-nuevo-docente');
-  const lblEditMateria  = document.getElementById('lbl-edit-materia');
-  const lblEditDocente  = document.getElementById('lbl-edit-docente');
-  const inpMateria      = document.getElementById('inp-curso-materia');
-  const editMateria     = document.getElementById('edit-curso-materia');
-  const inpDocente      = document.getElementById('inp-curso-docente');
-  const editDocente     = document.getElementById('edit-curso-docente');
-
-  if (isPreceptor()) {
-    if (lblNuevoMateria) lblNuevoMateria.textContent = 'Curso / División / Turno';
-    if (lblNuevoDocente) lblNuevoDocente.textContent = 'Preceptor/a a cargo';
-    if (lblEditMateria)  lblEditMateria.textContent  = 'Curso / División / Turno';
-    if (lblEditDocente)  lblEditDocente.textContent  = 'Preceptor/a a cargo';
-    if (inpMateria)      inpMateria.placeholder      = 'Ej: 3° A — Mañana';
-    if (editMateria)     editMateria.placeholder     = 'Ej: 3° A — Mañana';
-    if (inpDocente)      inpDocente.placeholder      = 'Ej: Prof. García';
-    if (editDocente)     editDocente.placeholder     = 'Ej: Prof. García';
-  } else {
-    if (lblNuevoMateria) lblNuevoMateria.textContent = 'Materia (opcional)';
-    if (lblNuevoDocente) lblNuevoDocente.textContent = 'Docente a cargo';
-    if (lblEditMateria)  lblEditMateria.textContent  = 'Materia (opcional)';
-    if (lblEditDocente)  lblEditDocente.textContent  = 'Docente a cargo';
-    if (inpMateria)      inpMateria.placeholder      = 'Ej: Matemática';
-    if (editMateria)     editMateria.placeholder     = 'Ej: Matemática';
-    if (inpDocente)      inpDocente.placeholder      = 'Ej: Prof. Ana Pérez';
-    if (editDocente)     editDocente.placeholder     = 'Ej: Prof. Ana Pérez';
-  }
+  // Formularios diferenciados según rol
+  const formProfesor   = document.getElementById('form-profesor');
+  const formPreceptor  = document.getElementById('form-preceptor');
+  const editFormProf   = document.getElementById('edit-form-profesor');
+  const editFormPrec   = document.getElementById('edit-form-preceptor');
+  if (formProfesor)  formProfesor.style.display  = isPreceptor() ? 'none' : 'block';
+  if (formPreceptor) formPreceptor.style.display = isPreceptor() ? 'block' : 'none';
+  if (editFormProf)  editFormProf.style.display  = isPreceptor() ? 'none' : 'block';
+  if (editFormPrec)  editFormPrec.style.display  = isPreceptor() ? 'block' : 'none';
 }
 
 
@@ -24814,7 +24857,13 @@ function updateToggleRoleBtn() {
 function toggleRole() {
   const newRole = isPreceptor() ? 'docente' : 'preceptor';
   selectRole(newRole);
+  applyRoleUI();
   updateToggleRoleBtn();
+  // Recargar cursos filtrados por nuevo rol
+  loadAllData().then(() => {
+    renderCursosGrid();
+    syncSelects();
+  });
   const label = isPreceptor() ? 'Preceptor/a' : 'Profesor';
   showToast('✅ Modo ' + label + ' activado');
 }
@@ -26479,21 +26528,41 @@ function beep(type) {
       o.stop(ctx.currentTime + start + dur + 0.02);
     };
 
-    if (type === 'ok') {
-      // Original ascendente, volumen máximo
-      tone(1400, 0,    0.05, 1.0);
-      tone(1800, 0.05, 0.18, 1.0);
-    } else if (type === 'dup') {
-      // Duplicado: dos bips medios
-      tone(700, 0,    0.09, 0.9);
-      tone(700, 0.13, 0.09, 0.9);
-    } else {
-      // Error: bip grave descendente
+    // Compresor para maximizar volumen percibido
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-24, ctx.currentTime);
+    compressor.knee.setValueAtTime(3, ctx.currentTime);
+    compressor.ratio.setValueAtTime(20, ctx.currentTime);
+    compressor.attack.setValueAtTime(0, ctx.currentTime);
+    compressor.release.setValueAtTime(0.1, ctx.currentTime);
+    compressor.connect(ctx.destination);
+
+    const toneC = (freq, start, dur, vol, shape='square') => {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
+      o.connect(g); g.connect(compressor);
+      o.type = shape;
+      o.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      g.gain.setValueAtTime(vol, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur + 0.02);
+    };
+
+    if (type === 'ok') {
+      // Pitido muy fuerte tipo escáner supermercado
+      toneC(1200, 0,    0.05, 1.5, 'square');
+      toneC(1800, 0.06, 0.28, 1.5, 'square');
+      toneC(1800, 0,    0.05, 1.5, 'square'); // doble canal para más volumen
+    } else if (type === 'dup') {
+      toneC(700, 0,    0.10, 1.0, 'square');
+      toneC(700, 0.15, 0.10, 1.0, 'square');
+    } else {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(compressor);
       o.type = 'sawtooth';
-      o.frequency.setValueAtTime(400, ctx.currentTime);
+      o.frequency.setValueAtTime(500, ctx.currentTime);
       o.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.35);
       g.gain.setValueAtTime(1.0, ctx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
@@ -26781,7 +26850,8 @@ async function loadAllData() {
       sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
       sbFetch(`attendance?user_id=eq.${_sbUserId}`)
     ]);
-    cursos   = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e'}));
+    const todosLosCursos = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e',rol:r.rol||'docente'}));
+    cursos = todosLosCursos.filter(r => r.rol === _userRole);
     students = s.map(r => ({id:r.id,cursoId:r.curso_id,apellido:r.apellido||'',nombre:r.nombre||'',full:r.full_name||'',emailAlumno:r.email_alumno||'',emailPadre:r.email_padre||'',emailFamilia:r.email_padre||'',whatsappFamilia:r.whatsapp_familia||''}));
     attendance = {};
     a.forEach(r => {
@@ -26792,7 +26862,7 @@ async function loadAllData() {
 }
 
 async function sbSaveCurso(c) {
-  await sbFetch('cursos',{method:'POST',prefer:'return=minimal',body:{id:c.id,user_id:_sbUserId,nombre:c.nombre,materia:c.materia||null,docente:c.docente||null,color:c.color}});
+  await sbFetch('cursos',{method:'POST',prefer:'return=minimal',body:{id:c.id,user_id:_sbUserId,nombre:c.nombre,materia:c.materia||null,docente:c.docente||null,color:c.color,rol:c.rol||_userRole}});
 }
 async function sbDeleteCurso(id) {
   await sbFetch(`cursos?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
