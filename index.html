@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AsistApp — Sistema de Asistencia Docente</title>
+<title>AsistApp — Sistema de Asistencia · Preceptoría</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -22889,9 +22889,17 @@ var __async = (__this, __arguments, generator) => {
   .qr-sel-bar.visible { display:flex; }
   .qr-sel-count { font-family:'DM Mono',monospace; font-size:0.82rem; font-weight:700; color:var(--teal); flex:1; }
 
-  /* ── COMPARTIR QR ── */
-  .share-code-box { font-family:'DM Mono',monospace; font-size:0.78rem; background:var(--mist); border:1.5px solid var(--teal); border-radius:10px; padding:12px 14px; word-break:break-all; line-height:1.6; color:var(--slate); max-height:120px; overflow-y:auto; cursor:pointer; }
-  .share-code-box:hover { background:#d4f0ec; }
+  /* ── PRECEPTOR ── */
+  .role-selector { display:flex; gap:10px; margin-bottom:1rem; }
+  .role-btn { flex:1; padding:10px; border:2px solid var(--border); border-radius:10px; background:var(--cream); cursor:pointer; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.9rem; color:var(--slate); text-align:center; transition:all 0.2s; }
+  .role-btn.selected { border-color:var(--teal); background:var(--mist); color:var(--teal); }
+  .badge-prec { background:#7C3AED; color:white; border-radius:6px; font-size:0.65rem; font-weight:800; padding:2px 7px; margin-left:6px; vertical-align:middle; }
+  .semaforo-verde { color:#27AE60; font-weight:800; }
+  .semaforo-amarillo { color:#D4A017; font-weight:800; }
+  .semaforo-rojo { color:#E85D75; font-weight:800; }
+  .inasist-bar { height:8px; border-radius:4px; background:#e5e7eb; margin-top:4px; overflow:hidden; }
+  .inasist-fill { height:100%; border-radius:4px; transition:width 0.4s; }
+  .prec-config-card { background:var(--paper); border:1.5px solid var(--border); border-radius:12px; padding:1.2rem; margin-bottom:1.2rem; }
 
   /* EXPORT MODAL */
   .export-modal { max-width: 560px; }
@@ -23069,7 +23077,7 @@ var __async = (__this, __arguments, generator) => {
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo">📋 <span>Asist</span>App</div>
-    <div class="login-sub">Sistema de Asistencia Docente</div>
+    <div class="login-sub">Sistema de Asistencia · Preceptoría</div>
     <div class="login-tabs">
       <button class="login-tab active" id="tab-login" onclick="switchLoginTab('login')">Iniciar sesión</button>
       <button class="login-tab" id="tab-register" onclick="switchLoginTab('register')">Registrarse</button>
@@ -23112,6 +23120,13 @@ var __async = (__this, __arguments, generator) => {
         <input type="text" id="reg-name" placeholder="Ej: Prof. Ana Pérez">
       </div>
       <div class="field">
+        <label>Rol</label>
+        <div class="role-selector">
+          <div class="role-btn selected" id="role-docente" onclick="selectRole('docente')">👩‍🏫 Docente</div>
+          <div class="role-btn" id="role-preceptor" onclick="selectRole('preceptor')">📋 Preceptor/a</div>
+        </div>
+      </div>
+      <div class="field">
         <label>Email</label>
         <input type="text" id="reg-user" placeholder="tucorreo@email.com">
       </div>
@@ -23132,7 +23147,7 @@ var __async = (__this, __arguments, generator) => {
 <div id="app-wrapper">
 
 <header>
-  <div class="logo">📋 <span>Asist</span>App <span class="logo-badge">DOCENTE</span></div>
+  <div class="logo">📋 <span>Asist</span>App <span class="logo-badge" id="logo-role-badge">DOCENTE</span></div>
   <nav>
     <button class="nav-btn active" onclick="showView('cursos',this)">🏫 Cursos</button>
     <button class="nav-btn" onclick="showView('nomina',this)">👥 Nómina</button>
@@ -23236,10 +23251,13 @@ var __async = (__this, __arguments, generator) => {
         <div class="card-title">➕ Agregar Alumno</div>
         <div class="field"><label>Apellido/s</label><input type="text" id="inp-apellido" placeholder="Ej: García López" onkeydown="if(event.key==='Enter')addStudent()"></div>
         <div class="field"><label>Nombre/s</label><input type="text" id="inp-nombre" placeholder="Ej: Martina Belén" onkeydown="if(event.key==='Enter')addStudent()"></div>
+        <div id="prec-family-fields" style="display:none">
+          <div class="field"><label>📧 Email familia</label><input type="email" id="inp-email-familia" placeholder="familia@email.com"></div>
+          <div class="field"><label>📱 WhatsApp familia</label><input type="tel" id="inp-whatsapp-familia" placeholder="Ej: 1123456789"></div>
+        </div>
         <button class="btn btn-primary btn-full" onclick="addStudent()">➕ Agregar</button>
         <div class="divider">importar</div>
         <button class="btn btn-secondary btn-full btn-sm" onclick="importCSV()">📤 Importar desde CSV</button>
-        <button class="btn btn-secondary btn-full btn-sm" style="color:var(--teal);border-color:var(--teal)" onclick="openImportSharedCode()">🔗 Importar nómina compartida</button>
       </div>
       <div class="card">
         <div class="card-title">📋 Lista <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.8rem;color:#9ca3af" id="student-count">0 alumnos</span></div>
@@ -23248,7 +23266,6 @@ var __async = (__this, __arguments, generator) => {
         <div class="divider">acciones</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
           <button class="btn btn-secondary btn-sm" onclick="exportNominaWord()">📄 Exportar nómina Word</button>
-          <button class="btn btn-secondary btn-sm" style="color:var(--teal);border-color:var(--teal)" onclick="openShareNominaModal()">🔗 Compartir QR de la Clase (con otro docente)</button>
           <button class="btn btn-danger btn-sm" onclick="clearStudents()">🗑 Limpiar nómina</button>
         </div>
       </div>
@@ -23451,54 +23468,66 @@ var __async = (__this, __arguments, generator) => {
 </div>
 
 
-<!-- MODAL COMPARTIR NÓMINA -->
-<div class="modal-overlay" id="share-nomina-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:520px">
+<!-- MODAL CONFIG PRECEPTOR -->
+<div class="modal-overlay" id="prec-config-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:480px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink)">🔗 Compartir QRs del curso</h3>
-      <button onclick="document.getElementById('share-nomina-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink)">⚙️ Configuración Preceptor</h3>
+      <button onclick="document.getElementById('prec-config-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
     </div>
-    <div style="background:var(--mist);border-radius:10px;padding:12px 14px;margin-bottom:1rem;font-size:0.85rem;color:var(--slate);line-height:1.6">
-      📋 <strong>¿Cómo funciona?</strong><br>
-      Compartí este código con otro docente del mismo curso. Al importarlo, los alumnos conservan los <strong>mismos IDs</strong> y los QR que ya tienen seguirán funcionando en su materia. <strong>Cada docente gestiona su asistencia de forma independiente.</strong>
-    </div>
-    <div class="field">
-      <label>Curso a compartir</label>
-      <select id="share-curso-sel" style="width:100%"></select>
-    </div>
-    <div id="share-code-area" style="display:none">
-      <label style="font-size:0.82rem;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block">Código para compartir — hacé clic para copiar</label>
-      <div class="share-code-box" id="share-code-display" onclick="copyShareCode()"></div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-primary btn-sm" style="flex:1" onclick="copyShareCode()">📋 Copiar código</button>
+    <div class="prec-config-card">
+      <div style="font-weight:800;font-size:0.85rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">📅 Umbrales de inasistencia</div>
+      <div class="field"><label>Inasistencias máximas por año (alerta roja)</label>
+        <input type="number" id="cfg-max-anual" value="25" min="1" max="100" style="width:100px">
+        <span style="font-size:0.8rem;color:#9ca3af;margin-left:8px">(Pcia. Buenos Aires: 25)</span>
       </div>
-      <p style="font-size:0.75rem;color:#9ca3af;margin-top:6px">Copiá el código y enviáselo al otro docente por WhatsApp o email.</p>
+      <div class="field"><label>Alerta amarilla a partir de</label>
+        <input type="number" id="cfg-alerta-anual" value="15" min="1" max="100" style="width:100px">
+        <span style="font-size:0.8rem;color:#9ca3af;margin-left:8px">inasistencias en el año</span>
+      </div>
+      <div class="field"><label>Notificar familia a partir de</label>
+        <input type="number" id="cfg-notif-mes" value="3" min="1" max="31" style="width:100px">
+        <span style="font-size:0.8rem;color:#9ca3af;margin-left:8px">inasistencias en el mes</span>
+      </div>
+      <div class="field"><label>Avisar por 3 ausencias consecutivas</label>
+        <select id="cfg-consec" style="width:100%">
+          <option value="3">Sí — a partir de 3 consecutivas</option>
+          <option value="2">Sí — a partir de 2 consecutivas</option>
+          <option value="0">No</option>
+        </select>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:1.2rem">
-      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('share-nomina-modal').classList.remove('open')">Cerrar</button>
-      <button class="btn btn-primary" style="flex:2" onclick="generateShareCode()">🔗 Generar código</button>
+    <div class="prec-config-card">
+      <div style="font-weight:800;font-size:0.85rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🏫 Turno</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="role-btn selected" id="turno-manana" onclick="selectTurno('mañana')">🌅 Mañana</button>
+        <button class="role-btn" id="turno-tarde" onclick="selectTurno('tarde')">🌇 Tarde</button>
+        <button class="role-btn" id="turno-noche" onclick="selectTurno('noche')">🌙 Noche</button>
+        <button class="role-btn" id="turno-completa" onclick="selectTurno('completa')">📚 Completa</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:1rem">
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('prec-config-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" style="flex:2" onclick="savePrecConfig()">💾 Guardar configuración</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL IMPORTAR NÓMINA COMPARTIDA -->
-<div class="modal-overlay" id="import-shared-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:520px">
+<!-- MODAL NOTIFICAR FAMILIA -->
+<div class="modal-overlay" id="notif-familia-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:480px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink)">🔗 Importar nómina compartida</h3>
-      <button onclick="document.getElementById('import-shared-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink)">📢 Notificar a la familia</h3>
+      <button onclick="document.getElementById('notif-familia-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
     </div>
-    <div style="background:var(--mist);border-radius:10px;padding:12px 14px;margin-bottom:1rem;font-size:0.85rem;color:var(--slate);line-height:1.6">
-      📋 Los alumnos se importarán con sus <strong>IDs originales</strong> para que los QR existentes funcionen en tu materia. Tu asistencia es completamente independiente.
+    <div id="notif-alumno-info" style="background:var(--mist);border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:0.9rem;color:var(--slate)"></div>
+    <div class="field"><label>Mensaje</label>
+      <textarea id="notif-mensaje" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:'Nunito',sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
     </div>
-    <div class="field">
-      <label>Pegá el código que te enviaron</label>
-      <textarea id="import-shared-code" rows="4" placeholder="Pegá aquí el código compartido..." style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:0.78rem;resize:vertical;background:var(--cream);color:var(--ink);outline:none;box-sizing:border-box"></textarea>
-    </div>
-    <div id="import-shared-preview" style="display:none;background:var(--paper);border-radius:8px;padding:10px 14px;margin-bottom:0.8rem;font-size:0.85rem;color:var(--slate)"></div>
-    <div style="display:flex;gap:10px;margin-top:1rem">
-      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('import-shared-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-primary" style="flex:2" onclick="confirmImportShared()">✅ Importar alumnos</button>
+    <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('notif-familia-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" style="flex:1" id="notif-wa-btn" onclick="notificarWhatsApp()">📱 WhatsApp</button>
+      <button class="btn btn-primary" style="flex:1" id="notif-email-btn" onclick="notificarEmail()">📧 Email</button>
     </div>
   </div>
 </div>
@@ -24165,7 +24194,7 @@ function previewQRsSelected() {
     <div class="grid">${cardsHTML}</div>
     <div class="footer">
       <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e">Asist<span style="color:#1bc5b4">App</span></span>
-      <span>Sistema de Asistencia Docente</span>
+      <span>Sistema de Asistencia · Preceptoría</span>
       <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;font-family:'Century Gothic',sans-serif">DIGITAL SHOP</span></span>
     </div>
   </div>
@@ -24354,7 +24383,7 @@ function printQRs() {
   <div class="header">
     <div>
       <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">📋 Asist<span style="color:#1bc5b4">App</span></div>
-      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia Docente</div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia · Preceptoría</div>
     </div>
     <div class="header-right">
       <strong>${cursoNombre}</strong>
@@ -24364,7 +24393,7 @@ function printQRs() {
   <div class="grid">${cardsHTML}</div>
   <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
     <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
-    <span>Sistema de Asistencia Docente</span>
+    <span>Sistema de Asistencia · Preceptoría</span>
     <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
   </div>
 </div>
@@ -24448,8 +24477,8 @@ async function onScanSuccess(txt) {
   if (!student) { setStatus('error','❌ Alumno no encontrado'); beep('error'); triggerCooldown(); return; }
   if (student.cursoId !== activeScanId) {
     const otro = getCurso(student.cursoId);
-    setStatus('error','⚠ Alumno de '+(otro?otro.nombre:'otro curso')+' — selecció el curso correcto');
-    showScanName(student.full, '⚠ Este QR es de otro curso', 'error');
+    setStatus('error','⚠ Alumno de '+(otro?otro.nombre:'otro curso'));
+    showScanName(student.full, '⚠ Pertenece a otro curso', 'error');
     beep('error'); triggerCooldown(); return;
   }
   const date = document.getElementById('scan-date').value;
@@ -24680,137 +24709,179 @@ async function confirmDeleteDay() {
 }
 
 
-// ════════════════════════════════════════════════════════
-// COMPARTIR / IMPORTAR NÓMINA (Opción C — mismo QR)
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// PERFIL PRECEPTOR — Variables y configuración
+// ════════════════════════════════════════════════════════════
+let _userRole    = localStorage.getItem('aa_role') || 'preceptor';  // 'docente' | 'preceptor'
+let _userTurno   = localStorage.getItem('aa_turno') || 'mañana';
+let _precConfig  = JSON.parse(localStorage.getItem('aa_prec_config') || JSON.stringify({
+  maxAnual: 25, alertaAnual: 15, notifMes: 3, consec: 3
+}));
+let _notifStudent = null; // alumno actual para notificar
 
-function openShareNominaModal() {
-  if (!activeCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
-  // Rellenar selector con todos los cursos
-  const sel = document.getElementById('share-curso-sel');
-  sel.innerHTML = cursos.map(c =>
-    `<option value="${c.id}" ${c.id===activeCursoId?'selected':''}>${c.nombre}${c.materia?' — '+c.materia:''}</option>`
-  ).join('');
-  document.getElementById('share-code-area').style.display = 'none';
-  document.getElementById('share-nomina-modal').classList.add('open');
+const isPreceptor = () => _userRole === 'preceptor';
+
+// ── Selección de rol en registro ──
+function selectRole(role) {
+  _userRole = role;
+  document.getElementById('role-docente').classList.toggle('selected', role==='docente');
+  document.getElementById('role-preceptor').classList.toggle('selected', role==='preceptor');
 }
 
-function generateShareCode() {
-  const cursoId = document.getElementById('share-curso-sel').value;
-  const c = getCurso(cursoId);
-  if (!c) return;
-  const list = studentsOf(cursoId);
-  if (!list.length) { showToast('⚠ El curso no tiene alumnos'); return; }
-
-  // Construir payload con IDs originales
-  const payload = {
-    v: 1,
-    curso: c.nombre,
-    materia: c.materia || '',
-    alumnos: list.map(s => ({ id: s.id, apellido: s.apellido||'', nombre: s.nombre||'' }))
-  };
-
-  // Codificar en base64 para facilitar copiar/pegar
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-
-  const display = document.getElementById('share-code-display');
-  display.textContent = code;
-  document.getElementById('share-code-area').style.display = 'block';
-  showToast('✅ Código generado — tocá para copiar');
-}
-
-function copyShareCode() {
-  const code = document.getElementById('share-code-display').textContent;
-  if (!code) return;
-  navigator.clipboard.writeText(code).then(() => {
-    showToast('✅ Código copiado al portapapeles');
-    document.getElementById('share-code-display').style.background = '#b7f0e8';
-    setTimeout(() => document.getElementById('share-code-display').style.background = '', 1200);
-  }).catch(() => {
-    // Fallback
-    const ta = document.createElement('textarea');
-    ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('✅ Código copiado');
+// ── Selección de turno ──
+function selectTurno(turno) {
+  _userTurno = turno;
+  ['manana','tarde','noche','completa'].forEach(t => {
+    const el = document.getElementById('turno-'+t);
+    if (el) el.classList.toggle('selected', t === turno.replace('ñ','n'));
   });
 }
 
-function openImportSharedCode() {
-  if (!activeCursoId) { showToast('⚠ Seleccioná o creá un curso de destino primero'); return; }
-  document.getElementById('import-shared-code').value = '';
-  document.getElementById('import-shared-preview').style.display = 'none';
-  document.getElementById('import-shared-modal').classList.add('open');
-  // Preview en tiempo real
-  document.getElementById('import-shared-code').oninput = previewSharedCode;
-}
+// ── Aplicar rol a la interfaz ──
+function applyRoleUI() {
+  const badge = document.getElementById('logo-role-badge');
+  if (badge) badge.textContent = isPreceptor() ? 'PRECEPTOR' : 'DOCENTE';
 
-function previewSharedCode() {
-  const raw = document.getElementById('import-shared-code').value.trim();
-  const preview = document.getElementById('import-shared-preview');
-  if (!raw) { preview.style.display = 'none'; return; }
-  try {
-    const payload = JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if (!payload.alumnos || !payload.v) throw new Error('Formato inválido');
-    const n = payload.alumnos.length;
-    const existing = studentsOf(activeCursoId).map(s => s.id);
-    const nuevos = payload.alumnos.filter(a => !existing.includes(a.id)).length;
-    const ya = n - nuevos;
-    preview.innerHTML = `
-      <strong>✅ Código válido</strong><br>
-      Curso origen: <strong>${payload.curso}${payload.materia ? ' — '+payload.materia : ''}</strong><br>
-      Alumnos en el código: <strong>${n}</strong><br>
-      ${nuevos > 0 ? `<span style="color:var(--teal)">➕ ${nuevos} alumnos nuevos a importar</span>` : ''}
-      ${ya > 0 ? `<br><span style="color:#9ca3af">&#x29B5; ${ya} ya existíen en este curso (se omiten)</span>` : ''}
-    `;
-    preview.style.display = 'block';
-  } catch(e) {
-    preview.innerHTML = '<span style="color:var(--rose)">❌ Código inválido. Verificá que lo copiaste completo.</span>';
-    preview.style.display = 'block';
+  // Mostrar/ocultar campos familia en nómina
+  const famFields = document.getElementById('prec-family-fields');
+  if (famFields) famFields.style.display = isPreceptor() ? 'block' : 'none';
+
+  // Botón configuración preceptor en nav
+  let cfgBtn = document.getElementById('nav-prec-config');
+  if (isPreceptor() && !cfgBtn) {
+    cfgBtn = document.createElement('button');
+    cfgBtn.id = 'nav-prec-config';
+    cfgBtn.className = 'nav-btn';
+    cfgBtn.style.cssText = 'background:rgba(124,58,237,0.2);color:#a78bfa';
+    cfgBtn.innerHTML = '⚙️ Config';
+    cfgBtn.onclick = () => openPrecConfig();
+    document.querySelector('nav').appendChild(cfgBtn);
   }
 }
 
-async function confirmImportShared() {
-  if (!activeCursoId) { showToast('⚠ No hay curso de destino seleccionado'); return; }
-  const raw = document.getElementById('import-shared-code').value.trim();
-  if (!raw) { showToast('⚠ Pegá el código primero'); return; }
+// ── Guardar rol en registro ──
+function saveRoleToSession() {
+  localStorage.setItem('aa_role', _userRole);
+  localStorage.setItem('aa_turno', _userTurno);
+}
 
-  let payload;
-  try {
-    payload = JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if (!payload.alumnos || !payload.v) throw new Error();
-  } catch(e) {
-    showToast('❌ Código inválido'); return;
-  }
+// ── Config preceptor ──
+function openPrecConfig() {
+  document.getElementById('cfg-max-anual').value   = _precConfig.maxAnual;
+  document.getElementById('cfg-alerta-anual').value = _precConfig.alertaAnual;
+  document.getElementById('cfg-notif-mes').value   = _precConfig.notifMes;
+  document.getElementById('cfg-consec').value      = _precConfig.consec;
+  selectTurno(_userTurno);
+  document.getElementById('prec-config-modal').classList.add('open');
+}
 
-  const existing = studentsOf(activeCursoId).map(s => s.id);
-  const toImport = payload.alumnos.filter(a => !existing.includes(a.id));
-
-  if (!toImport.length) {
-    showToast('⚠ Todos los alumnos ya existen en este curso');
-    document.getElementById('import-shared-modal').classList.remove('open');
-    return;
-  }
-
-  const newStudents = toImport.map(a => ({
-    id: a.id,                          // ← mismo ID = mismo QR
-    cursoId: activeCursoId,
-    apellido: a.apellido,
-    nombre: a.nombre,
-    full: [a.apellido, a.nombre].filter(Boolean).join(', ')
-  }));
-
-  students.push(...newStudents);
+function savePrecConfig() {
+  _precConfig = {
+    maxAnual:    parseInt(document.getElementById('cfg-max-anual').value) || 25,
+    alertaAnual: parseInt(document.getElementById('cfg-alerta-anual').value) || 15,
+    notifMes:    parseInt(document.getElementById('cfg-notif-mes').value) || 3,
+    consec:      parseInt(document.getElementById('cfg-consec').value) || 3,
+  };
+  localStorage.setItem('aa_prec_config', JSON.stringify(_precConfig));
+  localStorage.setItem('aa_turno', _userTurno);
+  document.getElementById('prec-config-modal').classList.remove('open');
+  showToast('✅ Configuración guardada');
   renderStudentList();
-  document.getElementById('import-shared-modal').classList.remove('open');
-  showToast(`✅ ${newStudents.length} alumno${newStudents.length!==1?'s':''} importado${newStudents.length!==1?'s':''} — los QR existentes ya funcionan`);
+}
 
-  // Sincronizar con Supabase
-  try {
-    await Promise.all(newStudents.map(s => sbSaveStudent(s)));
-  } catch(e) {
-    showToast('⚠ Guardado local — sin conexión');
-  }
+// ════════════════════════════════════════════════════════════
+// CONTADORES DE INASISTENCIAS (Preceptor)
+// ════════════════════════════════════════════════════════════
+function getInasistenciasAnuales(studentId) {
+  const att = attendance[studentId] || {};
+  return Object.values(att).filter(v => v === 'A').length;
+}
+
+function getInasistenciasMes(studentId) {
+  const now = new Date();
+  const mes = now.getMonth(); const anio = now.getFullYear();
+  const att = attendance[studentId] || {};
+  return Object.entries(att).filter(([fecha, v]) => {
+    if (v !== 'A') return false;
+    const d = new Date(fecha);
+    return d.getMonth() === mes && d.getFullYear() === anio;
+  }).length;
+}
+
+function getSemaforoColor(anual) {
+  if (anual >= _precConfig.maxAnual)    return { cls:'semaforo-rojo',   icon:'🔴', label:'LÍMITE' };
+  if (anual >= _precConfig.alertaAnual) return { cls:'semaforo-amarillo', icon:'🟡', label:'EN RIESGO' };
+  return { cls:'semaforo-verde', icon:'🟢', label:'OK' };
+}
+
+function buildInasistBar(anual) {
+  const pct = Math.min(100, Math.round(anual / _precConfig.maxAnual * 100));
+  const color = anual >= _precConfig.maxAnual ? '#E85D75' : anual >= _precConfig.alertaAnual ? '#D4A017' : '#27AE60';
+  return `<div class="inasist-bar"><div class="inasist-fill" style="width:${pct}%;background:${color}"></div></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// NOTIFICACIÓN A FAMILIAS
+// ════════════════════════════════════════════════════════════
+function openNotifFamilia(studentId) {
+  const s = students.find(x => x.id === studentId); if (!s) return;
+  _notifStudent = s;
+  const anual = getInasistenciasAnuales(studentId);
+  const mes   = getInasistenciasMes(studentId);
+  const consec = getConsecutiveAbsences(studentId);
+  const c = getCurso(s.cursoId);
+
+  document.getElementById('notif-alumno-info').innerHTML = `
+    <strong>${s.full}</strong> — ${c ? c.nombre : ''}<br>
+    <span style="color:var(--rose)">Inasistencias: ${anual} en el año · ${mes} este mes · ${consec} consecutivas</span>
+  `;
+
+  // Mensaje pre-redactado
+  const hoy = new Date().toLocaleDateString('es-AR', {day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('notif-mensaje').value =
+    `Estimada familia de ${s.full}:
+
+` +
+    `Le informamos que su hijo/a registra ${anual} inasistencia${anual!==1?'s':''} en el año lectivo` +
+    (mes > 0 ? ` (${mes} este mes)` : '') +
+    (consec >= (_precConfig.consec||3) ? ` y ${consec} ausencias consecutivas` : '') + `.
+
+` +
+    `Le solicitamos que se comunique con la institución para regularizar la situación.
+
+` +
+    `Atentamente,
+${c ? c.docente||'Preceptoría' : 'Preceptoría'}
+${c ? c.nombre : ''} — ${hoy}`;
+
+  // Habilitar/deshabilitar botones según datos disponibles
+  const waBtn = document.getElementById('notif-wa-btn');
+  const emBtn = document.getElementById('notif-email-btn');
+  waBtn.disabled  = !s.whatsappFamilia;
+  emBtn.disabled  = !s.emailFamilia;
+  if (!s.whatsappFamilia) waBtn.title = 'Sin WhatsApp registrado';
+  if (!s.emailFamilia)    emBtn.title = 'Sin email registrado';
+
+  document.getElementById('notif-familia-modal').classList.add('open');
+}
+
+function notificarWhatsApp() {
+  if (!_notifStudent?.whatsappFamilia) { showToast('⚠ Sin número de WhatsApp registrado'); return; }
+  const msg = encodeURIComponent(document.getElementById('notif-mensaje').value);
+  const num = _notifStudent.whatsappFamilia.replace(/\D/g,'');
+  window.open(`https://wa.me/54${num}?text=${msg}`, '_blank');
+  document.getElementById('notif-familia-modal').classList.remove('open');
+  showToast('✅ Abriendo WhatsApp...');
+}
+
+function notificarEmail() {
+  if (!_notifStudent?.emailFamilia) { showToast('⚠ Sin email registrado'); return; }
+  const msg  = document.getElementById('notif-mensaje').value;
+  const subj = encodeURIComponent(`Inasistencias — ${_notifStudent.full}`);
+  const body = encodeURIComponent(msg);
+  window.open(`mailto:${_notifStudent.emailFamilia}?subject=${subj}&body=${body}`, '_blank');
+  document.getElementById('notif-familia-modal').classList.remove('open');
+  showToast('✅ Abriendo email...');
 }
 
 function openAddDayModal() {
@@ -25558,7 +25629,7 @@ async function exportWordReport() {
             new TextRun({text:'Asist',bold:false,size:56,color:C.white,font:'Georgia'}),
             new TextRun({text:'App',bold:false,size:56,color:'1bc5b4',font:'Georgia'}),
           ]}),
-          new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:60}, children:[new TextRun({text:'Sistema de Asistencia Docente',size:22,color:'C8F0ED',font:'Arial'})] }),
+          new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:60}, children:[new TextRun({text:'Sistema de Asistencia · Preceptoría',size:22,color:'C8F0ED',font:'Arial'})] }),
         ]
       })] }),
       new TableRow({ children:[new TableCell({ borders:noBorders, shading:{fill:C.slate,type:ShadingType.CLEAR}, margins:{top:160,bottom:160,left:300,right:300},
@@ -25725,7 +25796,7 @@ async function exportWordReport() {
           children:[
             new TextRun({text:'Asist',size:18,color:C.ink,font:'Georgia'}),
             new TextRun({text:'App',size:18,color:'1bc5b4',font:'Georgia'}),
-            new TextRun({text:'  ·  Sistema de Asistencia Docente  ·  Desarrollado por ',size:16,color:C.gray,font:'Arial'}),
+            new TextRun({text:'  ·  Sistema de Asistencia · Preceptoría  ·  Desarrollado por ',size:16,color:C.gray,font:'Arial'}),
             new TextRun({text:'DIGITAL SHOP',size:18,color:'0F9B8E',bold:true,font:'Century Gothic'}),
           ]
         }),
@@ -25850,7 +25921,7 @@ async function exportWordInforme() {
             new TextRun({text:'Asist',bold:false,size:52,color:C.white,font:'Georgia'}),
             new TextRun({text:'App',bold:true,size:52,color:'C8F0ED',font:'Georgia'}),
           ]}),
-          new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:60}, children:[new TextRun({text:'Sistema de Asistencia Docente',size:22,color:'C8F0ED',font:'Arial'})] }),
+          new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:60}, children:[new TextRun({text:'Sistema de Asistencia · Preceptoría',size:22,color:'C8F0ED',font:'Arial'})] }),
         ]
       })] }),
       new TableRow({ children:[new TableCell({ borders:noBorders, shading:{fill:C.slate,type:ShadingType.CLEAR}, margins:{top:160,bottom:160,left:300,right:300},
@@ -26004,7 +26075,7 @@ async function exportWordInforme() {
           children:[
             new TextRun({text:'Asist',size:18,color:C.ink,font:'Georgia'}),
             new TextRun({text:'App',size:18,color:'1bc5b4',font:'Georgia'}),
-            new TextRun({text:`  ·  Sistema de Asistencia Docente  ·  `,size:16,color:C.gray,font:'Arial'}),
+            new TextRun({text:`  ·  Sistema de Asistencia · Preceptoría  ·  `,size:16,color:C.gray,font:'Arial'}),
             new TextRun({text:'DIGITAL SHOP',size:18,color:'0F9B8E',bold:true,font:'Century Gothic'}),
             new TextRun({text:`  ·  ${new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'})}`,size:16,color:C.gray,font:'Arial'}),
           ]
@@ -26186,7 +26257,7 @@ function exportReportCSV() {
 }
 
 function buildPrintHeader(cursoNombre, docenteStr, periodoStr, subtitleStr) {
-  const sub = subtitleStr || 'Sistema de Asistencia Docente';
+  const sub = subtitleStr || 'Sistema de Asistencia · Preceptoría';
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0f9b8e;padding-bottom:14px;margin-bottom:1.4rem;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -26208,7 +26279,7 @@ function buildPrintFooter() {
   const now = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
   return `<div style="$margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
     <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
-    <span>Sistema de Asistencia Docente</span>
+    <span>Sistema de Asistencia · Preceptoría</span>
     <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span> &nbsp;·&nbsp; ${now}</span>
   </div>`;
 }
@@ -26381,9 +26452,9 @@ function showToast(msg) {
 // ════════════════════════════════════════
 // SUPABASE CONFIG
 // ════════════════════════════════════════
-const SUPA_URL    = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
+const SUPA_URL    = 'https://iqhjotpdgtyfbsboolht.supabase.co';
 const ADMIN_EMAIL = 'soydigitalshop@gmail.com';
-const SUPA_KEY    = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
+const SUPA_KEY    = 'sb_publishable_46jAgsZbpTfa8lER1vbP5Q_i3HKamHh';
 
 async function sbFetch(path, options={}) {
   const url = SUPA_URL + '/rest/v1/' + path;
@@ -26521,7 +26592,8 @@ async function doRegister() {
   if (!email.includes('@'))  { showLoginError('⚠ Ingresá un email válido'); return; }
   setLoginLoading(true);
   try {
-    const data = await sbAuth('signup', {email, password:pass, data:{name}});
+    saveRoleToSession();
+    const data = await sbAuth('signup', {email, password:pass, data:{name, role:_userRole}});
     let token  = data.access_token || null;
     let userId = data.user?.id || null;
     if (!token) {
@@ -26605,7 +26677,7 @@ async function enterApp(userName) {
   setTodayDate();
   renderCursosGrid();
   syncSelects();
-
+  applyRoleUI();
 }
 
 function showAppLoading(on) {
@@ -26649,7 +26721,7 @@ async function loadAllData() {
       sbFetch(`attendance?user_id=eq.${_sbUserId}`)
     ]);
     cursos   = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e'}));
-    students = s.map(r => ({id:r.id,cursoId:r.curso_id,apellido:r.apellido||'',nombre:r.nombre||'',full:r.full_name||'',emailAlumno:r.email_alumno||'',emailPadre:r.email_padre||''}));
+    students = s.map(r => ({id:r.id,cursoId:r.curso_id,apellido:r.apellido||'',nombre:r.nombre||'',full:r.full_name||'',emailAlumno:r.email_alumno||'',emailPadre:r.email_padre||'',emailFamilia:r.email_padre||'',whatsappFamilia:r.whatsapp_familia||''}));
     attendance = {};
     a.forEach(r => {
       if (!attendance[r.student_id]) attendance[r.student_id] = {};
@@ -26665,7 +26737,7 @@ async function sbDeleteCurso(id) {
   await sbFetch(`cursos?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
 }
 async function sbSaveStudent(s) {
-  await sbFetch('students',{method:'POST',prefer:'return=minimal',body:{id:s.id,user_id:_sbUserId,curso_id:s.cursoId,apellido:s.apellido||null,nombre:s.nombre||null,full_name:s.full,email_alumno:s.emailAlumno||null,email_padre:s.emailPadre||null}});
+  await sbFetch('students',{method:'POST',prefer:'return=minimal',body:{id:s.id,user_id:_sbUserId,curso_id:s.cursoId,apellido:s.apellido||null,nombre:s.nombre||null,full_name:s.full,email_alumno:s.emailAlumno||null,email_padre:s.emailPadre||null,whatsapp_familia:s.whatsappFamilia||null}});
 }
 async function sbDeleteStudent(id) {
   await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
@@ -27001,7 +27073,7 @@ function exportObsPDF() {
     ${obsHTML}
     <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
       <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
-      <span>Sistema de Asistencia Docente</span>
+      <span>Sistema de Asistencia · Preceptoría</span>
       <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
     </div>
   </div>
@@ -27117,8 +27189,8 @@ async function adminDeleteUser(userId, userName, userEmail) {
   el.innerHTML = `<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Eliminando usuario ${userName}...</div>`;
 
   try {
-    const SUPABASE_URL = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZHZieGpkdmdta3Zhc3V6d3B3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5NTU1NzUsImV4cCI6MjA1NjUzMTU3NX0.np2oFvaG5a689y-5Uln5cgMhm36lx0YlHcE8hJBEBuQ';
+    const SUPABASE_URL = 'https://iqhjotpdgtyfbsboolht.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_46jAgsZbpTfa8lER1vbP5Q_i3HKamHh';
     const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-user`, {
       method: 'POST',
       headers: {
