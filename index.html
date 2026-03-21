@@ -23069,6 +23069,23 @@ var __async = (__this, __arguments, generator) => {
     color: white !important;
     transform: translateY(-1px);
   }
+
+  /* ── PAYWALL ── */
+  #paywall-screen { display:none; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:9999; align-items:center; justify-content:center; }
+  #paywall-screen.visible { display:flex; }
+  .paywall-card { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:3rem 2.5rem; max-width:480px; width:90%; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.4); }
+  .paywall-icon { font-size:3.5rem; margin-bottom:1rem; }
+  .paywall-title { font-family:'DM Serif Display',serif; font-size:2rem; color:#fff; margin-bottom:0.5rem; }
+  .paywall-sub { font-size:0.9rem; color:#94a3b8; margin-bottom:2rem; line-height:1.6; }
+  .paywall-price { background:rgba(15,155,142,0.15); border:1px solid rgba(15,155,142,0.3); border-radius:16px; padding:1.2rem; margin-bottom:2rem; }
+  .paywall-price-amount { font-size:2.5rem; font-weight:900; color:#1bc5b4; font-family:'DM Mono',monospace; }
+  .paywall-price-period { font-size:0.85rem; color:#94a3b8; font-weight:600; }
+  .paywall-features { text-align:left; margin-bottom:2rem; }
+  .paywall-feature { display:flex; gap:10px; align-items:center; padding:6px 0; font-size:0.88rem; color:#cbd5e1; }
+  .paywall-feature span:first-child { color:#1bc5b4; font-size:1rem; }
+  .btn-paywall { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:1rem; background:linear-gradient(135deg,#0f9b8e,#0d7a70); color:white; font-family:'Nunito',sans-serif; font-weight:800; font-size:1rem; border:none; border-radius:12px; cursor:pointer; text-decoration:none; box-shadow:0 4px 20px rgba(15,155,142,0.4); transition:all 0.2s; margin-bottom:1rem; }
+  .btn-paywall:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(15,155,142,0.6); }
+  .paywall-logout { font-size:0.78rem; color:#475569; cursor:pointer; text-decoration:underline; margin-top:0.5rem; display:inline-block; }
 </style>
 </head>
 <body>
@@ -24262,6 +24279,28 @@ function previewQRsSelected() {
       <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;font-family:'Century Gothic',sans-serif">DIGITAL SHOP</span></span>
     </div>
   </div>
+
+<!-- ═══ PAYWALL ═══ -->
+<div id="paywall-screen">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔐</div>
+    <div class="paywall-title">AsistApp</div>
+    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
+    <div class="paywall-price">
+      <div class="paywall-price-amount">$5.200</div>
+      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
+    </div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
+    </div>
+    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
+    <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
+  </div>
+</div>
 </body>
 </html>`;
 
@@ -24465,6 +24504,28 @@ function printQRs() {
   // Esperar a que las fuentes carguen antes de imprimir
   document.fonts.ready.then(function(){ window.print(); });
 <\/script>
+
+<!-- ═══ PAYWALL ═══ -->
+<div id="paywall-screen">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔐</div>
+    <div class="paywall-title">AsistApp</div>
+    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
+    <div class="paywall-price">
+      <div class="paywall-price-amount">$5.200</div>
+      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
+    </div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
+    </div>
+    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
+    <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
+  </div>
+</div>
 </body>
 </html>`;
 
@@ -26775,18 +26836,32 @@ async function saveEditStudent() {
 }
 
 async function enterApp(userName) {
-  // Verificar suspensión también al retomar sesión guardada
+  // Verificar suspensión y suscripción al retomar sesión guardada
   if (_sbUserId) {
     try {
-      const profileRes = await fetch(SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended', {
+      const profileRes = await fetch(SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended,subscription_status,subscription_expires_at', {
         headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken }
       });
       const profileData = await profileRes.json();
-      if (profileData && profileData[0] && profileData[0].suspended === true) {
-        localStorage.removeItem('aa_sb_session');
-        _sbToken = null; _sbUserId = null;
-        showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
-        return;
+      if (profileData && profileData[0]) {
+        const profile = profileData[0];
+        // Verificar suspensión
+        if (profile.suspended === true) {
+          localStorage.removeItem('aa_sb_session');
+          _sbToken = null; _sbUserId = null;
+          showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
+          return;
+        }
+        // Verificar suscripción
+        const status = profile.subscription_status;
+        const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+        const now = new Date();
+        const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
+        const isPending = status === 'pending' || (!status);
+        if (isExpired || isPending) {
+          showPaywall(userName, isExpired);
+          return;
+        }
       }
     } catch(e) { /* si falla el chequeo, dejar pasar */ }
   }
@@ -27363,6 +27438,27 @@ window.showView = function(id, btn) {
   if (id === 'admin') loadAdminUsers();
 };
 
+
+// ════════════════════════════════════════
+// PAYWALL
+// ════════════════════════════════════════
+const MP_PLAN_ID = '9344e4199be045509b8c6a0e3ffe3083';
+
+function showPaywall(userName, isExpired) {
+  const msg = document.getElementById('paywall-msg');
+  if (msg) {
+    msg.textContent = isExpired
+      ? `Tu suscripción venció, ${userName}. Renovála para seguir usando AsistApp.`
+      : `Bienvenido/a ${userName}. Activá tu suscripción para empezar a usar AsistApp.`;
+  }
+  // Generar link de suscripción con email del usuario
+  const email = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '');
+  const btn = document.getElementById('btn-suscribir');
+  if (btn) btn.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${email}`;
+  const paywall = document.getElementById('paywall-screen');
+  if (paywall) paywall.classList.add('visible');
+}
+
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
@@ -27389,5 +27485,27 @@ window.showView = function(id, btn) {
   <img id="obs-lightbox-img" src="" alt="Imagen adjunta">
 </div>
 
+
+<!-- ═══ PAYWALL ═══ -->
+<div id="paywall-screen">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔐</div>
+    <div class="paywall-title">AsistApp</div>
+    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
+    <div class="paywall-price">
+      <div class="paywall-price-amount">$5.200</div>
+      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
+    </div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
+    </div>
+    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
+    <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
+  </div>
+</div>
 </body>
 </html>
