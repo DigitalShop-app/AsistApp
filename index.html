@@ -26856,12 +26856,30 @@ async function enterApp(userName) {
         const status = profile.subscription_status;
         const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
         const now = new Date();
+        const GRACE_DAYS = 5;
+        const isActive = status === 'active' && (!expires || expires >= now);
         const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
-        const isPending = status === 'pending' || (!status);
-        if (isExpired || isPending) {
-          showPaywall(userName, isExpired);
-          return;
+        let inGrace = false, graceDaysLeft = 0;
+        if (isExpired && expires) {
+          const diffDays = Math.floor((now - expires) / 86400000);
+          if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
         }
+        if (!isActive && !inGrace) { showPaywall(userName, isExpired); return; }
+        if (inGrace) {
+          const userEmail = _sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '';
+          emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
+          showGraceModal(userName, graceDaysLeft);
+        }
+
+
+
+
+
+
+
+
+
+
       }
     } catch(e) { /* si falla el chequeo, dejar pasar */ }
   }
@@ -27457,6 +27475,23 @@ function showPaywall(userName, isExpired) {
   if (btn) btn.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${email}`;
   const paywall = document.getElementById('paywall-screen');
   if (paywall) paywall.classList.add('visible');
+}
+
+function showGraceModal(userName, daysLeft) {
+  // Crear modal si no existe
+  if (document.getElementById("grace-modal")) { document.getElementById("grace-modal").style.display="flex"; return; }
+  const mp_link = (() => { const e = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split(".")[1]))?.email || "" : ""); return `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${e}`; })();
+  const el = document.createElement("div");
+  el.id = "grace-modal";
+  el.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;display:flex;align-items:center;justify-content:center;";
+  el.innerHTML = `<div style="background:#1e293b;border:1px solid rgba(251,191,36,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="font-size:3rem;margin-bottom:1rem;">⏳</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:#fff;margin-bottom:0.5rem;">Período de gracia</div>
+    <p style="color:#cbd5e1;font-size:0.9rem;margin-bottom:1.5rem;line-height:1.6;">Hola <strong>${userName}</strong>, tu suscripción venció.<br>Tenés <strong style="color:#fbbf24;">${daysLeft} día${daysLeft!==1?"s":""} de gracia</strong> para renovarla.<br>Después de ese plazo no podrás ingresar.</p>
+    <a href="${mp_link}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:0.9rem;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;font-weight:800;font-size:1rem;border-radius:12px;text-decoration:none;margin-bottom:1rem;">💳 Renovar suscripción</a>
+    <button onclick="document.getElementById('grace-modal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:0.82rem;cursor:pointer;text-decoration:underline;">Continuar sin renovar</button>
+  </div>`;
+  document.body.appendChild(el);
 }
 
 // ════════════════════════════════════════
