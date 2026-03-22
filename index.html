@@ -26804,7 +26804,28 @@ async function doRegister() {
     await enterApp(name);
   } catch(e) {
     const msg = e.message||'';
-    showLoginError('❌ ' + (msg.includes('already')||msg.includes('registered') ? 'Ese email ya está registrado' : msg || 'Error al crear la cuenta'));
+    if (msg.includes('already')||msg.includes('registered')) {
+      // Email ya existe — intentar login y mostrar paywall
+      try {
+        const login = await sbAuth('token?grant_type=password', {email, password:pass});
+        const token = login.access_token; const userId = login.user?.id;
+        if (token && userId) {
+          _sbToken = token; _sbUserId = userId;
+          localStorage.setItem('aa_sb_session', JSON.stringify({token,userId,name}));
+          await enterApp(name);
+        } else {
+          showLoginError('⚠ Ese email ya tiene una cuenta. Iniciá sesión con tu contraseña.');
+          switchLoginTab('login');
+          document.getElementById('login-user').value = email;
+        }
+      } catch(e2) {
+        showLoginError('⚠ Ese email ya tiene una cuenta. Iniciá sesión con tu contraseña.');
+        switchLoginTab('login');
+        document.getElementById('login-user').value = email;
+      }
+    } else {
+      showLoginError('❌ ' + (msg || 'Error al crear la cuenta'));
+    }
   } finally { setLoginLoading(false); }
 }
 
