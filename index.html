@@ -26799,7 +26799,7 @@ async function doRegister() {
     if (!userId) throw new Error('No se pudo obtener el ID de usuario');
     _sbToken = token; _sbUserId = userId;
     localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name}));
-    try { await sbFetch('profiles', {method:'POST',body:{id:_sbUserId,name},prefer:'return=minimal'}); } catch(e) {}
+    try { await sbFetch('profiles', {method:'POST',body:{id:_sbUserId,name,subscription_status:'pending'},prefer:'return=minimal'}); } catch(e) {}
     sendWelcomeEmail(email, name, pass);
     await enterApp(name);
   } catch(e) {
@@ -26902,7 +26902,7 @@ async function enterApp(userName) {
 
 
       }
-    } catch(e) { /* si falla el chequeo, dejar pasar */ }
+    } catch(e) { showPaywall(userName, false); return; }
   }
   document.getElementById('header-user').textContent = '👤 ' + userName;
   document.getElementById('header-user').style.display = 'inline-flex';
