@@ -26644,7 +26644,7 @@ function showToast(msg) {
 // ════════════════════════════════════════
 const SUPA_URL    = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
 const ADMIN_EMAIL = 'soydigitalshop@gmail.com';
-const SUPA_KEY    = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
+const SUPA_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZHZieGpkdmdta3Zhc3V6d3B3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNzc2MTUsImV4cCI6MjA4ODY1MzYxNX0.ReRJLNcFEhIvjsEs2t7LEuJWjcEHkoIfYG_63Lwipns';
 
 async function sbFetch(path, options={}) {
   const url = SUPA_URL + '/rest/v1/' + path;
@@ -26864,7 +26864,8 @@ async function enterApp(userName) {
         headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken }
       });
       const profileData = await profileRes.json();
-      if (profileData && profileData[0]) {
+      if (!profileData || !profileData[0]) { showPaywall(userName, false); return; }
+      {
         const profile = profileData[0];
         // Verificar suspensión
         if (profile.suspended === true) {
