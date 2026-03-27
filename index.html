@@ -22623,8 +22623,8 @@ var __async = (__this, __arguments, generator) => {
 
   .field { margin-bottom: 1rem; }
   label { display: block; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin-bottom: 6px; }
-  input[type="text"], input[type="date"], input[type="password"], input[type="email"], select { width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; color: var(--ink); background: var(--cream); transition: border-color 0.2s; outline: none; box-sizing: border-box; }
-  input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus, input[type="email"]:focus, select:focus { border-color: var(--teal); background: white; }
+  input[type="text"], input[type="date"], input[type="password"], input[type="email"], input[type="tel"], select { width: 100%; padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Nunito', sans-serif; font-size: 0.95rem; color: var(--ink); background: var(--cream); transition: border-color 0.2s; outline: none; box-sizing: border-box; }
+  input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="tel"]:focus, select:focus { border-color: var(--teal); background: white; }
 
   .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: none; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.88rem; cursor: pointer; letter-spacing: 0.3px; transition: all 0.2s; }
   .btn-primary { background: var(--teal); color: white; }
@@ -22637,6 +22637,8 @@ var __async = (__this, __arguments, generator) => {
   .btn-gold:hover { background: #e09510; }
   .btn-slate { background: var(--slate); color: white; }
   .btn-slate:hover { background: #3d4a7a; }
+  .btn-success { background: #27ae60; color: white; }
+  .btn-success:hover { background: #219a52; }
   .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
   .btn-full { width: 100%; justify-content: center; }
 
@@ -22855,6 +22857,20 @@ var __async = (__this, __arguments, generator) => {
   .cat-opt.cat-familia   { background: #f3eefb; color: #7c3aed; }
 
   .print-area { display: none; }
+
+  /* ── NÓMINA GRID ── */
+  .nomina-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+
+  @media (max-width: 768px) {
+    .nomina-grid { grid-template-columns: 1fr; }
+    .nomina-form-card { order: -1; width: 100%; }
+    .nomina-list-card { order: 1; }
+  }
+  @media (max-width: 480px) {
+    .nomina-grid { grid-template-columns: 1fr; }
+    .nomina-form-card { order: -1; width: 100%; }
+    .nomina-list-card { order: 1; }
+  }
   @media print {
     body > *:not(.print-area) { display: none !important; }
     .print-area { display: block; }
@@ -23071,7 +23087,7 @@ var __async = (__this, __arguments, generator) => {
   }
 
   /* ── PAYWALL ── */
-  #paywall-screen-main { display:none; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:9999; align-items:center; justify-content:center; }
+  #paywall-screen-main { display:none; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:99999; align-items:center; justify-content:center; }
   #paywall-screen-main.visible { display:flex; }
   .paywall-card { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:3rem 2.5rem; max-width:480px; width:90%; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.4); }
   .paywall-icon { font-size:3.5rem; margin-bottom:1rem; }
@@ -23310,8 +23326,8 @@ var __async = (__this, __arguments, generator) => {
   </div>
   <div id="nomina-content" style="display:none">
     <div class="curso-bar" id="nomina-bar"></div>
-    <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem">
-      <div class="card">
+    <div class="nomina-grid">
+      <div class="card nomina-form-card">
         <div class="card-title">➕ Agregar Alumno</div>
         <div class="field"><label>Apellido/s</label><input type="text" id="inp-apellido" placeholder="Ej: García López" onkeydown="if(event.key==='Enter')addStudent()"></div>
         <div class="field"><label>Nombre/s</label><input type="text" id="inp-nombre" placeholder="Ej: Martina Belén" onkeydown="if(event.key==='Enter')addStudent()"></div>
@@ -23323,7 +23339,7 @@ var __async = (__this, __arguments, generator) => {
         <div class="divider">importar</div>
         <button class="btn btn-secondary btn-full btn-sm" onclick="importCSV()">📤 Importar desde CSV</button>
       </div>
-      <div class="card">
+      <div class="card nomina-list-card">
         <div class="card-title">📋 Lista <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:0.8rem;color:#9ca3af" id="student-count">0 alumnos</span></div>
         <div class="student-list" id="student-list"></div>
         <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px 0;font-family:'DM Mono',monospace;letter-spacing:0.3px;">💡 Clic sobre el alumno para agregar observaciones</p>
@@ -23439,6 +23455,7 @@ var __async = (__this, __arguments, generator) => {
           </p>
           <div class="absent-list" id="absent-list"></div>
           <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+            <button class="btn btn-success btn-sm" onclick="markAllPresent()" style="flex:1">🟢 Todos Presentes (P)</button>
             <button class="btn btn-danger btn-sm" onclick="markAllAbsent()" style="flex:1">🔴 Todos Ausentes (A)</button>
             <button class="btn btn-secondary btn-sm" onclick="document.getElementById('absent-panel').style.display='none'" style="flex:1">✕ Cerrar</button>
           </div>
@@ -23461,6 +23478,7 @@ var __async = (__this, __arguments, generator) => {
     <div class="curso-bar" id="planilla-bar"></div>
     <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
       <button class="btn btn-primary" onclick="openAddDayModal()">📅 Agregar día</button>
+      <button class="btn btn-success" onclick="openMarkAllPresentPlanilla()">🟢 Todos Presentes</button>
       <button class="btn btn-secondary" onclick="openExportModal()">📥 Exportar / Informe</button>
       <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
       <button class="btn btn-danger btn-sm" onclick="openDeleteDayModal()">🗑 Eliminar día</button>
@@ -23726,6 +23744,10 @@ var __async = (__this, __arguments, generator) => {
     <input type="hidden" id="edit-student-id">
     <div class="field"><label>Apellido/s</label><input type="text" id="edit-apellido" placeholder="Apellido/s"></div>
     <div class="field"><label>Nombre/s</label><input type="text" id="edit-nombre" placeholder="Nombre/s"></div>
+    <div id="edit-family-fields">
+      <div class="field"><label>📧 Email familia</label><input type="email" id="edit-email-familia" placeholder="familia@email.com"></div>
+      <div class="field"><label>📱 WhatsApp familia</label><input type="tel" id="edit-whatsapp-familia" placeholder="Ej: 1123456789"></div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:1.2rem">
       <button class="btn btn-primary" style="flex:1" onclick="saveEditStudent()">💾 Guardar</button>
       <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('edit-student-modal').classList.remove('open')">Cancelar</button>
@@ -24280,6 +24302,28 @@ function previewQRsSelected() {
     </div>
   </div>
 
+<!-- ═══ MODAL COMPARTIR ═══ -->
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
+    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
+      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
+      </button>
+    </div>
+    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
+  </div>
+</div>
+
 <!-- ═══ PAYWALL ═══ -->
 <div id="paywall-screen">
   <div class="paywall-card">
@@ -24287,7 +24331,7 @@ function previewQRsSelected() {
     <div class="paywall-title">AsistApp</div>
     <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
     <div class="paywall-price">
-      <div class="paywall-price-amount">$4.999</div>
+      <div class="paywall-price-amount">$4.970</div>
       <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
     </div>
     <div class="paywall-features">
@@ -24505,6 +24549,28 @@ function printQRs() {
   document.fonts.ready.then(function(){ window.print(); });
 <\/script>
 
+<!-- ═══ MODAL COMPARTIR ═══ -->
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
+    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
+      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
+      </button>
+    </div>
+    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
+  </div>
+</div>
+
 <!-- ═══ PAYWALL ═══ -->
 <div id="paywall-screen">
   <div class="paywall-card">
@@ -24512,7 +24578,7 @@ function printQRs() {
     <div class="paywall-title">AsistApp</div>
     <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
     <div class="paywall-price">
-      <div class="paywall-price-amount">$4.999</div>
+      <div class="paywall-price-amount">$4.970</div>
       <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
     </div>
     <div class="paywall-features">
@@ -24770,6 +24836,45 @@ async function markAllAbsent() {
   showToast(`🔴 ${toMark.length} ausentes registrados`);
   checkAndShowConsecAbsences(date);
   try { await Promise.all(toMark.map(s=>sbSaveAttendance(s.id, date, 'A'))); } catch(e) {}
+}
+
+// Marca todos presentes desde el Scanner
+async function markAllPresent() {
+  if (!activeScanId) return;
+  const date = document.getElementById('scan-date').value; if (!date) { showToast('⚠ Seleccioná una fecha primero'); return; }
+  const list = studentsOf(activeScanId);
+  if (!list.length) { showToast('⚠ No hay alumnos en este curso'); return; }
+  const ok = await showConfirm(`¿Marcar a los ${list.length} alumnos como Presentes?`, `Fecha: ${fmt(date)}`, '🟢', 'Sí, todos presentes', 'btn-success');
+  if (!ok) return;
+  list.forEach(s => { if (!attendance[s.id]) attendance[s.id]={}; attendance[s.id][date]=true; });
+  updateDayStats(date);
+  document.getElementById('absent-panel').style.display='none';
+  showToast(`🟢 ${list.length} alumnos marcados como Presentes`);
+  try { await Promise.all(list.map(s=>sbSaveAttendance(s.id, date, true))); } catch(e) {}
+}
+
+// Marca todos presentes desde Planilla — pide elegir fecha
+async function openMarkAllPresentPlanilla() {
+  if (!activePlanillaId) return;
+  const dates = datesForCurso(activePlanillaId);
+  if (!dates.length) { showToast('⚠ No hay días registrados en la planilla'); return; }
+  const today = new Date().toISOString().split('T')[0];
+  // Usar el mismo modal de cerrar día para elegir fecha
+  showConfirmCustom('🟢 Todos Presentes', 'Seleccioná el día para marcar a todos presentes:', dates, today);
+  // Override del botón OK para ejecutar la lógica correcta
+  const okBtn = document.getElementById('confirm-ok-btn');
+  okBtn.textContent = 'Marcar todos presentes';
+  okBtn.className = okBtn.className.replace('btn-primary','btn-success');
+  _confirmCb = async () => {
+    const sel = document.getElementById('close-day-date-sel');
+    const date = sel ? sel.value : today;
+    if (!date) return;
+    const list = studentsOf(activePlanillaId);
+    list.forEach(s => { if (!attendance[s.id]) attendance[s.id]={}; attendance[s.id][date]=true; });
+    renderAttendanceTable();
+    showToast(`🟢 ${list.length} alumnos marcados como Presentes el ${fmt(date)}`);
+    try { await Promise.all(list.map(s=>sbSaveAttendance(s.id, date, true))); } catch(e) {}
+  };
 }
 
 // ─── PLANILLA ───
@@ -25081,7 +25186,11 @@ async function confirmAddDay() {
 
 function renderAttendanceTable(scrollToEnd = false) {
   if (!activePlanillaId) return;
-  const list  = studentsOf(activePlanillaId);
+  const list  = studentsOf(activePlanillaId).slice().sort((a,b) => {
+    const fa = (a.apellido||a.nombre||'').toLowerCase();
+    const fb = (b.apellido||b.nombre||'').toLowerCase();
+    return fa.localeCompare(fb, 'es');
+  });
   const dates = datesForCurso(activePlanillaId);
   const thead = document.querySelector('#att-table thead tr');
   const tbody = document.getElementById('att-body');
@@ -25118,6 +25227,33 @@ function renderAttendanceTable(scrollToEnd = false) {
       <td class="name-cell" onclick="openObservations('${s.id}')" title="📝 Ver/agregar observaciones" style="cursor:pointer">${s.apellido?s.apellido+', '+s.nombre:s.nombre}${warnIcon}${obsBadge}</td>
       ${cells}${pctCell}</tr>`;
   }).join('');
+
+  // ── FILA DE TOTALES DIARIOS ──
+  const totalsRow = (() => {
+    if (!dates.length) return '';
+    // Columnas de datos: una fila por indicador (P, A, T, J)
+    // P = presentes (true) + tardes (T)
+    const pCells = dates.map(d => {
+      const p = list.filter(s => attendance[s.id]?.[d] === true || attendance[s.id]?.[d] === 'T').length;
+      return `<td class="att-cell" style="background:#f0faf5;font-weight:800;color:#27ae60;text-align:center;font-size:0.82rem">${p}</td>`;
+    }).join('');
+    // A = ausentes (A) + justificados (J)
+    const aCells = dates.map(d => {
+      const a = list.filter(s => attendance[s.id]?.[d] === 'A' || attendance[s.id]?.[d] === 'J').length;
+      return `<td class="att-cell" style="background:#fdf0f2;font-weight:800;color:#e74c3c;text-align:center;font-size:0.82rem">${a}</td>`;
+    }).join('');
+    return `<tr data-total-row="P" style="border-top:2px solid #d1e8d8">
+      <td class="num-cell" style="background:#f0faf5"></td>
+      <td class="name-cell" style="background:#f0faf5;font-size:0.75rem;font-weight:800;color:#27ae60;padding-left:12px">P</td>
+      ${pCells}<td class="att-cell" style="background:#f0faf5"></td>
+    </tr>
+    <tr data-total-row="A">
+      <td class="num-cell" style="background:#fdf0f2"></td>
+      <td class="name-cell" style="background:#fdf0f2;font-size:0.75rem;font-weight:800;color:#e74c3c;padding-left:12px">A</td>
+      ${aCells}<td class="att-cell" style="background:#fdf0f2"></td>
+    </tr>`;
+  })();
+  tbody.innerHTML += totalsRow;
 
   const totalPres = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&(attendance[s.id][d]===true||attendance[s.id][d]==='T')).length,0);
   const totalJust = list.reduce((a,s)=>a+dates.filter(d=>attendance[s.id]&&attendance[s.id][d]==='J').length,0);
@@ -25174,10 +25310,35 @@ async function cycleAttendance(studentId, date, el) {
     const row   = el.closest('tr');
     if (row) { const last=row.lastElementChild; last.style.color=col; last.textContent=pct!=='-'?pct+'%':'-'; }
   }
+  // Actualizar fila de totales para la columna de esa fecha
+  updateDailyTotals(date);
+
   try {
     if (next === undefined) await sbDeleteAttendance(studentId, date);
     else await sbSaveAttendance(studentId, date, next);
   } catch(e) { console.warn('attendance sync error', e); }
+}
+
+function updateDailyTotals(date) {
+  if (!activePlanillaId) return;
+  const list = studentsOf(activePlanillaId);
+  const dates = datesForCurso(activePlanillaId);
+  const colIdx = dates.indexOf(date); // índice 0-based de la fecha entre las fechas
+  if (colIdx === -1) return;
+  // Las filas de totales tienen data-total-row attribute
+  const totalRows = document.querySelectorAll('#att-body tr[data-total-row]');
+  totalRows.forEach(row => {
+    const tipo = row.getAttribute('data-total-row'); // 'P','A','T','J'
+    // La columna de datos empieza en td[2] (0=num, 1=nombre, 2=primera fecha)
+    const tds = row.querySelectorAll('td');
+    const td = tds[2 + colIdx]; // +2 por num y nombre
+    if (!td) return;
+    let count = 0;
+    // P incluye presentes (true) y tardes (T); A incluye ausentes (A) y justificados (J)
+    if (tipo === 'P') count = list.filter(s => attendance[s.id]?.[date] === true || attendance[s.id]?.[date] === 'T').length;
+    else if (tipo === 'A') count = list.filter(s => attendance[s.id]?.[date] === 'A' || attendance[s.id]?.[date] === 'J').length;
+    td.textContent = count;
+  });
 }
 
 // ─── CLOSE DAY FROM PLANILLA ───
@@ -25715,12 +25876,8 @@ ${_ss.map(s=>`<si><t xml:space="preserve">${xe(s)}</t></si>`).join('\n')}
   const cleanPart=s=>(s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-áéíóúüñÁÉÍÓÚÜÑ]/gi,'');
   const fname=`Asistencia_${cleanPart(c?c.nombre:'curso')}.xlsx`;
   const blob=new Blob([zipped],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=fname; a.click();
-  URL.revokeObjectURL(url);
-  showToast('✅ Excel exportado: '+fname);
   document.getElementById('export-modal').classList.remove('open');
+  showShareModal(blob, fname);
 }
 
 // ══════════════════════════════════════════════
@@ -25978,13 +26135,8 @@ async function exportWordReport() {
     const blob = await Packer.toBlob(doc);
     const cleanPart = str => (str||'').trim().replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1\u00c1\u00c9\u00cd\u00d3\u00da\u00dc\u00d1]/gi,'');
     const fname = `Informe_${cleanPart(c?c.nombre:'curso')}_${new Date().toISOString().slice(0,10)}.docx`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = fname;
-    a.click();
-    URL.revokeObjectURL(a.href);
     document.getElementById('export-modal').classList.remove('open');
-    showToast('\u2705 Word descargado: ' + fname);
+    showShareModal(blob, fname);
   } catch(e) {
     showToast('\u274c Error al generar Word: ' + e.message);
     console.error(e);
@@ -26258,10 +26410,7 @@ async function exportWordInforme() {
     const blob = await Packer.toBlob(doc);
     const clean = s => (s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-]/g,'');
     const fname = `Informe_${clean(c?c.nombre:'')}_${new Date().toISOString().slice(0,10)}.docx`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = fname; a.click();
-    URL.revokeObjectURL(a.href);
-    showToast('\u2705 Word descargado: ' + fname);
+    showShareModal(blob, fname);
   } catch(e) {
     showToast('\u274c Error: ' + e.message);
     console.error(e);
@@ -26400,10 +26549,7 @@ async function exportNominaWord() {
     const blob = await Packer.toBlob(document2);
     const clean = s => (s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-]/g,'');
     const fname = `Nomina_${clean(c?c.nombre:'')}_${new Date().toISOString().slice(0,10)}.docx`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = fname; a.click();
-    URL.revokeObjectURL(a.href);
-    showToast('\u2705 N\u00f3mina descargada: ' + fname);
+    showShareModal(blob, fname);
   } catch(e) {
     showToast('\u274c Error: ' + e.message);
     console.error(e);
@@ -26421,9 +26567,9 @@ function exportReportCSV() {
   const summary = ['','RESUMEN',`Período: ${periodo}`,`Total clases: ${dates.length}`,`Asistencia global: ${gPct}%`];
   const csv = [hdr,...rows,...summary].join('\n');
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = `informe_${c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso'}.csv`;
-  a.click();
+  const csvBlob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const csvFname = `informe_${c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso'}.csv`;
+  showShareModal(csvBlob, csvFname);
 }
 
 function buildPrintHeader(cursoNombre, docenteStr, periodoStr, subtitleStr) {
@@ -26797,8 +26943,18 @@ async function doRegister() {
     if (!userId) throw new Error('No se pudo obtener el ID de usuario');
     _sbToken = token; _sbUserId = userId;
     localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name,role:_userRole}));
-    // Esperar que el trigger cree el perfil
+    // Hacer login para obtener token válido de larga duración
     await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const loginData = await sbAuth('token?grant_type=password', {email, password:pass});
+      if (loginData.access_token) {
+        _sbToken = loginData.access_token;
+        _sbUserId = loginData.user?.id || _sbUserId;
+        const loginRole = loginData.user?.user_metadata?.role || _userRole;
+        _userRole = loginRole;
+        localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name,role:loginRole,refresh:loginData.refresh_token}));
+      }
+    } catch(e) {}
     sendWelcomeEmail(email, name, pass);
     await enterApp(name);
   } catch(e) {
@@ -26839,6 +26995,16 @@ function openEditStudent(id) {
   document.getElementById('edit-student-id').value = id;
   document.getElementById('edit-apellido').value   = s.apellido||'';
   document.getElementById('edit-nombre').value     = s.nombre||'';
+  // Mostrar/ocultar campos de familia según rol
+  const familyFields = document.getElementById('edit-family-fields');
+  if (familyFields) {
+    const showFamily = (_userRole === 'preceptor' || _userRole === 'admin');
+    familyFields.style.display = showFamily ? 'block' : 'none';
+    if (showFamily) {
+      document.getElementById('edit-email-familia').value    = s.emailFamilia||s.emailPadre||'';
+      document.getElementById('edit-whatsapp-familia').value = s.whatsappFamilia||'';
+    }
+  }
   document.getElementById('edit-student-modal').classList.add('open');
 }
 
@@ -26849,35 +27015,95 @@ async function saveEditStudent() {
   if (!ape && !nom) { showToast('⚠ Ingresá al menos apellido o nombre'); return; }
   const s = students.find(x=>x.id===id); if (!s) return;
   s.apellido = ape; s.nombre = nom; s.full = [ape, nom].filter(Boolean).join(', ');
+  // Guardar campos de familia si están visibles
+  const familyFields = document.getElementById('edit-family-fields');
+  const patchBody = {apellido:ape||null,nombre:nom||null,full_name:s.full};
+  if (familyFields && familyFields.style.display !== 'none') {
+    const email = document.getElementById('edit-email-familia').value.trim();
+    const wapp  = document.getElementById('edit-whatsapp-familia').value.trim();
+    s.emailFamilia = email; s.emailPadre = email; s.whatsappFamilia = wapp;
+    patchBody.email_padre = email||null;
+    patchBody.whatsapp_familia = wapp||null;
+  }
   renderStudentList();
   document.getElementById('edit-student-modal').classList.remove('open');
   showToast('✅ Alumno actualizado');
-  try { await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'PATCH',prefer:'return=minimal',body:{apellido:ape||null,nombre:nom||null,full_name:s.full}}); } catch(e) {}
+  try { await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'PATCH',prefer:'return=minimal',body:patchBody}); } catch(e) {}
 }
 
+// ════════════════════════════════════════
+// COMPARTIR DOCUMENTOS
+// ════════════════════════════════════════
+let _shareBlob = null;
+let _shareFname = '';
+
+function showShareModal(blob, fname) {
+  _shareBlob = blob;
+  _shareFname = fname;
+  document.getElementById('share-fname').textContent = fname;
+  document.getElementById('share-modal').classList.add('open');
+}
+
+function _triggerDownload(blob, fname) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function doShare(method) {
+  if (!_shareBlob || !_shareFname) return;
+  document.getElementById('share-modal').classList.remove('open');
+
+  if (method === 'download') {
+    _triggerDownload(_shareBlob, _shareFname);
+    showToast('⬇️ Descargando: ' + _shareFname);
+    return;
+  }
+
+  // Para WhatsApp y Email: descargar primero, luego abrir la app
+  _triggerDownload(_shareBlob, _shareFname);
+
+  if (method === 'whatsapp') {
+    setTimeout(() => {
+      const text = encodeURIComponent('Te comparto el archivo *' + _shareFname + '* de AsistApp. Podés encontrarlo en tus descargas 📎');
+      const url = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        ? 'whatsapp://send?text=' + text
+        : 'https://web.whatsapp.com/send?text=' + text;
+      window.open(url, '_blank');
+      showToast('💬 Archivo descargado. Adjuntalo en WhatsApp.');
+    }, 800);
+  } else if (method === 'email') {
+    setTimeout(() => {
+      const subject = encodeURIComponent('Informe AsistApp — ' + _shareFname);
+      const body = encodeURIComponent('Hola,\n\nTe comparto el archivo adjunto generado con AsistApp.\nPodés encontrarlo en tus descargas: ' + _shareFname + '\n\nSaludos.');
+      window.open('mailto:?subject=' + subject + '&body=' + body, '_blank');
+      showToast('📧 Archivo descargado. Adjuntalo en tu email.');
+    }, 800);
+  }
+}
+
+
 async function enterApp(userName) {
-  console.log("enterApp called for:", userName, "userId:", _sbUserId);
-  // Verificar suspensión y suscripción usando RPC segura
+
+  // Verificar suscripción consultando directamente la tabla profiles
   if (_sbUserId && _sbToken) {
     try {
-      const rpcRes = await fetch(SUPA_URL + '/rest/v1/rpc/get_my_subscription', {
-        method: 'POST',
-        headers: { 
-          'apikey': SUPA_KEY, 
-          'Authorization': 'Bearer ' + _sbToken,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      });
-      const profile = await rpcRes.json();
-      if (profile && profile.suspended === true) {
+      // Intentar refrescar token
+      const refreshed = await sbRefreshToken().catch(()=>false);
+      // Consultar perfil usando el token actualizado
+      const profileRes = await fetch(
+        SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended,subscription_status,subscription_expires_at',
+        { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
+      );
+      if (!profileRes.ok) { showPaywall(userName, false); return; }
+      const profileArr = await profileRes.json();
+      if (!profileArr || !profileArr.length) { showPaywall(userName, false); return; }
+      const profile = profileArr[0];
+      if (profile.suspended === true) {
         localStorage.removeItem('aa_sb_session');
         _sbToken = null; _sbUserId = null;
-        showLoginError('\u{1F6AB} Tu cuenta fue suspendida. Contact\u00E1 al administrador: soydigitalshop@gmail.com');
-        return;
-      }
-      if (!profile || !profile.subscription_status) {
-        showPaywall(userName, false);
+        showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
         return;
       }
       const status = profile.subscription_status;
@@ -27479,18 +27705,28 @@ window.showView = function(id, btn) {
 const MP_PLAN_ID = '9344e4199be045509b8c6a0e3ffe3083';
 
 function showPaywall(userName, isExpired) {
+  // Limpiar sesión para evitar auto-login en próxima visita
+  localStorage.removeItem('aa_sb_session');
+  // Ocultar todo lo demás
+  const appWrapper = document.getElementById('app-wrapper');
+  if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = 'none'; }
+  const loginScreen = document.getElementById('login-screen');
+  if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
   const msg = document.getElementById('paywall-msg-main');
   if (msg) {
     msg.textContent = isExpired
       ? `Tu suscripción venció, ${userName}. Renovála para seguir usando AsistApp.`
-      : `Bienvenido/a ${userName}. Activá tu suscripción para empezar a usar AsistApp.`;
+      : `Bienvenido/a ${userName}. Para acceder a AsistApp activá tu suscripción mensual.`;
   }
   // Generar link de suscripción con email del usuario
   const email = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '');
   const btn = document.getElementById('btn-suscribir-main');
   if (btn) btn.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${email}`;
+  // Mostrar paywall con style directo (más confiable que classList en algunos navegadores)
   const paywall = document.getElementById('paywall-screen-main');
-  if (paywall) paywall.classList.add('visible');
+  if (paywall) {
+    paywall.style.cssText = 'display:flex !important; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:99999; align-items:center; justify-content:center;';
+  }
 }
 
 function showGraceModal(userName, daysLeft) {
@@ -27532,6 +27768,7 @@ function showGraceModal(userName, daysLeft) {
   // Sin sesión → mostrar pantalla de login
 })();
 </script>
+</div><!-- /app-wrapper -->
 
 <!-- LIGHTBOX para imágenes de observaciones -->
 <div id="obs-lightbox" onclick="if(event.target===this||event.target.id==='obs-lightbox')closeObsLightbox()">
@@ -27539,6 +27776,32 @@ function showGraceModal(userName, daysLeft) {
   <img id="obs-lightbox-img" src="" alt="Imagen adjunta">
 </div>
 
+<!-- Botón flotante cambio de rol -->
+<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:24px;right:24px;z-index:1000;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:10px 18px;font-size:0.78rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.4);transition:all 0.2s;"></button>
+
+
+
+<!-- ═══ MODAL COMPARTIR ═══ -->
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
+    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
+      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
+      </button>
+    </div>
+    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
+  </div>
+</div>
 
 <!-- ═══ PAYWALL ═══ -->
 <div id="paywall-screen-main">
@@ -27547,7 +27810,7 @@ function showGraceModal(userName, daysLeft) {
     <div class="paywall-title">AsistApp</div>
     <div class="paywall-sub" id="paywall-msg-main">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
     <div class="paywall-price">
-      <div class="paywall-price-amount">$4.999</div>
+      <div class="paywall-price-amount">$4.970</div>
       <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
     </div>
     <div class="paywall-features">
@@ -27561,7 +27824,5 @@ function showGraceModal(userName, daysLeft) {
     <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
   </div>
 </div>
-<!-- Botón flotante cambio de rol -->
-<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:24px;right:24px;z-index:1000;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:10px 18px;font-size:0.78rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.4);transition:all 0.2s;"></button>
 </body>
 </html>
