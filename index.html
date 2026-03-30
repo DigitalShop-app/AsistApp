@@ -22610,6 +22610,7 @@ var __async = (__this, __arguments, generator) => {
   .nav-btn { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
   .nav-btn:hover { background: rgba(255,255,255,0.14); color: white; }
   .nav-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
+  .nav-btn.hidden-role { display: none !important; }
 
   .view { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
   .view.active { display: block; }
@@ -23847,7 +23848,7 @@ function showView(id, btn) {
     syncSelects();
     // Pre-seleccionar el curso activo si no hay uno seleccionado en proceso
     if (!activeProcesoCursoId) {
-      const fallback = activePlanillaId || activeCursoId || null;
+      const fallback = activePlanillaId || activeScanId || activeCursoId || null;
       if (fallback) {
         const sel = document.getElementById('proceso-curso-sel');
         if (sel) { sel.value = fallback; onProcesoCursoChange(); }
@@ -24380,7 +24381,7 @@ function previewQRsSelected() {
       </table>
     </div>
   </div>
-  <div id="proceso-empty" class="empty-state"><div class="ei">📝</div><p>Seleccioná un curso para ver su registro de proceso</p></div>
+  <div id="proceso-empty" class="empty-state"><div class="ei">📝</div><p>Seleccioná un curso para ver su registro de proceso</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Podés agregar registros de evaluación: notas, calificaciones cualitativas y símbolos</p></div>
 </div>
 
 <!-- MODAL AGREGAR REGISTRO DE PROCESO -->
@@ -24741,113 +24742,10 @@ function printQRs() {
 
 <!-- ═══ PROCESO ═══ -->
 <!-- MODAL AGREGAR REGISTRO DE PROCESO -->
-<div class="modal-overlay" id="add-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:480px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--slate)">📋 Nuevo registro</h3>
-      <button onclick="document.getElementById('add-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field">
-      <label>📅 Fecha</label>
-      <input type="date" id="proceso-add-date">
-    </div>
-    <div class="field">
-      <label>📌 Nombre del registro</label>
-      <input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3, Participación...">
-    </div>
-    <div class="field">
-      <label>📊 Tipo de calificación</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="proceso-tipo-btns">
-        <button class="role-btn selected" id="ptipo-num" onclick="selectProcesoTipo('num')">🔢 Numérica (1–10)</button>
-        <button class="role-btn" id="ptipo-cual" onclick="selectProcesoTipo('cual')">📋 Cualitativa</button>
-        <button class="role-btn" id="ptipo-simb" onclick="selectProcesoTipo('simb')">🎯 Simbólica</button>
-      </div>
-    </div>
-    <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;line-height:1.5">Se agregará una columna para este registro. Hacé clic en cada celda para asignar la calificación.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-secondary" onclick="document.getElementById('add-proceso-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmAddProceso()">✅ Agregar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
-<div class="modal-overlay" id="delete-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--rose)">🗑 Eliminar registro</h3>
-      <button onclick="document.getElementById('delete-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field">
-      <label>Seleccioná el registro a eliminar</label>
-      <select id="delete-proceso-select" style="width:100%"><option value="">— Seleccioná —</option></select>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:1.2rem">
-      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('delete-proceso-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-danger" style="flex:2" onclick="confirmDeleteProceso()">🗑 Eliminar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL CALIFICAR CELDA DE PROCESO -->
-<div class="modal-overlay" id="proceso-cell-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <div>
-        <h3 id="pcell-student-name" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--slate);text-transform:uppercase"></h3>
-        <p id="pcell-registro-name" style="font-size:0.8rem;color:#9ca3af;font-weight:600;margin-top:2px"></p>
-      </div>
-      <button onclick="document.getElementById('proceso-cell-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <!-- Opciones numéricas -->
-    <div id="pcell-num-options">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Escala numérica</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem">
-        <button class="proceso-badge pnota-10" onclick="setProcesoVal(10)">10</button>
-        <button class="proceso-badge pnota-9"  onclick="setProcesoVal(9)">9</button>
-        <button class="proceso-badge pnota-8"  onclick="setProcesoVal(8)">8</button>
-        <button class="proceso-badge pnota-7"  onclick="setProcesoVal(7)">7</button>
-        <button class="proceso-badge pnota-6"  onclick="setProcesoVal(6)">6</button>
-        <button class="proceso-badge pnota-5"  onclick="setProcesoVal(5)">5</button>
-        <button class="proceso-badge pnota-4"  onclick="setProcesoVal(4)">4</button>
-        <button class="proceso-badge pnota-3"  onclick="setProcesoVal(3)">3</button>
-        <button class="proceso-badge pnota-2"  onclick="setProcesoVal(2)">2</button>
-        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
-      </div>
-    </div>
-    <!-- Opciones cualitativas -->
-    <div id="pcell-cual-options" style="display:none">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Escala cualitativa</p>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:1rem">
-        <button class="proceso-badge pcual-mb_plus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('MB+')">MB+ · Muy Bueno +</button>
-        <button class="proceso-badge pcual-mb"      style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('MB')">MB · Muy Bueno</button>
-        <button class="proceso-badge pcual-b_plus"  style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('B+')">B+ · Bueno +</button>
-        <button class="proceso-badge pcual-b"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('B')">B · Bueno</button>
-        <button class="proceso-badge pcual-s"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('S')">S · Suficiente</button>
-        <button class="proceso-badge pcual-s_minus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
-        <button class="proceso-badge pcual-i"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('I')">I · Insuficiente</button>
-        <button class="proceso-badge pcual-i_minus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
-      </div>
-    </div>
-    <!-- Opciones simbólicas -->
-    <div id="pcell-simb-options" style="display:none">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Registro simbólico</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem">
-        <button class="proceso-badge psimb" title="Logrado"        onclick="setProcesoVal('✅')">✅</button>
-        <button class="proceso-badge psimb" title="No cumplió"     onclick="setProcesoVal('❌')">❌</button>
-        <button class="proceso-badge psimb" title="Pendiente"      onclick="setProcesoVal('⏳')">⏳</button>
-        <button class="proceso-badge psimb" title="Excelente"      onclick="setProcesoVal('⭐')">⭐</button>
-        <button class="proceso-badge psimb" title="Participó"      onclick="setProcesoVal('🙋')">🙋</button>
-        <button class="proceso-badge psimb" title="Muy bien"       onclick="setProcesoVal('😄')">😄</button>
-        <button class="proceso-badge psimb" title="En proceso"     onclick="setProcesoVal('🤔')">🤔</button>
-        <button class="proceso-badge psimb" title="Necesita apoyo" onclick="setProcesoVal('😟')">😟</button>
-        <button class="proceso-badge psimb" title="Entregó"        onclick="setProcesoVal('📎')">📎</button>
-        <button class="proceso-badge psimb" title="No entregó"     onclick="setProcesoVal('🚫')">🚫</button>
-      </div>
-    </div>
-    <button class="btn btn-secondary btn-sm btn-full" style="margin-top:4px" onclick="setProcesoVal(null)">🗑 Borrar calificación</button>
-  </div>
-</div>
 
 <!-- ═══ MODAL COMPARTIR ═══ -->
 <div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
@@ -25278,7 +25176,18 @@ function applyRoleUI() {
   const famFields = document.getElementById('prec-family-fields');
   if (famFields) famFields.style.display = isPreceptor() ? 'block' : 'none';
 
-  // Botón configuración preceptor en nav
+  // Botón PROCESO: solo visible en modo Profesor
+  const procesoBtn = document.querySelector('button.nav-btn[onclick*="proceso"]');
+  if (procesoBtn) {
+    // Usar clase en lugar de style inline para no interferir con .active
+    if (isPreceptor()) {
+      procesoBtn.classList.add('hidden-role');
+    } else {
+      procesoBtn.classList.remove('hidden-role');
+    }
+  }
+
+  // Botón Configuración: solo visible en modo preceptor
   let cfgBtn = document.getElementById('nav-prec-config');
   if (!cfgBtn) {
     cfgBtn = document.createElement('button');
@@ -25289,7 +25198,6 @@ function applyRoleUI() {
     cfgBtn.onclick = () => openPrecConfig();
     document.querySelector('nav').appendChild(cfgBtn);
   }
-  // Solo visible en modo preceptor
   cfgBtn.style.display = isPreceptor() ? 'inline-flex' : 'none';
 
   // Formularios diferenciados según rol
@@ -25301,7 +25209,8 @@ function applyRoleUI() {
   if (formPreceptor) formPreceptor.style.display = isPreceptor() ? 'block' : 'none';
   if (editFormProf)  editFormProf.style.display  = isPreceptor() ? 'none' : 'block';
   if (editFormPrec)  editFormPrec.style.display  = isPreceptor() ? 'block' : 'none';
-  // Siempre refrescar el botón flotante
+
+  // Botón flotante de cambio de rol: siempre visible para todos
   updateToggleRoleBtn();
 }
 
@@ -25310,19 +25219,20 @@ function applyRoleUI() {
 function updateToggleRoleBtn() {
   const btn = document.getElementById('btn-toggle-role');
   if (!btn) return;
+  // Siempre visible — tanto admin como usuarios regulares pueden cambiar de rol
   btn.style.display = 'inline-flex';
   btn.style.alignItems = 'center';
   btn.style.gap = '5px';
   if (isPreceptor()) {
     btn.innerHTML = '👩‍🏫 Modo Profesor';
-    btn.style.background = 'rgba(124,58,237,0.25)';
-    btn.style.borderColor = 'rgba(167,139,250,0.5)';
-    btn.style.color = '#a78bfa';
+    btn.style.background = 'linear-gradient(135deg,#7c3aed,#6d28d9)';
+    btn.style.color = 'white';
+    btn.style.boxShadow = '0 4px 20px rgba(124,58,237,0.4)';
   } else {
     btn.innerHTML = '📋 Modo Preceptor';
-    btn.style.background = 'rgba(15,155,142,0.2)';
-    btn.style.borderColor = 'rgba(15,155,142,0.4)';
-    btn.style.color = '#1bc5b4';
+    btn.style.background = 'linear-gradient(135deg,#0f9b8e,#0d7a70)';
+    btn.style.color = 'white';
+    btn.style.boxShadow = '0 4px 20px rgba(15,155,142,0.4)';
   }
 }
 
@@ -27418,7 +27328,8 @@ function saveProcesoData(cursoId) {
 
 // ── Navegación a la sección ──
 function onProcesoCursoChange() {
-  const id = document.getElementById('proceso-curso-sel').value;
+  const sel = document.getElementById('proceso-curso-sel');
+  const id  = sel ? sel.value : '';
   activeProcesoCursoId = id || null;
   document.getElementById('proceso-content').style.display = id ? 'block' : 'none';
   document.getElementById('proceso-empty').style.display   = id ? 'none' : 'block';
@@ -27728,7 +27639,8 @@ async function enterApp(userName) {
       // El admin siempre tiene acceso — nunca mostrar paywall
       const currentEmail = _sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '';
       if (currentEmail === ADMIN_EMAIL) {
-        // Admin: pasar directo sin chequeo de suscripción
+        // Admin: pasar directo sin chequeo de suscripción, y forzar rol profesor
+        _userRole = 'profesor';
       } else {
         // Intentar refrescar token
         await sbRefreshToken().catch(()=>false);
@@ -28523,8 +28435,8 @@ function showGraceModal(userName, daysLeft) {
     try {
       const s = JSON.parse(saved);
       _sbToken = s.token; _sbUserId = s.userId;
-      // Restaurar rol guardado — admin siempre entra como profesor
-      const sessionEmail = s.token ? (JSON.parse(atob(s.token.split('.')[1]))?.email || '') : '';
+      // Restaurar rol — admin siempre entra como profesor
+      const sessionEmail = s.token ? (() => { try { return JSON.parse(atob(s.token.split('.')[1]))?.email || ''; } catch(e) { return ''; } })() : '';
       if (sessionEmail === ADMIN_EMAIL) {
         _userRole = 'profesor';
       } else if (s.role) {
@@ -28535,7 +28447,15 @@ function showGraceModal(userName, daysLeft) {
       }
       await enterApp(s.name);
       return;
-    } catch(e) { localStorage.removeItem('aa_sb_session'); }
+    } catch(e) {
+      // NO borrar la sesión por errores de red/timeout — solo si el token es inválido
+      console.warn('[AsistApp] Error en init, intentando continuar:', e.message);
+      // Solo limpiar si el token claramente expiró o es inválido (401)
+      if (e.message && (e.message.includes('401') || e.message.includes('JWT') || e.message.includes('invalid'))) {
+        localStorage.removeItem('aa_sb_session');
+      }
+      // En cualquier otro caso (red, timeout) mostrar login sin borrar
+    }
   }
   // Sin sesión → mostrar pantalla de login
 })();
@@ -28555,113 +28475,10 @@ function showGraceModal(userName, daysLeft) {
 
 <!-- ═══ PROCESO ═══ -->
 <!-- MODAL AGREGAR REGISTRO DE PROCESO -->
-<div class="modal-overlay" id="add-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:480px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--slate)">📋 Nuevo registro</h3>
-      <button onclick="document.getElementById('add-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field">
-      <label>📅 Fecha</label>
-      <input type="date" id="proceso-add-date">
-    </div>
-    <div class="field">
-      <label>📌 Nombre del registro</label>
-      <input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3, Participación...">
-    </div>
-    <div class="field">
-      <label>📊 Tipo de calificación</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="proceso-tipo-btns">
-        <button class="role-btn selected" id="ptipo-num" onclick="selectProcesoTipo('num')">🔢 Numérica (1–10)</button>
-        <button class="role-btn" id="ptipo-cual" onclick="selectProcesoTipo('cual')">📋 Cualitativa</button>
-        <button class="role-btn" id="ptipo-simb" onclick="selectProcesoTipo('simb')">🎯 Simbólica</button>
-      </div>
-    </div>
-    <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;line-height:1.5">Se agregará una columna para este registro. Hacé clic en cada celda para asignar la calificación.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-secondary" onclick="document.getElementById('add-proceso-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmAddProceso()">✅ Agregar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
-<div class="modal-overlay" id="delete-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--rose)">🗑 Eliminar registro</h3>
-      <button onclick="document.getElementById('delete-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field">
-      <label>Seleccioná el registro a eliminar</label>
-      <select id="delete-proceso-select" style="width:100%"><option value="">— Seleccioná —</option></select>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:1.2rem">
-      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('delete-proceso-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-danger" style="flex:2" onclick="confirmDeleteProceso()">🗑 Eliminar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL CALIFICAR CELDA DE PROCESO -->
-<div class="modal-overlay" id="proceso-cell-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <div>
-        <h3 id="pcell-student-name" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--slate);text-transform:uppercase"></h3>
-        <p id="pcell-registro-name" style="font-size:0.8rem;color:#9ca3af;font-weight:600;margin-top:2px"></p>
-      </div>
-      <button onclick="document.getElementById('proceso-cell-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <!-- Opciones numéricas -->
-    <div id="pcell-num-options">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Escala numérica</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem">
-        <button class="proceso-badge pnota-10" onclick="setProcesoVal(10)">10</button>
-        <button class="proceso-badge pnota-9"  onclick="setProcesoVal(9)">9</button>
-        <button class="proceso-badge pnota-8"  onclick="setProcesoVal(8)">8</button>
-        <button class="proceso-badge pnota-7"  onclick="setProcesoVal(7)">7</button>
-        <button class="proceso-badge pnota-6"  onclick="setProcesoVal(6)">6</button>
-        <button class="proceso-badge pnota-5"  onclick="setProcesoVal(5)">5</button>
-        <button class="proceso-badge pnota-4"  onclick="setProcesoVal(4)">4</button>
-        <button class="proceso-badge pnota-3"  onclick="setProcesoVal(3)">3</button>
-        <button class="proceso-badge pnota-2"  onclick="setProcesoVal(2)">2</button>
-        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
-      </div>
-    </div>
-    <!-- Opciones cualitativas -->
-    <div id="pcell-cual-options" style="display:none">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Escala cualitativa</p>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:1rem">
-        <button class="proceso-badge pcual-mb_plus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('MB+')">MB+ · Muy Bueno +</button>
-        <button class="proceso-badge pcual-mb"      style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('MB')">MB · Muy Bueno</button>
-        <button class="proceso-badge pcual-b_plus"  style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('B+')">B+ · Bueno +</button>
-        <button class="proceso-badge pcual-b"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('B')">B · Bueno</button>
-        <button class="proceso-badge pcual-s"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('S')">S · Suficiente</button>
-        <button class="proceso-badge pcual-s_minus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
-        <button class="proceso-badge pcual-i"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('I')">I · Insuficiente</button>
-        <button class="proceso-badge pcual-i_minus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
-      </div>
-    </div>
-    <!-- Opciones simbólicas -->
-    <div id="pcell-simb-options" style="display:none">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Registro simbólico</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem">
-        <button class="proceso-badge psimb" title="Logrado"        onclick="setProcesoVal('✅')">✅</button>
-        <button class="proceso-badge psimb" title="No cumplió"     onclick="setProcesoVal('❌')">❌</button>
-        <button class="proceso-badge psimb" title="Pendiente"      onclick="setProcesoVal('⏳')">⏳</button>
-        <button class="proceso-badge psimb" title="Excelente"      onclick="setProcesoVal('⭐')">⭐</button>
-        <button class="proceso-badge psimb" title="Participó"      onclick="setProcesoVal('🙋')">🙋</button>
-        <button class="proceso-badge psimb" title="Muy bien"       onclick="setProcesoVal('😄')">😄</button>
-        <button class="proceso-badge psimb" title="En proceso"     onclick="setProcesoVal('🤔')">🤔</button>
-        <button class="proceso-badge psimb" title="Necesita apoyo" onclick="setProcesoVal('😟')">😟</button>
-        <button class="proceso-badge psimb" title="Entregó"        onclick="setProcesoVal('📎')">📎</button>
-        <button class="proceso-badge psimb" title="No entregó"     onclick="setProcesoVal('🚫')">🚫</button>
-      </div>
-    </div>
-    <button class="btn btn-secondary btn-sm btn-full" style="margin-top:4px" onclick="setProcesoVal(null)">🗑 Borrar calificación</button>
-  </div>
-</div>
 
 <!-- ═══ MODAL COMPARTIR ═══ -->
 <div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
