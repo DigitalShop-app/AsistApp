@@ -22609,8 +22609,8 @@ var __async = (__this, __arguments, generator) => {
   nav { display: flex; gap: 4px; }
   .nav-btn { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; transition: all 0.2s; }
   .nav-btn:hover { background: rgba(255,255,255,0.14); color: white; }
-  .nav-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
-  .nav-btn.hidden-role { display: none !important; }
+  .nav-btn.active { background: var(--teal) !important; color: white !important; border-color: var(--teal) !important; }
+  .nav-btn.hidden-role { display: none; }
 
   .view { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
   .view.active { display: block; }
@@ -23845,10 +23845,7 @@ function showView(id, btn) {
   if (id === 'scanner')  { syncSelects(); }
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
-    // Siempre mostrar la grilla de cursos al entrar a la sección
     activeProcesoCursoId = null;
-    document.getElementById('proceso-panel-detalle').style.display = 'none';
-    document.getElementById('proceso-panel-cursos').style.display  = 'block';
     renderProcesoCursosGrid();
   }
 }
@@ -27341,9 +27338,16 @@ function renderProcesoCursosGrid() {
   const grid   = document.getElementById('proceso-cursos-grid');
   const noGrid = document.getElementById('proceso-sin-cursos');
   if (!grid) return;
-  if (!cursos.length) {
+  
+  // Asegurar que el panel de cursos es visible
+  const panelCursos  = document.getElementById('proceso-panel-cursos');
+  const panelDetalle = document.getElementById('proceso-panel-detalle');
+  if (panelCursos)  panelCursos.style.display  = 'block';
+  if (panelDetalle) panelDetalle.style.display = 'none';
+
+  if (!cursos || !cursos.length) {
     grid.innerHTML = '';
-    if (noGrid) noGrid.style.display = 'block';
+    if (noGrid) { noGrid.style.display = 'flex'; noGrid.style.flexDirection = 'column'; noGrid.style.alignItems = 'center'; }
     return;
   }
   if (noGrid) noGrid.style.display = 'none';
@@ -27355,13 +27359,13 @@ function renderProcesoCursosGrid() {
     div.style.cursor = 'pointer';
     div.onclick = () => abrirProcesoCurso(c.id);
     div.innerHTML = `
-      <div class="curso-card-stripe" style="background:${c.color}"></div>
+      <div class="curso-card-stripe" style="background:${c.color||'#0f9b8e'}"></div>
       <div class="curso-card-name">${c.nombre}</div>
       ${c.materia ? `<div class="curso-card-meta">📖 ${c.materia}</div>` : ''}
       ${c.docente ? `<div class="curso-card-meta">👤 ${c.docente}</div>` : ''}
       <div class="curso-card-count">👥 ${count} alumno${count !== 1 ? 's' : ''}</div>
       <div class="curso-card-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-primary btn-sm" style="flex:1" onclick="abrirProcesoCurso('${c.id}')">📝 Ver proceso</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();abrirProcesoCurso('${c.id}')">📝 Ver proceso</button>
       </div>`;
     grid.appendChild(div);
   });
