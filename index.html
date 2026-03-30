@@ -27891,9 +27891,16 @@ function showGraceModal(userName, daysLeft) {
     try {
       const s = JSON.parse(saved);
       _sbToken = s.token; _sbUserId = s.userId;
-      // Restaurar rol guardado
-      if (s.role) { _userRole = s.role === 'docente' ? 'profesor' : s.role; } 
-      else { const r = localStorage.getItem('aa_role'); if (r) _userRole = r === 'docente' ? 'profesor' : r; }
+      // Restaurar rol guardado — admin siempre entra como profesor
+      const sessionEmail = s.token ? (JSON.parse(atob(s.token.split('.')[1]))?.email || '') : '';
+      if (sessionEmail === ADMIN_EMAIL) {
+        _userRole = 'profesor';
+      } else if (s.role) {
+        _userRole = s.role === 'docente' ? 'profesor' : s.role;
+      } else {
+        const r = localStorage.getItem('aa_role');
+        if (r) _userRole = r === 'docente' ? 'profesor' : r;
+      }
       await enterApp(s.name);
       return;
     } catch(e) { localStorage.removeItem('aa_sb_session'); }
