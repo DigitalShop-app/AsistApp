@@ -23852,8 +23852,9 @@ function showView(id, btn) {
 
 // ─── SELECTS SYNC ───
 function syncSelects() {
-  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel','proceso-curso-sel'].forEach(sid => {
+  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel'].forEach(sid => {
     const el = document.getElementById(sid);
+    if (!el) return;
     const prev = el.value;
     el.innerHTML = '<option value="">— Seleccioná un curso —</option>';
     cursos.forEach(c => {
@@ -23988,13 +23989,15 @@ async function deleteCurso(id) {
 }
 
 function goToNomina(cid) {
-  showView('nomina', document.querySelectorAll('.nav-btn')[1]);
+  const btn = document.querySelector('.nav-btn[onclick*="nomina"]');
+  showView('nomina', btn);
   syncSelects();
   document.getElementById('nomina-curso-sel').value = cid;
   onNominaCursoChange();
 }
 function goToQR(cid) {
-  showView('qr', document.querySelectorAll('.nav-btn')[2]);
+  const btn = document.querySelector('.nav-btn[onclick*="qr"]');
+  showView('qr', btn);
   syncSelects();
   document.getElementById('qr-curso-sel').value = cid;
   onQrCursoChange();
@@ -24381,8 +24384,6 @@ function previewQRsSelected() {
     </div>
     <div id="proceso-empty" class="empty-state" style="display:none"><div class="ei">📋</div><p>No hay registros aún para este curso</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p></div>
   </div>
-  <!-- select oculto para compatibilidad con syncSelects -->
-  <select id="proceso-curso-sel" style="display:none" onchange="onProcesoCursoChange()"><option value="">—</option></select>
 </div>
 
 <!-- MODAL AGREGAR REGISTRO DE PROCESO -->
