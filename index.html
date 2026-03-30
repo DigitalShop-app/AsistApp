@@ -23155,7 +23155,7 @@ var __async = (__this, __arguments, generator) => {
       <div class="field">
         <label>Rol</label>
         <div class="role-selector">
-          <div class="role-btn selected" id="role-docente" onclick="selectRole('docente')">👩‍🏫 Docente</div>
+          <div class="role-btn selected" id="role-docente" onclick="selectRole('profesor')">👩‍🏫 Profesor/a</div>
           <div class="role-btn" id="role-preceptor" onclick="selectRole('preceptor')">📋 Preceptor/a</div>
         </div>
       </div>
@@ -24342,7 +24342,7 @@ function previewQRsSelected() {
       <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
     </div>
     <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
+    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
   </div>
 </div>
 </body>
@@ -24589,7 +24589,7 @@ function printQRs() {
       <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
     </div>
     <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
+    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
   </div>
 </div>
 </body>
@@ -24942,7 +24942,7 @@ async function confirmDeleteDay() {
 // ════════════════════════════════════════════════════════════
 // PERFIL PRECEPTOR — Variables y configuración
 // ════════════════════════════════════════════════════════════
-let _userRole    = localStorage.getItem('aa_role') || 'preceptor';  // 'docente' | 'preceptor'
+let _userRole    = localStorage.getItem('aa_role') || 'profesor';  // 'profesor' | 'preceptor'
 let _userTurno   = localStorage.getItem('aa_turno') || 'mañana';
 let _precConfig  = JSON.parse(localStorage.getItem('aa_prec_config') || JSON.stringify({
   maxAnual: 25, alertaAnual: 15, notifMes: 3, consec: 3
@@ -24954,8 +24954,10 @@ const isPreceptor = () => _userRole === 'preceptor';
 // ── Selección de rol en registro ──
 function selectRole(role) {
   _userRole = role;
-  document.getElementById('role-docente').classList.toggle('selected', role==='docente');
-  document.getElementById('role-preceptor').classList.toggle('selected', role==='preceptor');
+  // 'docente' es alias de 'profesor' — normalizar
+  if (_userRole === 'docente') _userRole = 'profesor';
+  document.getElementById('role-docente').classList.toggle('selected', _userRole==='profesor');
+  document.getElementById('role-preceptor').classList.toggle('selected', _userRole==='preceptor');
 }
 
 // ── Selección de turno ──
@@ -25021,7 +25023,7 @@ function updateToggleRoleBtn() {
 }
 
 function toggleRole() {
-  const newRole = isPreceptor() ? 'docente' : 'preceptor';
+  const newRole = isPreceptor() ? 'profesor' : 'preceptor';
   selectRole(newRole);
   applyRoleUI();
   updateToggleRoleBtn();
@@ -26908,7 +26910,9 @@ async function doLogin() {
       showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
       return;
     }
-    const loginRole = data.user.user_metadata?.role || localStorage.getItem('aa_role') || 'docente';
+    // Admin siempre entra como profesor (pero puede cambiar de rol después)
+    const rawRole = data.user.user_metadata?.role || localStorage.getItem('aa_role') || 'profesor';
+    const loginRole = (email === ADMIN_EMAIL) ? 'profesor' : rawRole;
     _userRole = loginRole;
     localStorage.setItem('aa_sb_session', JSON.stringify({token:_sbToken,userId:_sbUserId,name:data.user.user_metadata?.name||email,refresh:data.refresh_token,role:loginRole}));
     await enterApp(data.user.user_metadata?.name || email);
@@ -27089,41 +27093,60 @@ async function enterApp(userName) {
   // Verificar suscripción consultando directamente la tabla profiles
   if (_sbUserId && _sbToken) {
     try {
-      // Intentar refrescar token
-      const refreshed = await sbRefreshToken().catch(()=>false);
-      // Consultar perfil usando el token actualizado
-      const profileRes = await fetch(
-        SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended,subscription_status,subscription_expires_at',
-        { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
-      );
-      if (!profileRes.ok) { showPaywall(userName, false); return; }
-      const profileArr = await profileRes.json();
-      if (!profileArr || !profileArr.length) { showPaywall(userName, false); return; }
-      const profile = profileArr[0];
-      if (profile.suspended === true) {
-        localStorage.removeItem('aa_sb_session');
-        _sbToken = null; _sbUserId = null;
-        showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
-        return;
+      // El admin siempre tiene acceso — nunca mostrar paywall
+      const currentEmail = _sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '';
+      if (currentEmail === ADMIN_EMAIL) {
+        // Admin: pasar directo sin chequeo de suscripción
+      } else {
+        // Intentar refrescar token
+        await sbRefreshToken().catch(()=>false);
+        // Consultar perfil usando el token actualizado
+        const profileRes = await fetch(
+          SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended,subscription_status,subscription_expires_at',
+          { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
+        );
+        // Si hay error de red o servidor, dejar pasar (no penalizar al usuario)
+        // Solo mostrar paywall si definitivamente NO tiene suscripción activa
+        if (profileRes.ok) {
+          const profileArr = await profileRes.json();
+          if (profileArr && profileArr.length) {
+            const profile = profileArr[0];
+            if (profile.suspended === true) {
+              localStorage.removeItem('aa_sb_session');
+              _sbToken = null; _sbUserId = null;
+              showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
+              return;
+            }
+            const status = profile.subscription_status;
+            const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+            const now = new Date();
+            const GRACE_DAYS = 5;
+            const isActive = status === 'active' && (!expires || expires >= now);
+            const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
+            let inGrace = false, graceDaysLeft = 0;
+            if (isExpired && expires) {
+              const diffDays = Math.floor((now - expires) / 86400000);
+              if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
+            }
+            if (!isActive && !inGrace) { showPaywall(userName, isExpired); return; }
+            if (inGrace) {
+              const userEmail = currentEmail;
+              emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
+              showGraceModal(userName, graceDaysLeft);
+            }
+          } else {
+            // Sin perfil en Supabase → mostrar paywall (usuario nuevo sin suscripción)
+            showPaywall(userName, false); return;
+          }
+        }
+        // Si profileRes no es ok (error de red, 5xx, token issue) → dejar entrar
+        // para no bloquear usuarios activos por problemas de conectividad
       }
-      const status = profile.subscription_status;
-      const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
-      const now = new Date();
-      const GRACE_DAYS = 5;
-      const isActive = status === 'active' && (!expires || expires >= now);
-      const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
-      let inGrace = false, graceDaysLeft = 0;
-      if (isExpired && expires) {
-        const diffDays = Math.floor((now - expires) / 86400000);
-        if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
-      }
-      if (!isActive && !inGrace) { showPaywall(userName, isExpired); return; }
-      if (inGrace) {
-        const userEmail = _sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '';
-        emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
-        showGraceModal(userName, graceDaysLeft);
-      }
-    } catch(e) { showPaywall(userName, false); return; }
+    } catch(e) {
+      // Error inesperado (red caída, JSON inválido, etc.) → no mostrar paywall
+      // Solo bloquear si hay certeza de que no tiene suscripción
+      console.warn('[AsistApp] Error en chequeo de suscripción, permitiendo acceso:', e.message);
+    }
   }
   document.getElementById('header-user').textContent = '👤 ' + userName;
   document.getElementById('header-user').style.display = 'inline-flex';
@@ -27143,6 +27166,14 @@ async function enterApp(userName) {
   renderCursosGrid();
   syncSelects();
   applyRoleUI();
+  // Restaurar la vista donde estaba el usuario antes de recargar
+  try {
+    const lastView = localStorage.getItem('aa_last_view');
+    if (lastView && lastView !== 'cursos') {
+      const btn = document.querySelector(`.nav-btn[onclick*="'${lastView}'"]`);
+      showView(lastView, btn || null);
+    }
+  } catch(e) {}
 }
 
 function showAppLoading(on) {
@@ -27162,12 +27193,20 @@ function showAppLoading(on) {
 
 async function doLogout() {
   localStorage.removeItem('aa_sb_session');
+  localStorage.removeItem('aa_last_view');
   _sbToken=null; _sbUserId=null; _sbSession=null;
   cursos=[]; students=[]; attendance={};
   activeCursoId=null; activeQrId=null; activeScanId=null; activePlanillaId=null;
   stopScanner();
-  document.getElementById('app-wrapper').classList.remove('visible');
-  document.getElementById('login-screen').classList.remove('hidden');
+  // Ocultar paywall si estaba visible
+  const paywall = document.getElementById('paywall-screen-main');
+  if (paywall) paywall.style.cssText = 'display:none';
+  // Ocultar app-wrapper
+  const appWrapper = document.getElementById('app-wrapper');
+  if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = ''; }
+  // Mostrar login (remover todos los estilos inline que showPaywall pudo haber puesto)
+  const loginScreen = document.getElementById('login-screen');
+  if (loginScreen) { loginScreen.classList.remove('hidden'); loginScreen.style.display = ''; }
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').classList.remove('show');
@@ -27185,7 +27224,7 @@ async function loadAllData() {
       sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
       sbFetch(`attendance?user_id=eq.${_sbUserId}`)
     ]);
-    const todosLosCursos = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e',rol:r.rol||'docente'}));
+    const todosLosCursos = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e',rol:(r.rol==='docente'?'profesor':r.rol)||'profesor'}));
     cursos = todosLosCursos.filter(r => r.rol === _userRole);
     students = s.map(r => ({id:r.id,cursoId:r.curso_id,apellido:r.apellido||'',nombre:r.nombre||'',full:r.full_name||'',emailAlumno:r.email_alumno||'',emailPadre:r.email_padre||'',emailFamilia:r.email_padre||'',whatsappFamilia:r.whatsapp_familia||''}));
     attendance = {};
@@ -27696,8 +27735,64 @@ const _origShowView = showView;
 window.showView = function(id, btn) {
   _origShowView(id, btn);
   if (id === 'admin') loadAdminUsers();
+  // Persistir la vista activa para restaurar tras recarga
+  try { localStorage.setItem('aa_last_view', id); } catch(e) {}
 };
 
+
+// Re-chequeo de suscripción desde el paywall (para usuarios que ya pagaron)
+async function recheckSubscription() {
+  if (!_sbUserId || !_sbToken) {
+    showToast('⚠ Necesitás iniciar sesión primero');
+    doLogout();
+    return;
+  }
+  showToast('🔄 Verificando tu suscripción...');
+  try {
+    const refreshed = await sbRefreshToken().catch(()=>false);
+    const profileRes = await fetch(
+      SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=subscription_status,subscription_expires_at',
+      { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
+    );
+    if (!profileRes.ok) { showToast('❌ Error al verificar. Intentá cerrar sesión y volver a ingresar.'); return; }
+    const arr = await profileRes.json();
+    if (!arr || !arr.length) { showToast('❌ No se encontró tu cuenta.'); return; }
+    const profile = arr[0];
+    const status = profile.subscription_status;
+    const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+    const now = new Date();
+    const isActive = status === 'active' && (!expires || expires >= now);
+    if (isActive) {
+      // Suscripción activa — ocultar paywall y entrar a la app
+      const paywall = document.getElementById('paywall-screen-main');
+      if (paywall) paywall.style.cssText = 'display:none';
+      const loginScreen = document.getElementById('login-screen');
+      if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
+      // Recuperar nombre del usuario
+      const savedSession = localStorage.getItem('aa_sb_session');
+      const sess = savedSession ? JSON.parse(savedSession) : null;
+      const userName = sess ? sess.name : 'Usuario';
+      document.getElementById('header-user').textContent = '👤 ' + userName;
+      document.getElementById('header-user').style.display = 'inline-flex';
+      document.getElementById('btn-logout').style.display  = 'inline-flex';
+      updateToggleRoleBtn();
+      document.getElementById('app-wrapper').style.display = '';
+      document.getElementById('app-wrapper').classList.add('visible');
+      showAppLoading(true);
+      await loadAllData();
+      showAppLoading(false);
+      setTodayDate();
+      renderCursosGrid();
+      syncSelects();
+      applyRoleUI();
+      showToast('✅ ¡Suscripción verificada! Bienvenido/a.');
+    } else {
+      showToast('⏳ Tu pago aún no fue procesado. Esperá unos minutos e intentá de nuevo.');
+    }
+  } catch(e) {
+    showToast('❌ Error de conexión. Verificá tu internet e intentá de nuevo.');
+  }
+}
 
 // ════════════════════════════════════════
 // PAYWALL
@@ -27705,8 +27800,8 @@ window.showView = function(id, btn) {
 const MP_PLAN_ID = '9344e4199be045509b8c6a0e3ffe3083';
 
 function showPaywall(userName, isExpired) {
-  // Limpiar sesión para evitar auto-login en próxima visita
-  localStorage.removeItem('aa_sb_session');
+  // NO borrar la sesión aquí — el usuario puede haber pagado y necesita
+  // poder re-chequear sin volver a loguearse. Se borra solo en doLogout.
   // Ocultar todo lo demás
   const appWrapper = document.getElementById('app-wrapper');
   if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = 'none'; }
@@ -27759,8 +27854,8 @@ function showGraceModal(userName, daysLeft) {
       const s = JSON.parse(saved);
       _sbToken = s.token; _sbUserId = s.userId;
       // Restaurar rol guardado
-      if (s.role) { _userRole = s.role; } 
-      else { const r = localStorage.getItem('aa_role'); if (r) _userRole = r; }
+      if (s.role) { _userRole = s.role === 'docente' ? 'profesor' : s.role; } 
+      else { const r = localStorage.getItem('aa_role'); if (r) _userRole = r === 'docente' ? 'profesor' : r; }
       await enterApp(s.name);
       return;
     } catch(e) { localStorage.removeItem('aa_sb_session'); }
@@ -27821,7 +27916,8 @@ function showGraceModal(userName, daysLeft) {
       <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
     </div>
     <a id="btn-suscribir-main" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <div><span class="paywall-logout" onclick="doLogout()">Cerrar sesión</span></div>
+    <button onclick="recheckSubscription()" style="margin-top:0.6rem;width:100%;padding:11px;background:rgba(15,155,142,0.15);border:1px solid rgba(15,155,142,0.4);border-radius:10px;color:#1bc5b4;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(15,155,142,0.25)'" onmouseout="this.style.background='rgba(15,155,142,0.15)'">🔄 Ya pagué — verificar acceso</button>
+    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
   </div>
 </div>
 </body>
