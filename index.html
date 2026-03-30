@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AsistApp — Sistema de Asistencia Digital</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.comjsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn./fflate@0.8.2/umd/index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script>/* docx 9.x UMD inline */
 (function(global2, factory) {
   typeof exports === "object" && typeof module !== "undefined" ? factory(exports) : typeof define === "function" && define.amd ? define(["exports"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory(global2.docx = {}));
@@ -23846,9 +23846,15 @@ function showView(id, btn) {
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
     syncSelects();
-    // Preservar curso seleccionado si ya había uno
     const sel = document.getElementById('proceso-curso-sel');
-    if (sel && !sel.value && activeProcesoCursoId) sel.value = activeProcesoCursoId;
+    if (sel) {
+      // Restaurar selección previa o auto-seleccionar si hay un solo curso
+      if (activeProcesoCursoId && cursos.find(c=>c.id===activeProcesoCursoId)) {
+        sel.value = activeProcesoCursoId;
+      } else if (!sel.value && cursos.length === 1) {
+        sel.value = cursos[0].id;
+      }
+    }
     onProcesoCursoChange();
   }
 
@@ -25607,15 +25613,26 @@ function startScanner() {
   if (!studentsOf(activeScanId).length) { showToast('⚠ Este curso no tiene alumnos'); return; }
   document.getElementById('btn-start-scan').style.display = 'none';
   document.getElementById('btn-stop-scan').style.display  = 'inline-flex';
+  // Asegurar que el div reader tenga dimensiones para mobile
+  const readerEl = document.getElementById('reader');
+  if (readerEl && !readerEl.style.minHeight) readerEl.style.minHeight = '250px';
   html5Scanner = new Html5Qrcode('reader');
-  html5Scanner.start(
-    {facingMode:'environment'},
-    {fps:10, qrbox:{width:250,height:250}},
-    onScanSuccess, ()=>{}
-  ).catch(()=>{
-    showToast('⚠ No se pudo acceder a la cámara');
-    document.getElementById('btn-start-scan').style.display = 'inline-flex';
-    document.getElementById('btn-stop-scan').style.display  = 'none';
+  const config = {fps:10, qrbox:{width:250,height:250}, aspectRatio:1.0};
+  // Intentar cámara trasera primero; si falla, intentar sin constraint
+  html5Scanner.start({facingMode:'environment'}, config, onScanSuccess, ()=>{})
+  .catch(() => {
+    // Segundo intento: cualquier cámara disponible
+    html5Scanner.start({facingMode:'user'}, config, onScanSuccess, ()=>{})
+    .catch(() => {
+      // Tercer intento: dejar que el browser elija
+      html5Scanner.start(undefined, config, onScanSuccess, ()=>{})
+      .catch(err => {
+        showToast('⚠ No se pudo acceder a la cámara. Verificá los permisos.');
+        console.warn('Camera error:', err);
+        document.getElementById('btn-start-scan').style.display = 'inline-flex';
+        document.getElementById('btn-stop-scan').style.display  = 'none';
+      });
+    });
   });
 }
 
@@ -25780,8 +25797,9 @@ async function markAbsent(studentId, val, date) {
   if (row) { row.style.opacity='0.4'; row.style.pointerEvents='none'; }
   updateDayStats(date);
   showToast(val==='A' ? '🔴 Ausente registrado' : '🟡 Tarde registrado');
-  if (isOnline) { try { await sbSaveAttendance(studentId, date, val); } catch(e) { queueSync(studentId,date,val); } }
-  else queueSync(studentId, date, val);
+  // Siempre intentar guardar directamente (no depender solo de isOnline)
+  try { await sbSaveAttendance(studentId, date, val); }
+  catch(e) { queueSync(studentId, date, val); }
 
   // Check if all items now marked — show consecutive check
   const remaining = document.querySelectorAll('#absent-list .absent-item:not([style*="opacity"])');
@@ -26314,8 +26332,23 @@ async function cycleAttendance(studentId, date, el) {
     else await sbSaveAttendance(studentId, date, next);
   } catch(e) {
     console.warn('attendance sync error', e);
-    queueSync(studentId, date, next === undefined ? null : next);
-    showToast('⚠ Sin conexión — se sincronizará al reconectar');
+    // Solo encolar si es error de RED (sin internet), no errores de servidor
+    const isNetworkError = e instanceof TypeError || e.message?.includes('fetch') || e.message?.includes('network') || e.message?.includes('Failed');
+    if (isNetworkError || !navigator.onLine) {
+      queueSync(studentId, date, next === undefined ? null : next);
+      showToast('⚠ Sin conexión — se sincronizará al reconectar');
+    }
+    // Si es error de servidor (401 ya fue manejado por sbFetch), reintentar una vez
+    else {
+      try {
+        await sbRefreshToken().catch(()=>{});
+        if (next === undefined) await sbDeleteAttendance(studentId, date);
+        else await sbSaveAttendance(studentId, date, next);
+      } catch(e2) {
+        queueSync(studentId, date, next === undefined ? null : next);
+        showToast('⚠ Error al guardar — se reintentará pronto');
+      }
+    }
   }
 }
 
