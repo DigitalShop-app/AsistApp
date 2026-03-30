@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AsistApp — Sistema de Asistencia Digital</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<script src="https://cdnjs.cloudflare.comjsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn./fflate@0.8.2/umd/index.js"></script>
 <script>/* docx 9.x UMD inline */
 (function(global2, factory) {
   typeof exports === "object" && typeof module !== "undefined" ? factory(exports) : typeof define === "function" && define.amd ? define(["exports"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory(global2.docx = {}));
@@ -23845,14 +23845,18 @@ function showView(id, btn) {
   if (id === 'scanner')  { syncSelects(); }
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
-    activeProcesoCursoId = null;
-    renderProcesoCursosGrid();
+    syncSelects();
+    // Preservar curso seleccionado si ya había uno
+    const sel = document.getElementById('proceso-curso-sel');
+    if (sel && !sel.value && activeProcesoCursoId) sel.value = activeProcesoCursoId;
+    onProcesoCursoChange();
   }
+
 }
 
 // ─── SELECTS SYNC ───
 function syncSelects() {
-  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel'].forEach(sid => {
+  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel','proceso-curso-sel'].forEach(sid => {
     const el = document.getElementById(sid);
     if (!el) return;
     const prev = el.value;
@@ -24354,101 +24358,97 @@ function previewQRsSelected() {
   </div>
 
 <!-- ═══ PROCESO ═══ -->
+
 <div class="view" id="view-proceso">
-  <!-- PANEL: grilla de cursos -->
-  <div id="proceso-panel-cursos">
-    <div class="page-title">📝 Registro de Proceso</div>
-    <p class="page-sub">Seleccioná un curso para ver y cargar el seguimiento del proceso de aprendizaje</p>
-    <div class="cursos-grid" id="proceso-cursos-grid"></div>
-    <div id="proceso-sin-cursos" class="empty-state" style="display:none"><div class="ei">📝</div><p>No tenés cursos cargados aún</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Primero creá un curso en la sección Cursos</p></div>
-  </div>
-  <!-- PANEL: detalle del curso seleccionado -->
-  <div id="proceso-panel-detalle" style="display:none">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap">
-      <button class="btn btn-secondary btn-sm" onclick="volverAProcesoGrid()" style="display:flex;align-items:center;gap:6px">← Volver</button>
-      <div class="page-title" style="margin:0;font-size:1.4rem" id="proceso-detalle-titulo">📝 Proceso</div>
-    </div>
-    <div class="curso-bar" id="proceso-bar"></div>
-    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-primary" onclick="openAddProcesoModal()">📋 Agregar registro</button>
-      <button class="btn btn-secondary" onclick="openDeleteProcesoModal()">🗑 Eliminar registro</button>
-      <button class="btn btn-gold" onclick="exportProcesoWord()">📄 Informe Word</button>
-    </div>
-    <div id="proceso-content">
-      <div class="table-wrap">
-        <table id="proceso-table" class="proceso-table">
-          <thead><tr><th>#</th><th>Apellido y Nombre</th></tr></thead>
-          <tbody id="proceso-body"></tbody>
-        </table>
+  <div class="page-title">📝 Registro de Proceso</div>
+  <p class="page-sub">Seguimiento del proceso de aprendizaje · Notas, calificaciones cualitativas y simbólicas</p>
+
+  <!-- Selector de curso -->
+  <div id="proceso-selector" style="margin-bottom:1.5rem">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+      <div class="field" style="flex:1;min-width:200px;max-width:400px;margin:0">
+        <label>📚 Curso</label>
+        <select id="proceso-curso-sel" onchange="onProcesoCursoChange()">
+          <option value="">— Seleccioná un curso —</option>
+        </select>
+      </div>
+      <div id="proceso-acciones" style="display:none;gap:8px;flex-wrap:wrap;padding-bottom:2px">
+        <button class="btn btn-primary btn-sm" onclick="openAddProcesoModal()">➕ Agregar registro</button>
+        <button class="btn btn-secondary btn-sm" onclick="openDeleteProcesoModal()">🗑 Eliminar</button>
+        <button class="btn btn-gold btn-sm" onclick="exportProcesoWord()">📄 Word</button>
       </div>
     </div>
-    <div id="proceso-empty" class="empty-state" style="display:none"><div class="ei">📋</div><p>No hay registros aún para este curso</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p></div>
+    <div class="curso-bar" id="proceso-bar" style="margin-top:0.8rem"></div>
   </div>
+
+  <!-- Tabla -->
+  <div id="proceso-tabla-wrap" style="display:none">
+    <div class="table-wrap">
+      <table id="proceso-table" class="proceso-table">
+        <thead><tr id="proceso-thead-row"><th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th><th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th></tr></thead>
+        <tbody id="proceso-body"></tbody>
+      </table>
+    </div>
+    <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:'DM Mono',monospace">💡 Hacé clic en una celda para calificar · Clic en el nombre para observaciones</p>
+  </div>
+
+  <!-- Estados vacíos -->
+  <div id="proceso-empty-curso" class="empty-state"><div class="ei">📝</div><p>Seleccioná un curso para comenzar</p></div>
+  <div id="proceso-empty-regs" class="empty-state" style="display:none"><div class="ei">📋</div><p>No hay registros aún</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p></div>
 </div>
 
-<!-- MODAL AGREGAR REGISTRO DE PROCESO -->
+<!-- MODAL AGREGAR REGISTRO -->
 <div class="modal-overlay" id="add-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:480px">
+  <div class="modal" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--slate)">📋 Nuevo registro</h3>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--slate)">➕ Nuevo registro</h3>
       <button onclick="document.getElementById('add-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
     </div>
+    <div class="field"><label>📅 Fecha</label><input type="date" id="proceso-add-date"></div>
+    <div class="field"><label>📌 Nombre</label><input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3..."></div>
     <div class="field">
-      <label>📅 Fecha</label>
-      <input type="date" id="proceso-add-date">
-    </div>
-    <div class="field">
-      <label>📌 Nombre del registro</label>
-      <input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3, Participación...">
-    </div>
-    <div class="field">
-      <label>📊 Tipo de calificación</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="proceso-tipo-btns">
-        <button class="role-btn selected" id="ptipo-num" onclick="selectProcesoTipo('num')">🔢 Numérica (1–10)</button>
+      <label>📊 Tipo</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="role-btn selected" id="ptipo-num" onclick="selectProcesoTipo('num')">🔢 Numérica</button>
         <button class="role-btn" id="ptipo-cual" onclick="selectProcesoTipo('cual')">📋 Cualitativa</button>
         <button class="role-btn" id="ptipo-simb" onclick="selectProcesoTipo('simb')">🎯 Simbólica</button>
       </div>
     </div>
-    <p style="font-size:0.8rem;color:#9ca3af;margin-bottom:1rem;line-height:1.5">Se agregará una columna para este registro. Hacé clic en cada celda para asignar la calificación.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
       <button class="btn btn-secondary" onclick="document.getElementById('add-proceso-modal').classList.remove('open')">Cancelar</button>
       <button class="btn btn-primary" onclick="confirmAddProceso()">✅ Agregar</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
+<!-- MODAL ELIMINAR REGISTRO -->
 <div class="modal-overlay" id="delete-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
+  <div class="modal" style="max-width:380px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--rose)">🗑 Eliminar registro</h3>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--rose)">🗑 Eliminar registro</h3>
       <button onclick="document.getElementById('delete-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
     </div>
-    <div class="field">
-      <label>Seleccioná el registro a eliminar</label>
-      <select id="delete-proceso-select" style="width:100%"><option value="">— Seleccioná —</option></select>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:1.2rem">
+    <div class="field"><label>Registro a eliminar</label><select id="delete-proceso-select" style="width:100%"><option value="">— Seleccioná —</option></select></div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
       <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('delete-proceso-modal').classList.remove('open')">Cancelar</button>
       <button class="btn btn-danger" style="flex:2" onclick="confirmDeleteProceso()">🗑 Eliminar</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL CALIFICAR CELDA DE PROCESO -->
+<!-- MODAL CALIFICAR CELDA -->
 <div class="modal-overlay" id="proceso-cell-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
+  <div class="modal" style="max-width:380px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
       <div>
-        <h3 id="pcell-student-name" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--slate);text-transform:uppercase"></h3>
-        <p id="pcell-registro-name" style="font-size:0.8rem;color:#9ca3af;font-weight:600;margin-top:2px"></p>
+        <div id="pcell-student-name" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--slate);text-transform:uppercase;font-weight:800"></div>
+        <div id="pcell-registro-name" style="font-size:0.78rem;color:#9ca3af;margin-top:2px"></div>
       </div>
       <button onclick="document.getElementById('proceso-cell-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
     </div>
-    <!-- Opciones numéricas -->
     <div id="pcell-num-options">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Escala numérica</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem">
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala numérica</p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:1rem">
         <button class="proceso-badge pnota-10" onclick="setProcesoVal(10)">10</button>
         <button class="proceso-badge pnota-9"  onclick="setProcesoVal(9)">9</button>
         <button class="proceso-badge pnota-8"  onclick="setProcesoVal(8)">8</button>
@@ -24461,24 +24461,22 @@ function previewQRsSelected() {
         <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
       </div>
     </div>
-    <!-- Opciones cualitativas -->
     <div id="pcell-cual-options" style="display:none">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Escala cualitativa</p>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:1rem">
-        <button class="proceso-badge pcual-mb_plus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('MB+')">MB+ · Muy Bueno +</button>
-        <button class="proceso-badge pcual-mb"      style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('MB')">MB · Muy Bueno</button>
-        <button class="proceso-badge pcual-b_plus"  style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('B+')">B+ · Bueno +</button>
-        <button class="proceso-badge pcual-b"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('B')">B · Bueno</button>
-        <button class="proceso-badge pcual-s"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('S')">S · Suficiente</button>
-        <button class="proceso-badge pcual-s_minus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
-        <button class="proceso-badge pcual-i"       style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('I')">I · Insuficiente</button>
-        <button class="proceso-badge pcual-i_minus" style="width:100%;border-radius:8px;padding:8px;font-size:0.8rem" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala cualitativa</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:1rem">
+        <button class="proceso-badge pcual-mb_plus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('MB+')">MB+ · Muy Bueno +</button>
+        <button class="proceso-badge pcual-mb"      style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('MB')">MB · Muy Bueno</button>
+        <button class="proceso-badge pcual-b_plus"  style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('B+')">B+ · Bueno +</button>
+        <button class="proceso-badge pcual-b"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('B')">B · Bueno</button>
+        <button class="proceso-badge pcual-s"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S')">S · Suficiente</button>
+        <button class="proceso-badge pcual-s_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
+        <button class="proceso-badge pcual-i"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I')">I · Insuficiente</button>
+        <button class="proceso-badge pcual-i_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
       </div>
     </div>
-    <!-- Opciones simbólicas -->
     <div id="pcell-simb-options" style="display:none">
-      <p style="font-size:0.78rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Registro simbólico</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem">
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Registro simbólico</p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem">
         <button class="proceso-badge psimb" title="Logrado"        onclick="setProcesoVal('✅')">✅</button>
         <button class="proceso-badge psimb" title="No cumplió"     onclick="setProcesoVal('❌')">❌</button>
         <button class="proceso-badge psimb" title="Pendiente"      onclick="setProcesoVal('⏳')">⏳</button>
@@ -24491,7 +24489,7 @@ function previewQRsSelected() {
         <button class="proceso-badge psimb" title="No entregó"     onclick="setProcesoVal('🚫')">🚫</button>
       </div>
     </div>
-    <button class="btn btn-secondary btn-sm btn-full" style="margin-top:4px" onclick="setProcesoVal(null)">🗑 Borrar calificación</button>
+    <button class="btn btn-secondary btn-sm" style="width:100%" onclick="setProcesoVal(null)">🗑 Borrar calificación</button>
   </div>
 </div>
 
@@ -24795,6 +24793,776 @@ function printQRs() {
 </body>
 </html>`;
 
+    const w = window.open('', '_blank', 'width=980,height=750');
+    if (w) { w.document.write(pageHTML); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes en tu navegador');
+  });
+}
+
+function openModal(s) {
+  currentModalStudent = s;
+  const c = getCurso(s.cursoId);
+  const shortId = s.id.slice(-6).toUpperCase();
+  document.getElementById('modal-name').textContent = (s.apellido||s.nombre||'').toUpperCase() + (s.apellido && s.nombre ? ', ' + s.nombre.toUpperCase() : '');
+  document.getElementById('modal-curso-lbl').textContent = c ? '📚 '+c.nombre+(c.materia?' — '+c.materia:'') : '';
+  document.getElementById('modal-id').textContent = 'ID: '+shortId;
+  const con = document.getElementById('modal-qr-container'); con.innerHTML = '';
+  const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
+  new QRCode(con, { text: qrData, width:220,height:220,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H });
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function downloadQR() {
+  if (!currentModalStudent) return;
+  const s = currentModalStudent;
+  const c = getCurso(s.cursoId);
+
+  setTimeout(() => {
+    const qrCanvas = document.querySelector('#modal-qr-container canvas');
+    if (!qrCanvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+
+    // Datos del alumno
+    const apellido  = (s.apellido || s.nombre || '').toUpperCase();
+    const nombre    = s.apellido ? (s.nombre || '') : '';
+    const shortId   = s.id.slice(-6).toUpperCase();
+    const metaLine  = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+
+    // Canvas compuesto
+    const W = 220, PAD = 16;
+    const QR = 180;
+    // Calcular altura dinámica según líneas de texto
+    const lines = [apellido, nombre, metaLine, 'ID: ' + shortId].filter(Boolean);
+    const H = PAD + QR + PAD + lines.length * 22 + PAD;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Barra superior teal
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillRect(0, 0, W, 5);
+
+    // QR centrado
+    const qrX = (W - QR) / 2;
+    ctx.drawImage(qrCanvas, qrX, PAD + 5, QR, QR);
+
+    // Textos
+    let y = PAD + 5 + QR + 14;
+
+    // Apellido — bold grande
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = 'bold 14px "Barlow Condensed", Arial';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '0.8px';
+    ctx.fillText(apellido, W / 2, y);
+    y += 18;
+
+    if (nombre) {
+      ctx.fillStyle = '#2d3561';
+      ctx.font = '600 11px Nunito, Arial';
+      ctx.fillText(nombre, W / 2, y);
+      y += 17;
+    }
+
+    if (metaLine) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '500 9px Nunito, Arial';
+      ctx.fillText(metaLine, W / 2, y);
+      y += 15;
+    }
+
+    // ID en teal con fondo
+    const idText = 'ID: ' + shortId;
+    ctx.font = 'bold 9px "DM Mono", monospace';
+    const idW = ctx.measureText(idText).width + 16;
+    const idX = (W - idW) / 2;
+    ctx.fillStyle = '#e8f4f2';
+    ctx.beginPath();
+    ctx.roundRect(idX, y - 11, idW, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillText(idText, W / 2, y);
+
+    // Borde gris
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    // Descargar
+    const a = document.createElement('a');
+    a.href = cv.toDataURL('image/png');
+    a.download = 'QR_' + s.full.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+    a.click();
+    showToast('✅ QR descargado');
+  }, 300);
+}
+
+function printQRs() {
+  if (!activeQrId) return;
+  const list = studentsOf(activeQrId);
+  const c = getCurso(activeQrId);
+  if (!list.length) { showToast('⚠ No hay alumnos'); return; }
+
+  showToast('⏳ Generando QRs para impresión...');
+
+  // Primero generar todos los QR como imágenes base64 en canvas temporales
+  const qrPromises = list.map((s, i) => new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
+    new QRCode(tempDiv, {
+      text: qrData, width: 130, height: 130,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    setTimeout(() => {
+      const canvas = tempDiv.querySelector('canvas');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+      document.body.removeChild(tempDiv);
+      resolve({ s, dataUrl });
+    }, 80 + i * 20);
+  }));
+
+  Promise.all(qrPromises).then(results => {
+    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+    const docenteStr  = c && c.docente ? c.docente : '';
+
+    const cardsHTML = results.map(({ s, dataUrl }) => {
+      const shortId  = s.id.slice(-6).toUpperCase();
+      const apellido = (s.apellido || s.nombre || '').toUpperCase();
+      const nombre   = s.apellido ? (s.nombre || '') : '';
+      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+      return `
+        <div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+          ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+          ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+          ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Alumnos — ${cursoNombre}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: white; color: #1a1a2e; }
+    .page { padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0f9b8e; padding-bottom: 12px; margin-bottom: 1.2rem; }
+    .logo-text { font-size: 1.5rem; font-weight: 900; color: #1a1a2e; font-family: 'Barlow Condensed', Georgia, serif; letter-spacing: 0.5px; }
+    .logo-text span { color: #0f9b8e; }
+    .logo-sub { font-size: 0.6rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; font-family: 'Nunito', sans-serif; }
+    .header-right { text-align: right; font-size: 12px; color: #6b7280; font-family: 'Nunito', sans-serif; }
+    .header-right strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; font-weight: 800; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
+    .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
+    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">📋 Asist<span style="color:#1bc5b4">App</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia Digital</div>
+    </div>
+    <div class="header-right">
+      <strong>${cursoNombre}</strong>
+      ${docenteStr ? docenteStr : ''}
+    </div>
+  </div>
+  <div class="grid">${cardsHTML}</div>
+  <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
+    <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
+    <span>Sistema de Asistencia Digital</span>
+    <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
+  </div>
+</div>
+<script>
+  // Esperar a que las fuentes carguen antes de imprimir
+  document.fonts.ready.then(function(){ window.print(); });
+<\/script>
+
+<!-- ═══ PROCESO ═══ -->
+<!-- MODAL AGREGAR REGISTRO DE PROCESO -->
+
+<!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
+
+<!-- MODAL CALIFICAR CELDA DE PROCESO -->
+
+
+<!-- ═══ MODAL COMPARTIR ═══ -->
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
+    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
+      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
+      </button>
+    </div>
+    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
+  </div>
+</div>
+
+<!-- ═══ PAYWALL ═══ -->
+<div id="paywall-screen">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔐</div>
+    <div class="paywall-title">AsistApp</div>
+    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
+    <div class="paywall-price">
+      <div class="paywall-price-amount">$4.970</div>
+      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
+    </div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
+    </div>
+    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
+    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
+  </div>
+</div>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=980,height=750');
+    if (w) { w.document.write(pageHTML); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes en tu navegador');
+  });
+}
+
+function openModal(s) {
+  currentModalStudent = s;
+  const c = getCurso(s.cursoId);
+  const shortId = s.id.slice(-6).toUpperCase();
+  document.getElementById('modal-name').textContent = (s.apellido||s.nombre||'').toUpperCase() + (s.apellido && s.nombre ? ', ' + s.nombre.toUpperCase() : '');
+  document.getElementById('modal-curso-lbl').textContent = c ? '📚 '+c.nombre+(c.materia?' — '+c.materia:'') : '';
+  document.getElementById('modal-id').textContent = 'ID: '+shortId;
+  const con = document.getElementById('modal-qr-container'); con.innerHTML = '';
+  const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
+  new QRCode(con, { text: qrData, width:220,height:220,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H });
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function downloadQR() {
+  if (!currentModalStudent) return;
+  const s = currentModalStudent;
+  const c = getCurso(s.cursoId);
+
+  setTimeout(() => {
+    const qrCanvas = document.querySelector('#modal-qr-container canvas');
+    if (!qrCanvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+
+    // Datos del alumno
+    const apellido  = (s.apellido || s.nombre || '').toUpperCase();
+    const nombre    = s.apellido ? (s.nombre || '') : '';
+    const shortId   = s.id.slice(-6).toUpperCase();
+    const metaLine  = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+
+    // Canvas compuesto
+    const W = 220, PAD = 16;
+    const QR = 180;
+    // Calcular altura dinámica según líneas de texto
+    const lines = [apellido, nombre, metaLine, 'ID: ' + shortId].filter(Boolean);
+    const H = PAD + QR + PAD + lines.length * 22 + PAD;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Barra superior teal
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillRect(0, 0, W, 5);
+
+    // QR centrado
+    const qrX = (W - QR) / 2;
+    ctx.drawImage(qrCanvas, qrX, PAD + 5, QR, QR);
+
+    // Textos
+    let y = PAD + 5 + QR + 14;
+
+    // Apellido — bold grande
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = 'bold 14px "Barlow Condensed", Arial';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '0.8px';
+    ctx.fillText(apellido, W / 2, y);
+    y += 18;
+
+    if (nombre) {
+      ctx.fillStyle = '#2d3561';
+      ctx.font = '600 11px Nunito, Arial';
+      ctx.fillText(nombre, W / 2, y);
+      y += 17;
+    }
+
+    if (metaLine) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '500 9px Nunito, Arial';
+      ctx.fillText(metaLine, W / 2, y);
+      y += 15;
+    }
+
+    // ID en teal con fondo
+    const idText = 'ID: ' + shortId;
+    ctx.font = 'bold 9px "DM Mono", monospace';
+    const idW = ctx.measureText(idText).width + 16;
+    const idX = (W - idW) / 2;
+    ctx.fillStyle = '#e8f4f2';
+    ctx.beginPath();
+    ctx.roundRect(idX, y - 11, idW, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillText(idText, W / 2, y);
+
+    // Borde gris
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    // Descargar
+    const a = document.createElement('a');
+    a.href = cv.toDataURL('image/png');
+    a.download = 'QR_' + s.full.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+    a.click();
+    showToast('✅ QR descargado');
+  }, 300);
+}
+
+function printQRs() {
+  if (!activeQrId) return;
+  const list = studentsOf(activeQrId);
+  const c = getCurso(activeQrId);
+  if (!list.length) { showToast('⚠ No hay alumnos'); return; }
+
+  showToast('⏳ Generando QRs para impresión...');
+
+  // Primero generar todos los QR como imágenes base64 en canvas temporales
+  const qrPromises = list.map((s, i) => new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
+    new QRCode(tempDiv, {
+      text: qrData, width: 130, height: 130,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    setTimeout(() => {
+      const canvas = tempDiv.querySelector('canvas');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+      document.body.removeChild(tempDiv);
+      resolve({ s, dataUrl });
+    }, 80 + i * 20);
+  }));
+
+  Promise.all(qrPromises).then(results => {
+    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+    const docenteStr  = c && c.docente ? c.docente : '';
+
+    const cardsHTML = results.map(({ s, dataUrl }) => {
+      const shortId  = s.id.slice(-6).toUpperCase();
+      const apellido = (s.apellido || s.nombre || '').toUpperCase();
+      const nombre   = s.apellido ? (s.nombre || '') : '';
+      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+      return `
+        <div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+          ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+          ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+          ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Alumnos — ${cursoNombre}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: white; color: #1a1a2e; }
+    .page { padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0f9b8e; padding-bottom: 12px; margin-bottom: 1.2rem; }
+    .logo-text { font-size: 1.5rem; font-weight: 900; color: #1a1a2e; font-family: 'Barlow Condensed', Georgia, serif; letter-spacing: 0.5px; }
+    .logo-text span { color: #0f9b8e; }
+    .logo-sub { font-size: 0.6rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; font-family: 'Nunito', sans-serif; }
+    .header-right { text-align: right; font-size: 12px; color: #6b7280; font-family: 'Nunito', sans-serif; }
+    .header-right strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; font-weight: 800; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
+    .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
+    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">📋 Asist<span style="color:#1bc5b4">App</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia Digital</div>
+    </div>
+    <div class="header-right">
+      <strong>${cursoNombre}</strong>
+      ${docenteStr ? docenteStr : ''}
+    </div>
+  </div>
+  <div class="grid">${cardsHTML}</div>
+  <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
+    <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
+    <span>Sistema de Asistencia Digital</span>
+    <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
+  </div>
+</div>
+<script>
+  // Esperar a que las fuentes carguen antes de imprimir
+  document.fonts.ready.then(function(){ window.print(); });
+<\/script>
+
+<!-- ═══ PROCESO ═══ -->
+<!-- MODAL AGREGAR REGISTRO DE PROCESO -->
+
+<!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
+
+<!-- MODAL CALIFICAR CELDA DE PROCESO -->
+
+<!-- ═══ MODAL COMPARTIR ═══ -->
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
+    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
+      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
+      </button>
+    </div>
+    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
+  </div>
+</div>
+
+<!-- ═══ PAYWALL ═══ -->
+<div id="paywall-screen">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔐</div>
+    <div class="paywall-title">AsistApp</div>
+    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
+    <div class="paywall-price">
+      <div class="paywall-price-amount">$4.970</div>
+      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
+    </div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
+    </div>
+    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
+    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
+  </div>
+</div>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=980,height=750');
+    if (w) { w.document.write(pageHTML); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes en tu navegador');
+  });
+}
+
+function openModal(s) {
+  currentModalStudent = s;
+  const c = getCurso(s.cursoId);
+  const shortId = s.id.slice(-6).toUpperCase();
+  document.getElementById('modal-name').textContent = (s.apellido||s.nombre||'').toUpperCase() + (s.apellido && s.nombre ? ', ' + s.nombre.toUpperCase() : '');
+  document.getElementById('modal-curso-lbl').textContent = c ? '📚 '+c.nombre+(c.materia?' — '+c.materia:'') : '';
+  document.getElementById('modal-id').textContent = 'ID: '+shortId;
+  const con = document.getElementById('modal-qr-container'); con.innerHTML = '';
+  const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
+  new QRCode(con, { text: qrData, width:220,height:220,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H });
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function downloadQR() {
+  if (!currentModalStudent) return;
+  const s = currentModalStudent;
+  const c = getCurso(s.cursoId);
+
+  setTimeout(() => {
+    const qrCanvas = document.querySelector('#modal-qr-container canvas');
+    if (!qrCanvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+
+    // Datos del alumno
+    const apellido  = (s.apellido || s.nombre || '').toUpperCase();
+    const nombre    = s.apellido ? (s.nombre || '') : '';
+    const shortId   = s.id.slice(-6).toUpperCase();
+    const metaLine  = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+
+    // Canvas compuesto
+    const W = 220, PAD = 16;
+    const QR = 180;
+    // Calcular altura dinámica según líneas de texto
+    const lines = [apellido, nombre, metaLine, 'ID: ' + shortId].filter(Boolean);
+    const H = PAD + QR + PAD + lines.length * 22 + PAD;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Barra superior teal
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillRect(0, 0, W, 5);
+
+    // QR centrado
+    const qrX = (W - QR) / 2;
+    ctx.drawImage(qrCanvas, qrX, PAD + 5, QR, QR);
+
+    // Textos
+    let y = PAD + 5 + QR + 14;
+
+    // Apellido — bold grande
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = 'bold 14px "Barlow Condensed", Arial';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '0.8px';
+    ctx.fillText(apellido, W / 2, y);
+    y += 18;
+
+    if (nombre) {
+      ctx.fillStyle = '#2d3561';
+      ctx.font = '600 11px Nunito, Arial';
+      ctx.fillText(nombre, W / 2, y);
+      y += 17;
+    }
+
+    if (metaLine) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '500 9px Nunito, Arial';
+      ctx.fillText(metaLine, W / 2, y);
+      y += 15;
+    }
+
+    // ID en teal con fondo
+    const idText = 'ID: ' + shortId;
+    ctx.font = 'bold 9px "DM Mono", monospace';
+    const idW = ctx.measureText(idText).width + 16;
+    const idX = (W - idW) / 2;
+    ctx.fillStyle = '#e8f4f2';
+    ctx.beginPath();
+    ctx.roundRect(idX, y - 11, idW, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillText(idText, W / 2, y);
+
+    // Borde gris
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    // Descargar
+    const a = document.createElement('a');
+    a.href = cv.toDataURL('image/png');
+    a.download = 'QR_' + s.full.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+    a.click();
+    showToast('✅ QR descargado');
+  }, 300);
+}
+
+function printQRs() {
+  if (!activeQrId) return;
+  const list = studentsOf(activeQrId);
+  const c = getCurso(activeQrId);
+  if (!list.length) { showToast('⚠ No hay alumnos'); return; }
+
+  showToast('⏳ Generando QRs para impresión...');
+
+  // Primero generar todos los QR como imágenes base64 en canvas temporales
+  const qrPromises = list.map((s, i) => new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
+    new QRCode(tempDiv, {
+      text: qrData, width: 130, height: 130,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    setTimeout(() => {
+      const canvas = tempDiv.querySelector('canvas');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+      document.body.removeChild(tempDiv);
+      resolve({ s, dataUrl });
+    }, 80 + i * 20);
+  }));
+
+  Promise.all(qrPromises).then(results => {
+    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+    const docenteStr  = c && c.docente ? c.docente : '';
+
+    const cardsHTML = results.map(({ s, dataUrl }) => {
+      const shortId  = s.id.slice(-6).toUpperCase();
+      const apellido = (s.apellido || s.nombre || '').toUpperCase();
+      const nombre   = s.apellido ? (s.nombre || '') : '';
+      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+      return `
+        <div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+          ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+          ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+          ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Alumnos — ${cursoNombre}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: white; color: #1a1a2e; }
+    .page { padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0f9b8e; padding-bottom: 12px; margin-bottom: 1.2rem; }
+    .logo-text { font-size: 1.5rem; font-weight: 900; color: #1a1a2e; font-family: 'Barlow Condensed', Georgia, serif; letter-spacing: 0.5px; }
+    .logo-text span { color: #0f9b8e; }
+    .logo-sub { font-size: 0.6rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; font-family: 'Nunito', sans-serif; }
+    .header-right { text-align: right; font-size: 12px; color: #6b7280; font-family: 'Nunito', sans-serif; }
+    .header-right strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; font-weight: 800; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
+    .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
+    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">📋 Asist<span style="color:#1bc5b4">App</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia Digital</div>
+    </div>
+    <div class="header-right">
+      <strong>${cursoNombre}</strong>
+      ${docenteStr ? docenteStr : ''}
+    </div>
+  </div>
+  <div class="grid">${cardsHTML}</div>
+  <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
+    <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
+    <span>Sistema de Asistencia Digital</span>
+    <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
+  </div>
+</div>
+<script>
+  // Esperar a que las fuentes carguen antes de imprimir
+  document.fonts.ready.then(function(){ window.print(); });
+<\/script>
+
+<!-- ═══ PROCESO ═══ -->
+<!-- MODAL AGREGAR REGISTRO DE PROCESO -->
+
+<!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
+
+<!-- MODAL CALIFICAR CELDA DE PROCESO -->
+
+
+<!-- MODAL AGREGAR REGISTRO -->
+
+<!-- MODAL ELIMINAR REGISTRO -->
+
+<!-- MODAL CALIFICAR CELDA -->
+
+<!-- ═══ MODAL COMPARTIR ═══ -->
+<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
+    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
+    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
+      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
+      </button>
+    </div>
+    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
+  </div>
+</div>
+
+<!-- ═══ PAYWALL ═══ -->
+<div id="paywall-screen">
+  <div class="paywall-card">
+    <div class="paywall-icon">🔐</div>
+    <div class="paywall-title">AsistApp</div>
+    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
+    <div class="paywall-price">
+      <div class="paywall-price-amount">$4.970</div>
+      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
+    </div>
+    <div class="paywall-features">
+      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
+      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
+    </div>
+    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
+    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
+  </div>
+</div>
+</body>
+</html>`;
+
     const w = window.open('', '_blank', 'width=960,height=700');
     if (w) { w.document.write(html); w.document.close(); }
     else showToast('⚠ Activá las ventanas emergentes en tu navegador para imprimir');
@@ -25035,7 +25803,12 @@ async function markAllAbsent() {
   document.getElementById('absent-panel').style.display='none';
   showToast(`🔴 ${toMark.length} ausentes registrados`);
   checkAndShowConsecAbsences(date);
-  try { await Promise.all(toMark.map(s=>sbSaveAttendance(s.id, date, 'A'))); } catch(e) {}
+  try {
+    await Promise.all(toMark.map(s=>sbSaveAttendance(s.id, date, 'A')));
+  } catch(e) {
+    toMark.forEach(s => queueSync(s.id, date, 'A'));
+    showToast('⚠ Sin conexión — se sincronizará al reconectar');
+  }
 }
 
 // Marca todos presentes desde el Scanner
@@ -25050,7 +25823,12 @@ async function markAllPresent() {
   updateDayStats(date);
   document.getElementById('absent-panel').style.display='none';
   showToast(`🟢 ${list.length} alumnos marcados como Presentes`);
-  try { await Promise.all(list.map(s=>sbSaveAttendance(s.id, date, true))); } catch(e) {}
+  try {
+    await Promise.all(list.map(s=>sbSaveAttendance(s.id, date, true)));
+  } catch(e) {
+    list.forEach(s => queueSync(s.id, date, true));
+    showToast('⚠ Sin conexión — se sincronizará al reconectar');
+  }
 }
 
 // Marca todos presentes desde Planilla — pide elegir fecha
@@ -25534,7 +26312,11 @@ async function cycleAttendance(studentId, date, el) {
   try {
     if (next === undefined) await sbDeleteAttendance(studentId, date);
     else await sbSaveAttendance(studentId, date, next);
-  } catch(e) { console.warn('attendance sync error', e); }
+  } catch(e) {
+    console.warn('attendance sync error', e);
+    queueSync(studentId, date, next === undefined ? null : next);
+    showToast('⚠ Sin conexión — se sincronizará al reconectar');
+  }
 }
 
 function updateDailyTotals(date) {
@@ -27308,178 +28090,116 @@ function doShare(method) {
 // SECCIÓN PROCESO — Registro de aprendizaje
 // ════════════════════════════════════════
 let activeProcesoCursoId = null;
-let procesoData = {};       // { cursoId: { regId: { studentId: valor } } }
+let procesoData      = {};  // { cursoId: { studentId: { regId: valor } } }
 let procesoRegistros = {};  // { cursoId: [ { id, fecha, nombre, tipo } ] }
-let _procesoTipo = 'num';   // tipo seleccionado al agregar
-let _pcellStudentId = null;
-let _pcellRegId = null;
+let _procesoTipo     = 'num';
+let _pcellStudentId  = null;
+let _pcellRegId      = null;
 
-// ── Utilidades ──
-function procesoRegKey(regId) { return 'aa_proc_reg_' + regId; }
-function procesoDataKey(cursoId) { return 'aa_proc_data_' + cursoId; }
-function procesoListKey(cursoId) { return 'aa_proc_list_' + cursoId; }
+function procesoListKey(cid) { return 'aa_proc_list_' + cid; }
+function procesoDataKey(cid) { return 'aa_proc_data_' + cid; }
 
-function loadProcesoData(cursoId) {
-  try { procesoRegistros[cursoId] = JSON.parse(localStorage.getItem(procesoListKey(cursoId)) || '[]'); } catch(e) { procesoRegistros[cursoId] = []; }
-  try { procesoData[cursoId] = JSON.parse(localStorage.getItem(procesoDataKey(cursoId)) || '{}'); } catch(e) { procesoData[cursoId] = {}; }
-}
-function saveProcesoData(cursoId) {
-  localStorage.setItem(procesoListKey(cursoId), JSON.stringify(procesoRegistros[cursoId] || []));
-  localStorage.setItem(procesoDataKey(cursoId), JSON.stringify(procesoData[cursoId] || {}));
+function loadProcesoData(cid) {
+  try { procesoRegistros[cid] = JSON.parse(localStorage.getItem(procesoListKey(cid)) || '[]'); }
+  catch(e) { procesoRegistros[cid] = []; }
+  try { procesoData[cid] = JSON.parse(localStorage.getItem(procesoDataKey(cid)) || '{}'); }
+  catch(e) { procesoData[cid] = {}; }
 }
 
-// ── Navegación a la sección ──
+function saveProcesoData(cid) {
+  localStorage.setItem(procesoListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
+  localStorage.setItem(procesoDataKey(cid), JSON.stringify(procesoData[cid] || {}));
+}
+
 function onProcesoCursoChange() {
   const sel = document.getElementById('proceso-curso-sel');
   const id  = sel ? sel.value : '';
-  if (id) abrirProcesoCurso(id);
-}
+  activeProcesoCursoId = id || null;
+  const accs  = document.getElementById('proceso-acciones');
+  const bar   = document.getElementById('proceso-bar');
+  const tabla = document.getElementById('proceso-tabla-wrap');
+  const emC   = document.getElementById('proceso-empty-curso');
+  const emR   = document.getElementById('proceso-empty-regs');
 
-function renderProcesoCursosGrid() {
-  const grid   = document.getElementById('proceso-cursos-grid');
-  const noGrid = document.getElementById('proceso-sin-cursos');
-  if (!grid) return;
-  
-  // Asegurar que el panel de cursos es visible
-  const panelCursos  = document.getElementById('proceso-panel-cursos');
-  const panelDetalle = document.getElementById('proceso-panel-detalle');
-  if (panelCursos)  panelCursos.style.display  = 'block';
-  if (panelDetalle) panelDetalle.style.display = 'none';
-
-  if (!cursos || !cursos.length) {
-    grid.innerHTML = '';
-    if (noGrid) { noGrid.style.display = 'flex'; noGrid.style.flexDirection = 'column'; noGrid.style.alignItems = 'center'; }
+  if (!id) {
+    if (accs)  accs.style.display  = 'none';
+    if (tabla) tabla.style.display = 'none';
+    if (emC)   emC.style.display   = 'flex';
+    if (emR)   emR.style.display   = 'none';
+    if (bar)   bar.innerHTML       = '';
     return;
   }
-  if (noGrid) noGrid.style.display = 'none';
-  grid.innerHTML = '';
-  cursos.forEach(c => {
-    const count = studentsOf(c.id).length;
-    const div = document.createElement('div');
-    div.className = 'curso-card';
-    div.style.cursor = 'pointer';
-    div.onclick = () => abrirProcesoCurso(c.id);
-    div.innerHTML = `
-      <div class="curso-card-stripe" style="background:${c.color||'#0f9b8e'}"></div>
-      <div class="curso-card-name">${c.nombre}</div>
-      ${c.materia ? `<div class="curso-card-meta">📖 ${c.materia}</div>` : ''}
-      ${c.docente ? `<div class="curso-card-meta">👤 ${c.docente}</div>` : ''}
-      <div class="curso-card-count">👥 ${count} alumno${count !== 1 ? 's' : ''}</div>
-      <div class="curso-card-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();abrirProcesoCurso('${c.id}')">📝 Ver proceso</button>
-      </div>`;
-    grid.appendChild(div);
-  });
-}
 
-function abrirProcesoCurso(id) {
-  activeProcesoCursoId = id;
-  const c = getCurso(id);
-  // Actualizar título
-  const titulo = document.getElementById('proceso-detalle-titulo');
-  if (titulo) titulo.textContent = '📝 ' + (c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Proceso');
-  // Cambiar paneles
-  document.getElementById('proceso-panel-cursos').style.display  = 'none';
-  document.getElementById('proceso-panel-detalle').style.display = 'block';
-  // Cargar datos
-  document.getElementById('proceso-bar').innerHTML = buildBar(id);
+  if (accs)  accs.style.display  = 'flex';
+  if (emC)   emC.style.display   = 'none';
+  if (bar)   bar.innerHTML       = buildBar(id);
   loadProcesoData(id);
   renderProcesoTable();
 }
 
-function volverAProcesoGrid() {
-  activeProcesoCursoId = null;
-  document.getElementById('proceso-panel-detalle').style.display = 'none';
-  document.getElementById('proceso-panel-cursos').style.display  = 'block';
-  renderProcesoCursosGrid();
-}
-
-// ── Tipo de calificación ──
-function selectProcesoTipo(tipo) {
-  _procesoTipo = tipo;
-  ['num','cual','simb'].forEach(t => document.getElementById('ptipo-'+t)?.classList.toggle('selected', t===tipo));
-}
-
-// ── Agregar registro ──
-function openAddProcesoModal() {
+function renderProcesoTable() {
   if (!activeProcesoCursoId) return;
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('proceso-add-date').value = today;
-  document.getElementById('proceso-add-nombre').value = '';
-  selectProcesoTipo('num');
-  document.getElementById('add-proceso-modal').classList.add('open');
-}
+  const cid   = activeProcesoCursoId;
+  const list  = studentsOf(cid).slice().sort((a,b) =>
+    (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'));
+  const regs  = (procesoRegistros[cid] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
 
-function confirmAddProceso() {
-  const fecha  = document.getElementById('proceso-add-date').value;
-  const nombre = document.getElementById('proceso-add-nombre').value.trim();
-  if (!fecha)  { showToast('⚠ Seleccioná una fecha'); return; }
-  if (!nombre) { showToast('⚠ Escribí un nombre para el registro'); return; }
-  const id = genId();
-  if (!procesoRegistros[activeProcesoCursoId]) procesoRegistros[activeProcesoCursoId] = [];
-  procesoRegistros[activeProcesoCursoId].push({ id, fecha, nombre, tipo: _procesoTipo });
-  if (!procesoData[activeProcesoCursoId]) procesoData[activeProcesoCursoId] = {};
-  saveProcesoData(activeProcesoCursoId);
-  document.getElementById('add-proceso-modal').classList.remove('open');
-  renderProcesoTable(true);
-  showToast('✅ Registro "' + nombre + '" agregado');
-}
+  const tabla = document.getElementById('proceso-tabla-wrap');
+  const emR   = document.getElementById('proceso-empty-regs');
+  const thead = document.getElementById('proceso-thead-row');
+  const tbody = document.getElementById('proceso-body');
 
-// ── Eliminar registro ──
-function openDeleteProcesoModal() {
-  if (!activeProcesoCursoId) return;
-  const regs = (procesoRegistros[activeProcesoCursoId] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
-  if (!regs.length) { showToast('⚠ No hay registros para eliminar'); return; }
-  const sel = document.getElementById('delete-proceso-select');
-  sel.innerHTML = '<option value="">— Seleccioná —</option>' + regs.map(r => `<option value="${r.id}">${fmt(r.fecha)} · ${r.nombre}</option>`).join('');
-  document.getElementById('delete-proceso-modal').classList.add('open');
-}
-
-function confirmDeleteProceso() {
-  const id = document.getElementById('delete-proceso-select').value;
-  if (!id) { showToast('⚠ Seleccioná un registro'); return; }
-  procesoRegistros[activeProcesoCursoId] = (procesoRegistros[activeProcesoCursoId] || []).filter(r => r.id !== id);
-  // Borrar datos de ese registro
-  const data = procesoData[activeProcesoCursoId] || {};
-  Object.keys(data).forEach(sid => { if (data[sid][id] !== undefined) delete data[sid][id]; });
-  saveProcesoData(activeProcesoCursoId);
-  document.getElementById('delete-proceso-modal').classList.remove('open');
-  renderProcesoTable();
-  showToast('🗑 Registro eliminado');
-}
-
-// ── Abrir modal de calificación de celda ──
-function openProcesoCell(studentId, regId) {
-  const s   = students.find(x => x.id === studentId);
-  const reg = (procesoRegistros[activeProcesoCursoId] || []).find(r => r.id === regId);
-  if (!s || !reg) return;
-  _pcellStudentId = studentId;
-  _pcellRegId     = regId;
-  document.getElementById('pcell-student-name').textContent  = s.apellido ? s.apellido + ', ' + s.nombre : s.nombre;
-  document.getElementById('pcell-registro-name').textContent = reg.nombre + ' · ' + fmt(reg.fecha);
-  document.getElementById('pcell-num-options').style.display  = reg.tipo === 'num'  ? 'block' : 'none';
-  document.getElementById('pcell-cual-options').style.display = reg.tipo === 'cual' ? 'block' : 'none';
-  document.getElementById('pcell-simb-options').style.display = reg.tipo === 'simb' ? 'block' : 'none';
-  document.getElementById('proceso-cell-modal').classList.add('open');
-}
-
-function setProcesoVal(val) {
-  if (!_pcellStudentId || !_pcellRegId || !activeProcesoCursoId) return;
-  if (!procesoData[activeProcesoCursoId]) procesoData[activeProcesoCursoId] = {};
-  if (!procesoData[activeProcesoCursoId][_pcellStudentId]) procesoData[activeProcesoCursoId][_pcellStudentId] = {};
-  if (val === null) {
-    delete procesoData[activeProcesoCursoId][_pcellStudentId][_pcellRegId];
-  } else {
-    procesoData[activeProcesoCursoId][_pcellStudentId][_pcellRegId] = val;
+  if (!list.length) {
+    if (tabla) tabla.style.display = 'none';
+    if (emR)   emR.style.display   = 'none';
+    return;
   }
-  saveProcesoData(activeProcesoCursoId);
-  document.getElementById('proceso-cell-modal').classList.remove('open');
-  renderProcesoTable();
+
+  if (!regs.length) {
+    if (tabla) tabla.style.display = 'none';
+    if (emR)   { emR.style.display = 'flex'; emR.style.flexDirection = 'column'; emR.style.alignItems = 'center'; }
+    return;
+  }
+
+  if (tabla) tabla.style.display = 'block';
+  if (emR)   emR.style.display   = 'none';
+
+  // Cabecera
+  thead.innerHTML = '<th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th><th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>';
+  regs.forEach(r => {
+    const th = document.createElement('th');
+    th.className = 'proceso-col-header';
+    const tipoIcon = r.tipo==='num' ? '🔢' : r.tipo==='cual' ? '📋' : '🎯';
+    th.innerHTML = `${fmt(r.fecha)}<span class="proceso-col-type">${tipoIcon} ${r.nombre}</span>`;
+    th.title = r.nombre + ' · ' + r.fecha;
+    thead.appendChild(th);
+  });
+
+  // Filas
+  tbody.innerHTML = list.map((s,i) => {
+    const cells = regs.map(r => {
+      const val = (procesoData[cid]?.[s.id])?.[r.id];
+      return `<td style="text-align:center;cursor:pointer;padding:6px 4px" onclick="openProcesoCell('${s.id}','${r.id}')">${renderProcesoBadge(val, r.tipo)}</td>`;
+    }).join('');
+    const obs = getObservationCount(s.id);
+    const obsBadge = obs > 0 ? ` <span style="font-size:0.65rem;background:var(--mist);color:var(--teal);border-radius:6px;padding:1px 5px;border:1px solid var(--teal)">${obs}</span>` : '';
+    return `<tr>
+      <td style="position:sticky;left:0;background:var(--paper);font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--slate);text-align:center;padding:8px 6px">${String(i+1).padStart(2,'0')}</td>
+      <td style="position:sticky;left:36px;background:white;font-weight:700;font-size:0.88rem;padding:8px 12px;cursor:pointer;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis" onclick="openObservations('${s.id}')" title="Ver observaciones">${s.apellido ? s.apellido+', '+s.nombre : s.nombre}${obsBadge}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  // Scroll al final
+  setTimeout(() => {
+    const w = document.querySelector('#proceso-tabla-wrap .table-wrap');
+    if (w) w.scrollLeft = w.scrollWidth;
+  }, 60);
 }
 
-// ── Renderizar badge de proceso ──
 function renderProcesoBadge(val, tipo) {
-  if (val === null || val === undefined) return '<span class="proceso-badge pnota-empty">—</span>';
+  if (val === null || val === undefined)
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;color:#d1d5db;font-size:0.7rem">—</span>';
   if (tipo === 'num') {
     const n = parseInt(val);
     const cls = n >= 9 ? 'pnota-10' : n === 8 ? 'pnota-8' : n === 7 ? 'pnota-7' : n === 6 ? 'pnota-6' : n === 5 ? 'pnota-5' : n === 4 ? 'pnota-4' : 'pnota-1';
@@ -27487,216 +28207,166 @@ function renderProcesoBadge(val, tipo) {
   }
   if (tipo === 'cual') {
     const map = {'MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
-    return `<span class="proceso-badge ${map[val]||''}" style="font-size:0.72rem;padding:4px 6px">${val}</span>`;
+    return `<span class="proceso-badge ${map[val]||''}" style="font-size:0.7rem;padding:3px 5px">${val}</span>`;
   }
-  if (tipo === 'simb') return `<span class="proceso-badge psimb">${val}</span>`;
-  return `<span class="proceso-badge">${val}</span>`;
+  return `<span style="font-size:1.1rem">${val}</span>`;
 }
 
-// ── Render de la tabla ──
-function renderProcesoTable(scrollToEnd = false) {
-  if (!activeProcesoCursoId) return;
-  const list  = studentsOf(activeProcesoCursoId).slice().sort((a,b) => (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'', 'es'));
-  const regs  = (procesoRegistros[activeProcesoCursoId] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
-  const thead = document.querySelector('#proceso-table thead tr');
-  const tbody = document.getElementById('proceso-body');
-
-  // Cabecera
-  thead.innerHTML = '<th>#</th><th>Apellido y Nombre</th>';
-  regs.forEach(r => {
-    const tipoIcon = r.tipo === 'num' ? '🔢' : r.tipo === 'cual' ? '📋' : '🎯';
-    const th = document.createElement('th');
-    th.className = 'proceso-col-header';
-    th.innerHTML = `${fmt(r.fecha)}<span class="proceso-col-type">${tipoIcon} ${r.nombre}</span>`;
-    th.title = r.nombre + ' · ' + r.fecha;
-    thead.appendChild(th);
+function selectProcesoTipo(tipo) {
+  _procesoTipo = tipo;
+  ['num','cual','simb'].forEach(t => {
+    const el = document.getElementById('ptipo-'+t);
+    if (el) el.classList.toggle('selected', t===tipo);
   });
-
-  if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="30" style="text-align:center;padding:2rem;color:#9ca3af">Sin alumnos en este curso</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = list.map((s, i) => {
-    const cells = regs.map(r => {
-      const val = (procesoData[activeProcesoCursoId]?.[s.id])?.[r.id];
-      return `<td class="proceso-cell" onclick="openProcesoCell('${s.id}','${r.id}')">${renderProcesoBadge(val, r.tipo)}</td>`;
-    }).join('');
-    const obsCount = getObservationCount(s.id);
-    const obsBadge = obsCount > 0 ? ` <span style="font-size:0.68rem;background:var(--mist);color:var(--teal);border-radius:6px;padding:1px 6px;border:1px solid var(--teal)">${obsCount} obs</span>` : '';
-    return `<tr>
-      <td class="num-cell">${String(i+1).padStart(2,'0')}</td>
-      <td class="name-cell" onclick="openObservations('${s.id}')" title="Ver observaciones" style="cursor:pointer">${s.apellido ? s.apellido + ', ' + s.nombre : s.nombre}${obsBadge}</td>
-      ${cells}
-    </tr>`;
-  }).join('');
-
-  // Mostrar mensaje vacío si no hay registros
-  const emptyEl = document.getElementById('proceso-empty');
-  const tableWrap = document.querySelector('#proceso-panel-detalle .table-wrap');
-  if (emptyEl && tableWrap) {
-    if (!regs.length) {
-      tableWrap.style.display = 'none';
-      emptyEl.style.display = 'block';
-    } else {
-      tableWrap.style.display = '';
-      emptyEl.style.display = 'none';
-    }
-  }
-
-  if (scrollToEnd) {
-    setTimeout(() => { const w = document.querySelector('#proceso-panel-detalle .table-wrap'); if (w) w.scrollLeft = w.scrollWidth; }, 60);
-  }
 }
 
-// ── Exportar Word Proceso ──
+function openAddProcesoModal() {
+  if (!activeProcesoCursoId) return;
+  document.getElementById('proceso-add-date').value  = new Date().toISOString().split('T')[0];
+  document.getElementById('proceso-add-nombre').value = '';
+  selectProcesoTipo('num');
+  document.getElementById('add-proceso-modal').classList.add('open');
+  setTimeout(() => document.getElementById('proceso-add-nombre').focus(), 100);
+}
+
+function confirmAddProceso() {
+  const fecha  = document.getElementById('proceso-add-date').value;
+  const nombre = document.getElementById('proceso-add-nombre').value.trim();
+  if (!fecha)  { showToast('⚠ Seleccioná una fecha'); return; }
+  if (!nombre) { showToast('⚠ Ingresá un nombre'); return; }
+  const cid = activeProcesoCursoId;
+  if (!procesoRegistros[cid]) procesoRegistros[cid] = [];
+  procesoRegistros[cid].push({ id: genId(), fecha, nombre, tipo: _procesoTipo });
+  if (!procesoData[cid]) procesoData[cid] = {};
+  saveProcesoData(cid);
+  document.getElementById('add-proceso-modal').classList.remove('open');
+  renderProcesoTable();
+  showToast('✅ Registro "' + nombre + '" agregado');
+}
+
+function openDeleteProcesoModal() {
+  if (!activeProcesoCursoId) return;
+  const regs = (procesoRegistros[activeProcesoCursoId] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
+  if (!regs.length) { showToast('⚠ No hay registros para eliminar'); return; }
+  const sel = document.getElementById('delete-proceso-select');
+  sel.innerHTML = '<option value="">— Seleccioná —</option>' +
+    regs.map(r => `<option value="${r.id}">${fmt(r.fecha)} · ${r.nombre}</option>`).join('');
+  document.getElementById('delete-proceso-modal').classList.add('open');
+}
+
+function confirmDeleteProceso() {
+  const id = document.getElementById('delete-proceso-select').value;
+  if (!id) { showToast('⚠ Seleccioná un registro'); return; }
+  const cid = activeProcesoCursoId;
+  procesoRegistros[cid] = (procesoRegistros[cid] || []).filter(r => r.id !== id);
+  const data = procesoData[cid] || {};
+  Object.keys(data).forEach(sid => { if (data[sid]) delete data[sid][id]; });
+  saveProcesoData(cid);
+  document.getElementById('delete-proceso-modal').classList.remove('open');
+  renderProcesoTable();
+  showToast('🗑 Registro eliminado');
+}
+
+function openProcesoCell(studentId, regId) {
+  const s   = students.find(x => x.id === studentId);
+  const reg = (procesoRegistros[activeProcesoCursoId] || []).find(r => r.id === regId);
+  if (!s || !reg) return;
+  _pcellStudentId = studentId;
+  _pcellRegId     = regId;
+  document.getElementById('pcell-student-name').textContent  = s.apellido ? s.apellido+', '+s.nombre : s.nombre;
+  document.getElementById('pcell-registro-name').textContent = reg.nombre + ' · ' + fmt(reg.fecha);
+  document.getElementById('pcell-num-options').style.display  = reg.tipo==='num'  ? 'block' : 'none';
+  document.getElementById('pcell-cual-options').style.display = reg.tipo==='cual' ? 'block' : 'none';
+  document.getElementById('pcell-simb-options').style.display = reg.tipo==='simb' ? 'block' : 'none';
+  document.getElementById('proceso-cell-modal').classList.add('open');
+}
+
+function setProcesoVal(val) {
+  if (!_pcellStudentId || !_pcellRegId || !activeProcesoCursoId) return;
+  const cid = activeProcesoCursoId;
+  if (!procesoData[cid]) procesoData[cid] = {};
+  if (!procesoData[cid][_pcellStudentId]) procesoData[cid][_pcellStudentId] = {};
+  if (val === null) delete procesoData[cid][_pcellStudentId][_pcellRegId];
+  else procesoData[cid][_pcellStudentId][_pcellRegId] = val;
+  saveProcesoData(cid);
+  document.getElementById('proceso-cell-modal').classList.remove('open');
+  renderProcesoTable();
+}
+
 async function exportProcesoWord() {
   if (!activeProcesoCursoId) return;
   if (typeof docx === 'undefined') { showToast('⚠ Librería Word no disponible'); return; }
   const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
           AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign } = docx;
-
-  const c     = getCurso(activeProcesoCursoId);
-  const list  = studentsOf(activeProcesoCursoId).slice().sort((a,b) => (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'));
-  const regs  = (procesoRegistros[activeProcesoCursoId] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
+  const cid  = activeProcesoCursoId;
+  const c    = getCurso(cid);
+  const list = studentsOf(cid).slice().sort((a,b) => (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'));
+  const regs = (procesoRegistros[cid] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
   if (!regs.length) { showToast('⚠ Sin registros para exportar'); return; }
   showToast('⏳ Generando Word...');
-
   const C = { teal:'0F9B8E', tealLight:'1bc5b4', slate:'2D3561', ink:'1A1A2E',
-               mist:'E8F4F2', paper:'F0EDE4', white:'FFFFFF', gray:'9CA3AF',
-               green10:'27AE60', green8:'52C97A', yellow:'F1C40F', orange:'E67E22',
-               red:'E74C3C', darkRed:'C0392B' };
+               white:'FFFFFF', gray:'9CA3AF', mist:'E8F4F2', paper:'F0EDE4',
+               g10:'27AE60', g8:'52C97A', y:'F1C40F', o:'E67E22', r:'E74C3C', dr:'C0392B' };
   const W = 9360;
   const bdr = { style:BorderStyle.SINGLE, size:1, color:'DDDDDD' };
-  const borders = { top:bdr, bottom:bdr, left:bdr, right:bdr };
-  const noBorders = { top:{style:BorderStyle.NONE,size:0,color:'FFFFFF'}, bottom:{style:BorderStyle.NONE,size:0,color:'FFFFFF'}, left:{style:BorderStyle.NONE,size:0,color:'FFFFFF'}, right:{style:BorderStyle.NONE,size:0,color:'FFFFFF'} };
-
-  const mkCell = (text, { bg=C.white, w, bold=false, align=AlignmentType.CENTER, color=C.ink, size=18, noBorder=false }={}) =>
-    new TableCell({
-      borders: noBorder ? noBorders : borders,
-      width: w ? {size:w,type:WidthType.DXA} : undefined,
-      shading: { fill:bg, type:ShadingType.CLEAR },
-      verticalAlign: VerticalAlign.CENTER,
-      margins: { top:80, bottom:80, left:120, right:120 },
-      children: [new Paragraph({ alignment:align, children:[new TextRun({text:String(text??''),bold,color,size,font:'Arial'})] })]
-    });
-
-  const notaColor = (val, tipo) => {
-    if (tipo === 'num') {
-      const n = parseInt(val);
-      if (n >= 9) return C.green10; if (n === 8) return C.green8;
-      if (n === 7) return '8FDA6E'; if (n === 6) return C.yellow;
-      if (n === 5) return C.orange; if (n === 4) return C.red;
-      return C.darkRed;
-    }
-    if (tipo === 'cual') {
-      const map = {'MB+':C.green10,'MB':C.green8,'B+':'8FDA6E','B':'D4EDDA','S':'FFF3CD','S-':'FFE0B2','I':'FFCCCC','I-':C.darkRed};
-      return map[val] || C.mist;
-    }
+  const B = { top:bdr, bottom:bdr, left:bdr, right:bdr };
+  const NB = { top:{style:BorderStyle.NONE,size:0,color:'FFF'}, bottom:{style:BorderStyle.NONE,size:0,color:'FFF'}, left:{style:BorderStyle.NONE,size:0,color:'FFF'}, right:{style:BorderStyle.NONE,size:0,color:'FFF'} };
+  const mk = (text, {bg=C.white,w,bold=false,align=AlignmentType.CENTER,color=C.ink,size=18,nb=false}={}) =>
+    new TableCell({ borders:nb?NB:B, width:w?{size:w,type:WidthType.DXA}:undefined,
+      shading:{fill:bg,type:ShadingType.CLEAR}, verticalAlign:VerticalAlign.CENTER,
+      margins:{top:80,bottom:80,left:120,right:120},
+      children:[new Paragraph({alignment:align, children:[new TextRun({text:String(text??''),bold,color,size,font:'Arial'})]})] });
+  const notaBg = (val,tipo) => {
+    if (tipo==='num') { const n=parseInt(val); return n>=9?C.g10:n===8?C.g8:n===7?'8FDA6E':n===6?C.y:n===5?C.o:n===4?C.r:C.dr; }
+    if (tipo==='cual') { const m={'MB+':C.g10,'MB':C.g8,'B+':'8FDA6E','B':'D4EDDA','S':'FFF3CD','S-':'FFE0B2','I':'FFCCCC','I-':C.dr}; return m[val]||C.mist; }
     return C.mist;
   };
-  const notaTextColor = (val, tipo) => {
-    if (tipo === 'num') { const n=parseInt(val); return (n>=6&&n!==7)||n===8||n===9||n===10 ? C.white : n===7?'1A3A1A': C.white; }
-    if (tipo === 'cual') { return ['MB+','MB','S-','I-'].includes(val) ? C.white : C.ink; }
-    return C.ink;
-  };
-
-  const curso    = c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Curso';
-  const docente  = c && c.docente ? 'Prof. ' + c.docente : '';
+  const colW = Math.max(500, Math.floor((W-3600)/Math.max(regs.length,1)));
+  const curso = c ? c.nombre+(c.materia?' · '+c.materia:'') : 'Curso';
+  const docente = c&&c.docente ? 'Prof. '+c.docente : '';
   const fechaGen = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
-
-  // Header
-  const headerTable = new Table({
-    width:{size:W,type:WidthType.DXA}, columnWidths:[W],
-    rows:[
-      new TableRow({ children:[new TableCell({ borders:noBorders, shading:{fill:C.slate,type:ShadingType.CLEAR}, margins:{top:200,bottom:200,left:300,right:300},
-        children:[
-          new Paragraph({ alignment:AlignmentType.CENTER, children:[
-            new TextRun({text:'Asist',bold:false,size:52,color:C.white,font:'Georgia'}),
-            new TextRun({text:'App',bold:false,size:52,color:C.tealLight,font:'Georgia'}),
-          ]}),
-          new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:40}, children:[new TextRun({text:'Registro de Proceso de Aprendizaje',size:20,color:'C8F0ED',font:'Arial'})] }),
-        ]
-      })] }),
-      new TableRow({ children:[new TableCell({ borders:noBorders, shading:{fill:C.teal,type:ShadingType.CLEAR}, margins:{top:140,bottom:140,left:300,right:300},
-        children:[
-          new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({text:curso,bold:true,size:28,color:C.white,font:'Arial'})] }),
-          new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:30}, children:[new TextRun({text:[docente,`Generado: ${fechaGen}`].filter(Boolean).join('  ·  '),size:18,color:C.mist,font:'Georgia'})] }),
-        ]
-      })] }),
-    ]
-  });
-
-  // Leyenda de escala
-  const escalaRows = [
-    new TableRow({ children:[
-      mkCell('Nota', {bg:C.slate, bold:true, color:C.white, size:18}),
-      mkCell('Concepto', {bg:C.slate, bold:true, color:C.white, size:18}),
-      mkCell('Descripción', {bg:C.slate, bold:true, color:C.white, size:18}),
-      mkCell('Estado', {bg:C.slate, bold:true, color:C.white, size:18}),
-    ]}),
-    ...[
-      [10,'MB+','Muy Bueno +',C.green10,C.white,'Aprobado'],
-      [9,'MB','Muy Bueno',C.green10,C.white,'Aprobado'],
-      [8,'B+','Bueno +','52C97A',C.white,'Aprobado'],
-      [7,'B','Bueno','8FDA6E','1A3A1A','Aprobado'],
-      [6,'S','Suficiente',C.yellow,'5A4000','Aprobado'],
-      [5,'S-','Suficiente -',C.orange,C.white,'Desaprobado'],
-      [4,'I','Insuficiente',C.red,C.white,'Desaprobado'],
-      ['1-3','I-','Insuf. Grave',C.darkRed,C.white,'Desaprobado'],
-    ].map(([n,c2,desc,bg,tc,estado]) => new TableRow({ children:[
-      mkCell(String(n), {bg, color:tc, bold:true}),
-      mkCell(c2, {bg, color:tc, bold:true}),
-      mkCell(desc, {bg:'F9F9F9', color:C.ink, align:AlignmentType.LEFT}),
-      mkCell(estado, {bg: estado==='Aprobado'?'E8F5E9':'FFEBEE', color: estado==='Aprobado'?'1B5E20':'B71C1C', bold:true}),
-    ]}))
-  ];
-  const escalaTable = new Table({ width:{size:Math.floor(W*0.6),type:WidthType.DXA}, columnWidths:[800,800,2200,1600], rows:escalaRows });
-
-  // Tabla de proceso
-  const colW = Math.max(600, Math.floor((W - 3600) / Math.max(regs.length, 1)));
-  const headerRow = new TableRow({ children:[
-    mkCell('#', {bg:C.slate, bold:true, color:C.white, w:400}),
-    mkCell('Apellido y Nombre', {bg:C.slate, bold:true, color:C.white, w:3200, align:AlignmentType.LEFT}),
-    ...regs.map(r => mkCell(fmt(r.fecha) + '\n' + r.nombre, {bg:C.slate, bold:true, color:C.white, w:colW, size:16})),
+  const hdr = new Table({ width:{size:W,type:WidthType.DXA}, columnWidths:[W], rows:[
+    new TableRow({ children:[new TableCell({ borders:NB, shading:{fill:C.slate,type:ShadingType.CLEAR}, margins:{top:180,bottom:180,left:300,right:300},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER, children:[new TextRun({text:'Asist',size:48,color:C.white,font:'Georgia'}),new TextRun({text:'App',size:48,color:C.tealLight,font:'Georgia'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:30}, children:[new TextRun({text:'Registro de Proceso de Aprendizaje',size:18,color:C.mist,font:'Arial'})]}),
+      ]})]}),
+    new TableRow({ children:[new TableCell({ borders:NB, shading:{fill:C.teal,type:ShadingType.CLEAR}, margins:{top:120,bottom:120,left:300,right:300},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER, children:[new TextRun({text:curso,bold:true,size:26,color:C.white,font:'Arial'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:20}, children:[new TextRun({text:[docente,`Generado: ${fechaGen}`].filter(Boolean).join('  ·  '),size:16,color:C.mist,font:'Georgia'})]}),
+      ]})]}),
   ]});
-
-  const dataRows = list.map((s, i) => {
-    const isEven = i % 2 === 0;
-    const rowBg  = isEven ? C.white : 'F7F9FC';
+  const headerRow = new TableRow({ children:[
+    mk('#',{bg:C.slate,bold:true,color:C.white,w:400}),
+    mk('Apellido y Nombre',{bg:C.slate,bold:true,color:C.white,w:3200,align:AlignmentType.LEFT}),
+    ...regs.map(r => mk(fmt(r.fecha)+' '+r.nombre,{bg:C.slate,bold:true,color:C.white,w:colW,size:15})),
+  ]});
+  const dataRows = list.map((s,i) => {
+    const bg = i%2===0 ? C.white : 'F7F9FC';
     return new TableRow({ children:[
-      mkCell(String(i+1).padStart(2,'0'), {bg:C.paper, color:C.slate, bold:true, w:400, size:16}),
-      mkCell((s.apellido ? s.apellido + ', ' + s.nombre : s.nombre), {bg:rowBg, color:C.ink, align:AlignmentType.LEFT, w:3200, bold:false}),
+      mk(String(i+1).padStart(2,'0'),{bg:C.paper,color:C.slate,bold:true,w:400,size:15}),
+      mk(s.apellido?s.apellido+', '+s.nombre:s.nombre,{bg,color:C.ink,align:AlignmentType.LEFT,w:3200}),
       ...regs.map(r => {
-        const val = (procesoData[activeProcesoCursoId]?.[s.id])?.[r.id];
-        const display = val != null ? String(val) : '—';
-        const bg  = val != null ? notaColor(val, r.tipo).replace('#','') : rowBg;
-        const tc  = val != null ? notaTextColor(val, r.tipo) : C.gray;
-        return mkCell(display, {bg, color:tc, bold:val!=null, w:colW, size:val!=null?20:16});
+        const val = (procesoData[cid]?.[s.id])?.[r.id];
+        const display = val!=null ? String(val) : '—';
+        const nbg = val!=null ? notaBg(val,r.tipo) : bg;
+        return mk(display,{bg:nbg,bold:val!=null,w:colW,size:val!=null?19:15});
       }),
     ]});
   });
-
-  const procesoTable = new Table({ width:{size:W,type:WidthType.DXA}, columnWidths:[400,3200,...regs.map(()=>colW)], rows:[headerRow,...dataRows] });
-  const spacer = () => new Paragraph({ children:[new TextRun({text:'',size:14})] });
-
+  const tabla = new Table({ width:{size:W,type:WidthType.DXA}, columnWidths:[400,3200,...regs.map(()=>colW)], rows:[headerRow,...dataRows] });
+  const sp = () => new Paragraph({children:[new TextRun({text:'',size:12})]});
   try {
-    const doc2 = new Document({ sections:[{ properties:{}, children:[
-      headerTable, spacer(), spacer(),
-      new Paragraph({ children:[new TextRun({text:'Escala de calificación mixta',bold:true,size:24,color:C.slate,font:'Arial'})] }),
-      spacer(),
-      escalaTable, spacer(), spacer(),
-      new Paragraph({ children:[new TextRun({text:'Registro de proceso — ' + curso,bold:true,size:24,color:C.slate,font:'Arial'})] }),
-      spacer(),
-      procesoTable, spacer(),
-      new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({text:'Desarrollado por DIGITAL SHOP · AsistApp',size:16,color:C.gray,font:'Georgia'})] }),
+    const doc2 = new Document({ sections:[{ properties:{}, children:[hdr,sp(),sp(),tabla,sp(),
+      new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Desarrollado por DIGITAL SHOP · AsistApp',size:14,color:C.gray,font:'Georgia'})]}),
     ]}]});
-    const blob  = await Packer.toBlob(doc2);
+    const blob = await Packer.toBlob(doc2);
     const clean = s => (s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-]/g,'');
-    const fname = `Proceso_${clean(c?c.nombre:'')}_${new Date().toISOString().slice(0,10)}.docx`;
-    showShareModal(blob, fname);
-  } catch(e) { showToast('❌ Error: ' + e.message); }
+    showShareModal(blob, `Proceso_${clean(c?c.nombre:'')}_${new Date().toISOString().slice(0,10)}.docx`);
+  } catch(e) { showToast('❌ Error: '+e.message); }
 }
+
 
 async function enterApp(userName) {
 
@@ -27888,6 +28558,14 @@ function initOfflineMode() {
   updateOfflineBanner();
   window.addEventListener('online',  () => { isOnline = true;  updateOfflineBanner(); syncPending(); });
   window.addEventListener('offline', () => { isOnline = false; updateOfflineBanner(); });
+  // Al volver al tab en mobile: refrescar token y sincronizar pendientes
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isOnline && _sbToken) {
+      sbRefreshToken().catch(()=>{}).then(() => {
+        if (pendingSync.length > 0) syncPending();
+      });
+    }
+  });
 }
 
 function updateOfflineBanner() {
@@ -27908,6 +28586,8 @@ function queueSync(studentId, fecha, estado) {
 
 async function syncPending() {
   if (!isOnline || pendingSync.length === 0) return;
+  // Refrescar token antes de sincronizar
+  await sbRefreshToken().catch(()=>{});
   const queue = [...pendingSync];
   let synced = 0;
   for (const item of queue) {
@@ -28546,6 +29226,13 @@ function showGraceModal(userName, daysLeft) {
 <!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
 
 <!-- MODAL CALIFICAR CELDA DE PROCESO -->
+
+
+<!-- MODAL AGREGAR REGISTRO -->
+
+<!-- MODAL ELIMINAR REGISTRO -->
+
+<!-- MODAL CALIFICAR CELDA -->
 
 <!-- ═══ MODAL COMPARTIR ═══ -->
 <div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
