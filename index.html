@@ -23845,24 +23845,15 @@ function showView(id, btn) {
   if (id === 'scanner')  { syncSelects(); }
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
-    syncSelects();
-    const sel = document.getElementById('proceso-curso-sel');
-    if (sel) {
-      // Restaurar selección previa o auto-seleccionar si hay un solo curso
-      if (activeProcesoCursoId && cursos.find(c=>c.id===activeProcesoCursoId)) {
-        sel.value = activeProcesoCursoId;
-      } else if (!sel.value && cursos.length === 1) {
-        sel.value = cursos[0].id;
-      }
-    }
-    onProcesoCursoChange();
+    activeProcesoCursoId = null;
+    try { procRenderGrid(); } catch(e) { console.warn('procRenderGrid error:', e); }
   }
 
 }
 
 // ─── SELECTS SYNC ───
 function syncSelects() {
-  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel','proceso-curso-sel'].forEach(sid => {
+  ['nomina-curso-sel','qr-curso-sel','scanner-curso-sel','planilla-curso-sel'].forEach(sid => {
     const el = document.getElementById(sid);
     if (!el) return;
     const prev = el.value;
@@ -24366,41 +24357,53 @@ function previewQRsSelected() {
 <!-- ═══ PROCESO ═══ -->
 
 <div class="view" id="view-proceso">
-  <div class="page-title">📝 Registro de Proceso</div>
-  <p class="page-sub">Seguimiento del proceso de aprendizaje · Notas, calificaciones cualitativas y simbólicas</p>
 
-  <!-- Selector de curso -->
-  <div id="proceso-selector" style="margin-bottom:1.5rem">
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
-      <div class="field" style="flex:1;min-width:200px;max-width:400px;margin:0">
-        <label>📚 Curso</label>
-        <select id="proceso-curso-sel" onchange="onProcesoCursoChange()">
-          <option value="">— Seleccioná un curso —</option>
-        </select>
-      </div>
-      <div id="proceso-acciones" style="display:none;gap:8px;flex-wrap:wrap;padding-bottom:2px">
-        <button class="btn btn-primary btn-sm" onclick="openAddProcesoModal()">➕ Agregar registro</button>
-        <button class="btn btn-secondary btn-sm" onclick="openDeleteProcesoModal()">🗑 Eliminar</button>
-        <button class="btn btn-gold btn-sm" onclick="exportProcesoWord()">📄 Word</button>
-      </div>
+  <!-- VISTA A: grilla de cursos -->
+  <div id="proc-vista-cursos">
+    <div class="page-title">📝 Registro de Proceso</div>
+    <p class="page-sub">Seleccioná un curso para registrar el seguimiento del aprendizaje</p>
+    <div class="cursos-grid" id="proc-grid"></div>
+    <div id="proc-sin-cursos" class="empty-state" style="display:none">
+      <div class="ei">📝</div>
+      <p>No hay cursos cargados</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Primero creá un curso en la sección Cursos</p>
     </div>
-    <div class="curso-bar" id="proceso-bar" style="margin-top:0.8rem"></div>
   </div>
 
-  <!-- Tabla -->
-  <div id="proceso-tabla-wrap" style="display:none">
-    <div class="table-wrap">
-      <table id="proceso-table" class="proceso-table">
-        <thead><tr id="proceso-thead-row"><th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th><th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th></tr></thead>
-        <tbody id="proceso-body"></tbody>
-      </table>
+  <!-- VISTA B: detalle del curso -->
+  <div id="proc-vista-detalle" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="procVolverGrid()" style="display:flex;align-items:center;gap:5px">← Cursos</button>
+      <div class="page-title" style="margin:0;font-size:1.3rem" id="proc-titulo">📝 Proceso</div>
     </div>
-    <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:'DM Mono',monospace">💡 Hacé clic en una celda para calificar · Clic en el nombre para observaciones</p>
+    <div class="curso-bar" id="proceso-bar" style="margin-bottom:1rem"></div>
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="openAddProcesoModal()">➕ Agregar registro</button>
+      <button class="btn btn-secondary btn-sm" onclick="openDeleteProcesoModal()">🗑 Eliminar registro</button>
+      <button class="btn btn-gold btn-sm" onclick="exportProcesoWord()">📄 Informe Word</button>
+    </div>
+    <!-- Tabla -->
+    <div id="proceso-tabla-wrap" style="display:none">
+      <div class="table-wrap">
+        <table id="proceso-table" class="proceso-table">
+          <thead><tr id="proceso-thead-row">
+            <th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th>
+            <th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>
+          </tr></thead>
+          <tbody id="proceso-body"></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:'DM Mono',monospace">💡 Clic en celda para calificar · Clic en nombre para observaciones</p>
+    </div>
+    <div id="proceso-empty-regs" class="empty-state" style="display:none">
+      <div class="ei">📋</div>
+      <p>Sin registros aún para este curso</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p>
+    </div>
   </div>
 
-  <!-- Estados vacíos -->
-  <div id="proceso-empty-curso" class="empty-state"><div class="ei">📝</div><p>Seleccioná un curso para comenzar</p></div>
-  <div id="proceso-empty-regs" class="empty-state" style="display:none"><div class="ei">📋</div><p>No hay registros aún</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p></div>
+  <!-- select oculto para compatibilidad -->
+  <select id="proceso-curso-sel" style="display:none"></select>
 </div>
 
 <!-- MODAL AGREGAR REGISTRO -->
@@ -28145,29 +28148,67 @@ function saveProcesoData(cid) {
 }
 
 function onProcesoCursoChange() {
+  // Mantener por compatibilidad — ahora se usa procAbrirCurso
   const sel = document.getElementById('proceso-curso-sel');
   const id  = sel ? sel.value : '';
-  activeProcesoCursoId = id || null;
-  const accs  = document.getElementById('proceso-acciones');
-  const bar   = document.getElementById('proceso-bar');
-  const tabla = document.getElementById('proceso-tabla-wrap');
-  const emC   = document.getElementById('proceso-empty-curso');
-  const emR   = document.getElementById('proceso-empty-regs');
+  if (id) procAbrirCurso(id);
+}
 
-  if (!id) {
-    if (accs)  accs.style.display  = 'none';
-    if (tabla) tabla.style.display = 'none';
-    if (emC)   emC.style.display   = 'flex';
-    if (emR)   emR.style.display   = 'none';
-    if (bar)   bar.innerHTML       = '';
+function procRenderGrid() {
+  const grid     = document.getElementById('proc-grid');
+  const sinCursos = document.getElementById('proc-sin-cursos');
+  const vistaCursos = document.getElementById('proc-vista-cursos');
+  const vistaDetalle = document.getElementById('proc-vista-detalle');
+  if (!grid) return;
+
+  // Mostrar vista grilla, ocultar detalle
+  if (vistaCursos)  vistaCursos.style.display  = 'block';
+  if (vistaDetalle) vistaDetalle.style.display = 'none';
+
+  if (!cursos || !cursos.length) {
+    grid.innerHTML = '';
+    if (sinCursos) sinCursos.style.display = 'flex';
     return;
   }
+  if (sinCursos) sinCursos.style.display = 'none';
+  grid.innerHTML = '';
+  cursos.forEach(c => {
+    const count = studentsOf(c.id).length;
+    const div = document.createElement('div');
+    div.className = 'curso-card';
+    div.style.cursor = 'pointer';
+    div.onclick = () => procAbrirCurso(c.id);
+    div.innerHTML =
+      '<div class="curso-card-stripe" style="background:' + (c.color||'#0f9b8e') + '"></div>' +
+      '<div class="curso-card-name">' + c.nombre + '</div>' +
+      (c.materia ? '<div class="curso-card-meta">📖 ' + c.materia + '</div>' : '') +
+      (c.docente ? '<div class="curso-card-meta">👤 ' + c.docente + '</div>' : '') +
+      '<div class="curso-card-count">👥 ' + count + ' alumno' + (count!==1?'s':'') + '</div>' +
+      '<div class="curso-card-actions" style="margin-top:12px">' +
+        '<button class="btn btn-primary btn-sm" style="flex:1">📝 Ver proceso</button>' +
+      '</div>';
+    grid.appendChild(div);
+  });
+}
 
-  if (accs)  accs.style.display  = 'flex';
-  if (emC)   emC.style.display   = 'none';
-  if (bar)   bar.innerHTML       = buildBar(id);
+function procAbrirCurso(id) {
+  activeProcesoCursoId = id;
+  const c = getCurso(id);
+  const titulo = document.getElementById('proc-titulo');
+  if (titulo) titulo.textContent = '📝 ' + (c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Proceso');
+  const vistaCursos  = document.getElementById('proc-vista-cursos');
+  const vistaDetalle = document.getElementById('proc-vista-detalle');
+  if (vistaCursos)  vistaCursos.style.display  = 'none';
+  if (vistaDetalle) vistaDetalle.style.display = 'block';
+  const bar = document.getElementById('proceso-bar');
+  if (bar) bar.innerHTML = buildBar(id);
   loadProcesoData(id);
   renderProcesoTable();
+}
+
+function procVolverGrid() {
+  activeProcesoCursoId = null;
+  procRenderGrid();
 }
 
 function renderProcesoTable() {
@@ -28492,10 +28533,15 @@ async function enterApp(userName) {
   try {
     const lastView = localStorage.getItem('aa_last_view');
     if (lastView && lastView !== 'cursos') {
-      const btn = document.querySelector(`.nav-btn[onclick*="'${lastView}'"]`);
+      const btn = document.querySelector('.nav-btn[onclick*="' + lastView + '"]');
       showView(lastView, btn || null);
+    } else {
+      renderCursosGrid();
     }
-  } catch(e) {}
+  } catch(e) {
+    console.warn('Error restaurando vista:', e);
+    renderCursosGrid();
+  }
 }
 
 function showAppLoading(on) {
