@@ -23845,17 +23845,11 @@ function showView(id, btn) {
   if (id === 'scanner')  { syncSelects(); }
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
-    syncSelects();
-    // Pre-seleccionar el curso activo si no hay uno seleccionado en proceso
-    if (!activeProcesoCursoId) {
-      const fallback = activePlanillaId || activeScanId || activeCursoId || null;
-      if (fallback) {
-        const sel = document.getElementById('proceso-curso-sel');
-        if (sel) { sel.value = fallback; onProcesoCursoChange(); }
-      }
-    } else {
-      renderProcesoTable();
-    }
+    // Siempre mostrar la grilla de cursos al entrar a la sección
+    activeProcesoCursoId = null;
+    document.getElementById('proceso-panel-detalle').style.display = 'none';
+    document.getElementById('proceso-panel-cursos').style.display  = 'block';
+    renderProcesoCursosGrid();
   }
 }
 
@@ -24361,27 +24355,37 @@ function previewQRsSelected() {
 
 <!-- ═══ PROCESO ═══ -->
 <div class="view" id="view-proceso">
-  <div class="page-title">📝 Registro de Proceso</div>
-  <p class="page-sub">Seguimiento del proceso de aprendizaje de cada alumno · Calificaciones numéricas, cualitativas y simbólicas</p>
-  <div class="field" style="max-width:400px;margin-bottom:1.5rem">
-    <label>📚 Curso</label>
-    <select id="proceso-curso-sel" onchange="onProcesoCursoChange()"><option value="">— Seleccioná un curso —</option></select>
+  <!-- PANEL: grilla de cursos -->
+  <div id="proceso-panel-cursos">
+    <div class="page-title">📝 Registro de Proceso</div>
+    <p class="page-sub">Seleccioná un curso para ver y cargar el seguimiento del proceso de aprendizaje</p>
+    <div class="cursos-grid" id="proceso-cursos-grid"></div>
+    <div id="proceso-sin-cursos" class="empty-state" style="display:none"><div class="ei">📝</div><p>No tenés cursos cargados aún</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Primero creá un curso en la sección Cursos</p></div>
   </div>
-  <div id="proceso-content" style="display:none">
+  <!-- PANEL: detalle del curso seleccionado -->
+  <div id="proceso-panel-detalle" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="volverAProcesoGrid()" style="display:flex;align-items:center;gap:6px">← Volver</button>
+      <div class="page-title" style="margin:0;font-size:1.4rem" id="proceso-detalle-titulo">📝 Proceso</div>
+    </div>
     <div class="curso-bar" id="proceso-bar"></div>
     <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
       <button class="btn btn-primary" onclick="openAddProcesoModal()">📋 Agregar registro</button>
       <button class="btn btn-secondary" onclick="openDeleteProcesoModal()">🗑 Eliminar registro</button>
       <button class="btn btn-gold" onclick="exportProcesoWord()">📄 Informe Word</button>
     </div>
-    <div class="table-wrap">
-      <table id="proceso-table" class="proceso-table">
-        <thead><tr><th>#</th><th>Apellido y Nombre</th></tr></thead>
-        <tbody id="proceso-body"></tbody>
-      </table>
+    <div id="proceso-content">
+      <div class="table-wrap">
+        <table id="proceso-table" class="proceso-table">
+          <thead><tr><th>#</th><th>Apellido y Nombre</th></tr></thead>
+          <tbody id="proceso-body"></tbody>
+        </table>
+      </div>
     </div>
+    <div id="proceso-empty" class="empty-state" style="display:none"><div class="ei">📋</div><p>No hay registros aún para este curso</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p></div>
   </div>
-  <div id="proceso-empty" class="empty-state"><div class="ei">📝</div><p>Seleccioná un curso para ver su registro de proceso</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Podés agregar registros de evaluación: notas, calificaciones cualitativas y símbolos</p></div>
+  <!-- select oculto para compatibilidad con syncSelects -->
+  <select id="proceso-curso-sel" style="display:none" onchange="onProcesoCursoChange()"><option value="">—</option></select>
 </div>
 
 <!-- MODAL AGREGAR REGISTRO DE PROCESO -->
@@ -27330,14 +27334,59 @@ function saveProcesoData(cursoId) {
 function onProcesoCursoChange() {
   const sel = document.getElementById('proceso-curso-sel');
   const id  = sel ? sel.value : '';
-  activeProcesoCursoId = id || null;
-  document.getElementById('proceso-content').style.display = id ? 'block' : 'none';
-  document.getElementById('proceso-empty').style.display   = id ? 'none' : 'block';
-  if (id) {
-    document.getElementById('proceso-bar').innerHTML = buildBar(id);
-    loadProcesoData(id);
-    renderProcesoTable();
+  if (id) abrirProcesoCurso(id);
+}
+
+function renderProcesoCursosGrid() {
+  const grid   = document.getElementById('proceso-cursos-grid');
+  const noGrid = document.getElementById('proceso-sin-cursos');
+  if (!grid) return;
+  if (!cursos.length) {
+    grid.innerHTML = '';
+    if (noGrid) noGrid.style.display = 'block';
+    return;
   }
+  if (noGrid) noGrid.style.display = 'none';
+  grid.innerHTML = '';
+  cursos.forEach(c => {
+    const count = studentsOf(c.id).length;
+    const div = document.createElement('div');
+    div.className = 'curso-card';
+    div.style.cursor = 'pointer';
+    div.onclick = () => abrirProcesoCurso(c.id);
+    div.innerHTML = `
+      <div class="curso-card-stripe" style="background:${c.color}"></div>
+      <div class="curso-card-name">${c.nombre}</div>
+      ${c.materia ? `<div class="curso-card-meta">📖 ${c.materia}</div>` : ''}
+      ${c.docente ? `<div class="curso-card-meta">👤 ${c.docente}</div>` : ''}
+      <div class="curso-card-count">👥 ${count} alumno${count !== 1 ? 's' : ''}</div>
+      <div class="curso-card-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="abrirProcesoCurso('${c.id}')">📝 Ver proceso</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+function abrirProcesoCurso(id) {
+  activeProcesoCursoId = id;
+  const c = getCurso(id);
+  // Actualizar título
+  const titulo = document.getElementById('proceso-detalle-titulo');
+  if (titulo) titulo.textContent = '📝 ' + (c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Proceso');
+  // Cambiar paneles
+  document.getElementById('proceso-panel-cursos').style.display  = 'none';
+  document.getElementById('proceso-panel-detalle').style.display = 'block';
+  // Cargar datos
+  document.getElementById('proceso-bar').innerHTML = buildBar(id);
+  loadProcesoData(id);
+  renderProcesoTable();
+}
+
+function volverAProcesoGrid() {
+  activeProcesoCursoId = null;
+  document.getElementById('proceso-panel-detalle').style.display = 'none';
+  document.getElementById('proceso-panel-cursos').style.display  = 'block';
+  renderProcesoCursosGrid();
 }
 
 // ── Tipo de calificación ──
@@ -27477,8 +27526,21 @@ function renderProcesoTable(scrollToEnd = false) {
     </tr>`;
   }).join('');
 
+  // Mostrar mensaje vacío si no hay registros
+  const emptyEl = document.getElementById('proceso-empty');
+  const tableWrap = document.querySelector('#proceso-panel-detalle .table-wrap');
+  if (emptyEl && tableWrap) {
+    if (!regs.length) {
+      tableWrap.style.display = 'none';
+      emptyEl.style.display = 'block';
+    } else {
+      tableWrap.style.display = '';
+      emptyEl.style.display = 'none';
+    }
+  }
+
   if (scrollToEnd) {
-    setTimeout(() => { const w = document.querySelector('.table-wrap'); if (w) w.scrollLeft = w.scrollWidth; }, 60);
+    setTimeout(() => { const w = document.querySelector('#proceso-panel-detalle .table-wrap'); if (w) w.scrollLeft = w.scrollWidth; }, 60);
   }
 }
 
