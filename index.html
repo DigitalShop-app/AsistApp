@@ -27123,12 +27123,20 @@ async function enterApp(userName) {
             const GRACE_DAYS = 5;
             const isActive = status === 'active' && (!expires || expires >= now);
             const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
+            // Si status es null/undefined/trial = pendiente de webhook → no bloquear
+            const isDefinitelyInactive = (status === 'expired') || 
+              (status === 'active' && expires && expires < now) ||
+              (status === 'pending' && expires && expires < now);
             let inGrace = false, graceDaysLeft = 0;
             if (isExpired && expires) {
               const diffDays = Math.floor((now - expires) / 86400000);
               if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
             }
-            if (!isActive && !inGrace) { showPaywall(userName, isExpired); return; }
+            if (isDefinitelyInactive && !inGrace) { showPaywall(userName, isExpired); return; }
+            if (!isActive && !isDefinitelyInactive && !inGrace) {
+              // Status ambiguo (null, pending sin expiración) → dejar entrar sin bloquear
+              // El botón "Ya pagué" puede usarse para verificar manualmente
+            }
             if (inGrace) {
               const userEmail = currentEmail;
               emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
@@ -27742,42 +27750,70 @@ window.showView = function(id, btn) {
 
 // Re-chequeo de suscripción desde el paywall (para usuarios que ya pagaron)
 async function recheckSubscription() {
+  const btn = document.querySelector('#paywall-screen-main button[onclick="recheckSubscription()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ VERIFICANDO...'; }
+
+  // Si no hay userId/token, intentar recuperar de localStorage
   if (!_sbUserId || !_sbToken) {
-    showToast('⚠ Necesitás iniciar sesión primero');
-    doLogout();
+    const saved = localStorage.getItem('aa_sb_session');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        _sbToken = s.token; _sbUserId = s.userId;
+      } catch(e) {}
+    }
+  }
+
+  if (!_sbUserId) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+    showToast('⚠ Sesión no encontrada. Cerrá sesión e ingresá de nuevo.');
     return;
   }
-  showToast('🔄 Verificando tu suscripción...');
+
   try {
-    const refreshed = await sbRefreshToken().catch(()=>false);
+    // Siempre refrescar el token antes de consultar
+    await sbRefreshToken().catch(()=>{});
+
     const profileRes = await fetch(
       SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=subscription_status,subscription_expires_at',
       { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
     );
-    if (!profileRes.ok) { showToast('❌ Error al verificar. Intentá cerrar sesión y volver a ingresar.'); return; }
+
+    if (!profileRes.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+      showToast('❌ Error al consultar. Cerrá sesión e ingresá de nuevo.');
+      return;
+    }
+
     const arr = await profileRes.json();
-    if (!arr || !arr.length) { showToast('❌ No se encontró tu cuenta.'); return; }
+    if (!arr || !arr.length) {
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+      showToast('❌ No se encontró tu perfil. Contactá a soporte.');
+      return;
+    }
+
     const profile = arr[0];
-    const status = profile.subscription_status;
+    const status  = profile.subscription_status;
     const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
-    const now = new Date();
+    const now     = new Date();
     const isActive = status === 'active' && (!expires || expires >= now);
+
     if (isActive) {
-      // Suscripción activa — ocultar paywall y entrar a la app
+      // ✅ Suscripción activa — ocultar paywall y entrar
       const paywall = document.getElementById('paywall-screen-main');
-      if (paywall) paywall.style.cssText = 'display:none';
+      if (paywall) paywall.style.cssText = 'display:none !important';
       const loginScreen = document.getElementById('login-screen');
       if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
-      // Recuperar nombre del usuario
-      const savedSession = localStorage.getItem('aa_sb_session');
-      const sess = savedSession ? JSON.parse(savedSession) : null;
-      const userName = sess ? sess.name : 'Usuario';
-      document.getElementById('header-user').textContent = '👤 ' + userName;
+      const appWrapper = document.getElementById('app-wrapper');
+      if (appWrapper) { appWrapper.style.display = ''; appWrapper.classList.add('visible'); }
+      // Nombre del usuario
+      const saved = localStorage.getItem('aa_sb_session');
+      const sess  = saved ? JSON.parse(saved) : null;
+      const uName = sess?.name || 'Usuario';
+      document.getElementById('header-user').textContent = '👤 ' + uName;
       document.getElementById('header-user').style.display = 'inline-flex';
       document.getElementById('btn-logout').style.display  = 'inline-flex';
       updateToggleRoleBtn();
-      document.getElementById('app-wrapper').style.display = '';
-      document.getElementById('app-wrapper').classList.add('visible');
       showAppLoading(true);
       await loadAllData();
       showAppLoading(false);
@@ -27785,12 +27821,14 @@ async function recheckSubscription() {
       renderCursosGrid();
       syncSelects();
       applyRoleUI();
-      showToast('✅ ¡Suscripción verificada! Bienvenido/a.');
+      showToast('✅ ¡Suscripción verificada! Bienvenido/a ' + uName + '.');
     } else {
-      showToast('⏳ Tu pago aún no fue procesado. Esperá unos minutos e intentá de nuevo.');
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+      showToast('⏳ Pago aún no procesado. Esperá unos minutos e intentá de nuevo.');
     }
   } catch(e) {
-    showToast('❌ Error de conexión. Verificá tu internet e intentá de nuevo.');
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+    showToast('❌ Error de conexión. Verificá tu internet.');
   }
 }
 
@@ -27916,7 +27954,7 @@ function showGraceModal(userName, daysLeft) {
       <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
     </div>
     <a id="btn-suscribir-main" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <button onclick="recheckSubscription()" style="margin-top:0.6rem;width:100%;padding:11px;background:rgba(15,155,142,0.15);border:1px solid rgba(15,155,142,0.4);border-radius:10px;color:#1bc5b4;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(15,155,142,0.25)'" onmouseout="this.style.background='rgba(15,155,142,0.15)'">🔄 Ya pagué — verificar acceso</button>
+    <button onclick="recheckSubscription()" style="margin-top:0.6rem;width:100%;padding:11px;background:rgba(15,155,142,0.15);border:1px solid rgba(15,155,142,0.4);border-radius:10px;color:#1bc5b4;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(15,155,142,0.25)'" onmouseout="this.style.background='rgba(15,155,142,0.15)'">🔄 YA PAGUÉ — VERIFICAR ACCESO</button>
     <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
   </div>
 </div>
