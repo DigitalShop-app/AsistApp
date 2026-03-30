@@ -23836,7 +23836,9 @@ function toggleNuevoCursoForm() {
 function showView(id, btn) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('view-'+id).classList.add('active');
+  const viewEl = document.getElementById('view-'+id);
+  if (!viewEl) { console.warn('Vista no encontrada:', id); return; }
+  viewEl.classList.add('active');
   if (btn) btn.classList.add('active');
   if (id !== 'scanner') stopScanner();
   if (id === 'cursos')   renderCursosGrid();
@@ -28620,7 +28622,17 @@ async function sbDeleteStudentsByCurso(cursoId) {
 }
 async function sbSaveAttendance(studentId, fecha, estado) {
   const estadoStr = estado === true ? 'P' : estado;
-  await sbFetch('attendance',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{student_id:studentId,user_id:_sbUserId,fecha,estado:estadoStr}});
+  try {
+    await sbFetch('attendance',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{student_id:studentId,user_id:_sbUserId,fecha,estado:estadoStr}});
+  } catch(e) {
+    // Si falla por duplicado (409), intentar PATCH para actualizar el registro existente
+    if (e.message && (e.message.includes('duplicate') || e.message.includes('409') || e.message.includes('unique'))) {
+      await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`,
+        {method:'PATCH', prefer:'return=minimal', body:{estado:estadoStr}});
+    } else {
+      throw e;
+    }
+  }
 }
 async function sbDeleteAttendance(studentId, fecha) {
   await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
