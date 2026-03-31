@@ -23851,7 +23851,7 @@ function showView(id, btn) {
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
     activeProcesoCursoId = null;
-    try { procRenderGrid(); } catch(e) { console.warn('procRenderGrid error:', e); }
+    procMostrarGrid();
   }
 
 }
