@@ -23800,6 +23800,7 @@ var __async = (__this, __arguments, generator) => {
 </div>
 
 <script>
+// AsistApp v2025.03 — PROCESO OK
 // ─── CONFIRM ───
 let _confirmCb = null;
 function showConfirm(msg, sub, icon, okLabel, okClass) {
@@ -24359,53 +24360,42 @@ function previewQRsSelected() {
 <!-- ═══ PROCESO ═══ -->
 
 <div class="view" id="view-proceso">
-
-  <!-- VISTA A: grilla de cursos -->
-  <div id="proc-vista-cursos">
-    <div class="page-title">📝 Registro de Proceso</div>
-    <p class="page-sub">Seleccioná un curso para registrar el seguimiento del aprendizaje</p>
-    <div class="cursos-grid" id="proc-grid"></div>
-    <div id="proc-sin-cursos" class="empty-state" style="display:none">
-      <div class="ei">📝</div>
+  <div id="proc-grid-view">
+    <div class="page-title">&#128221; Registro de Proceso</div>
+    <p class="page-sub">Selecciona un curso para ver y registrar el proceso de aprendizaje</p>
+    <div class="cursos-grid" id="proc-cursos-grid"></div>
+    <div id="proc-empty" class="empty-state" style="display:none">
+      <div class="ei">&#128221;</div>
       <p>No hay cursos cargados</p>
-      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Primero creá un curso en la sección Cursos</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Crea un curso primero en la seccion Cursos</p>
     </div>
   </div>
-
-  <!-- VISTA B: detalle del curso -->
-  <div id="proc-vista-detalle" style="display:none">
+  <div id="proc-detalle-view" style="display:none">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
-      <button class="btn btn-secondary btn-sm" onclick="procVolverGrid()" style="display:flex;align-items:center;gap:5px">← Cursos</button>
-      <div class="page-title" style="margin:0;font-size:1.3rem" id="proc-titulo">📝 Proceso</div>
+      <button class="btn btn-secondary btn-sm" id="proc-volver-btn">&#8592; Cursos</button>
+      <div class="page-title" style="margin:0;font-size:1.3rem" id="proc-titulo-detalle">Proceso</div>
     </div>
-    <div class="curso-bar" id="proceso-bar" style="margin-bottom:1rem"></div>
+    <div class="curso-bar" id="proc-barra-curso" style="margin-bottom:1rem"></div>
     <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" onclick="openAddProcesoModal()">➕ Agregar registro</button>
-      <button class="btn btn-secondary btn-sm" onclick="openDeleteProcesoModal()">🗑 Eliminar registro</button>
-      <button class="btn btn-gold btn-sm" onclick="exportProcesoWord()">📄 Informe Word</button>
+      <button class="btn btn-primary btn-sm" id="proc-btn-agregar">&#43; Agregar registro</button>
+      <button class="btn btn-secondary btn-sm" id="proc-btn-eliminar">&#128465; Eliminar registro</button>
+      <button class="btn btn-gold btn-sm" id="proc-btn-word">&#128196; Informe Word</button>
     </div>
-    <!-- Tabla -->
-    <div id="proceso-tabla-wrap" style="display:none">
+    <div id="proc-tabla-wrap" style="display:none">
       <div class="table-wrap">
-        <table id="proceso-table" class="proceso-table">
-          <thead><tr id="proceso-thead-row">
-            <th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th>
-            <th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>
-          </tr></thead>
-          <tbody id="proceso-body"></tbody>
+        <table id="proc-tabla" class="proceso-table">
+          <thead><tr id="proc-thead"></tr></thead>
+          <tbody id="proc-tbody"></tbody>
         </table>
       </div>
-      <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:'DM Mono',monospace">💡 Clic en celda para calificar · Clic en nombre para observaciones</p>
+      <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:'DM Mono',monospace">Clic en celda para calificar &middot; Clic en nombre para observaciones</p>
     </div>
-    <div id="proceso-empty-regs" class="empty-state" style="display:none">
-      <div class="ei">📋</div>
-      <p>Sin registros aún para este curso</p>
-      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usá "Agregar registro" para crear la primera columna de evaluación</p>
+    <div id="proc-sin-registros" class="empty-state" style="display:none">
+      <div class="ei">&#128203;</div>
+      <p>Sin registros aun</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Usa "Agregar registro" para crear la primera columna</p>
     </div>
   </div>
-
-  <!-- select oculto para compatibilidad -->
-  <select id="proceso-curso-sel" style="display:none"></select>
 </div>
 
 <!-- MODAL AGREGAR REGISTRO -->
@@ -24526,27 +24516,6 @@ function previewQRsSelected() {
   </div>
 </div>
 
-<!-- ═══ PAYWALL ═══ -->
-<div id="paywall-screen">
-  <div class="paywall-card">
-    <div class="paywall-icon">🔐</div>
-    <div class="paywall-title">AsistApp</div>
-    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
-    <div class="paywall-price">
-      <div class="paywall-price-amount">$4.970</div>
-      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
-    </div>
-    <div class="paywall-features">
-      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
-    </div>
-    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
-  </div>
-</div>
 </body>
 </html>`;
 
@@ -24780,27 +24749,6 @@ function printQRs() {
   </div>
 </div>
 
-<!-- ═══ PAYWALL ═══ -->
-<div id="paywall-screen">
-  <div class="paywall-card">
-    <div class="paywall-icon">🔐</div>
-    <div class="paywall-title">AsistApp</div>
-    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
-    <div class="paywall-price">
-      <div class="paywall-price-amount">$4.970</div>
-      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
-    </div>
-    <div class="paywall-features">
-      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
-    </div>
-    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
-  </div>
-</div>
 </body>
 </html>`;
 
@@ -25035,27 +24983,6 @@ function printQRs() {
   </div>
 </div>
 
-<!-- ═══ PAYWALL ═══ -->
-<div id="paywall-screen">
-  <div class="paywall-card">
-    <div class="paywall-icon">🔐</div>
-    <div class="paywall-title">AsistApp</div>
-    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
-    <div class="paywall-price">
-      <div class="paywall-price-amount">$4.970</div>
-      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
-    </div>
-    <div class="paywall-features">
-      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
-    </div>
-    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
-  </div>
-</div>
 </body>
 </html>`;
 
@@ -25289,27 +25216,6 @@ function printQRs() {
   </div>
 </div>
 
-<!-- ═══ PAYWALL ═══ -->
-<div id="paywall-screen">
-  <div class="paywall-card">
-    <div class="paywall-icon">🔐</div>
-    <div class="paywall-title">AsistApp</div>
-    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
-    <div class="paywall-price">
-      <div class="paywall-price-amount">$4.970</div>
-      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
-    </div>
-    <div class="paywall-features">
-      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
-    </div>
-    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
-  </div>
-</div>
 </body>
 </html>`;
 
@@ -25550,27 +25456,6 @@ function printQRs() {
   </div>
 </div>
 
-<!-- ═══ PAYWALL ═══ -->
-<div id="paywall-screen">
-  <div class="paywall-card">
-    <div class="paywall-icon">🔐</div>
-    <div class="paywall-title">AsistApp</div>
-    <div class="paywall-sub" id="paywall-msg">Para continuar usando AsistApp necesitás activar tu suscripción mensual.</div>
-    <div class="paywall-price">
-      <div class="paywall-price-amount">$4.970</div>
-      <div class="paywall-price-period">por mes · Se renueva automáticamente</div>
-    </div>
-    <div class="paywall-features">
-      <div class="paywall-feature"><span>✅</span><span>Registro de asistencia con QR</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Informes y exportación Word/PDF</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Panel Docente y Preceptor</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Notificaciones WhatsApp a familias</span></div>
-      <div class="paywall-feature"><span>✅</span><span>Datos guardados en la nube</span></div>
-    </div>
-    <a id="btn-suscribir" href="#" target="_blank" class="btn-paywall">💳 Suscribirme ahora con Mercado Pago</a>
-    <button onclick="doLogout()" style="margin-top:0.8rem;width:100%;padding:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:10px;color:#cbd5e1;font-family:'Nunito',sans-serif;font-weight:700;font-size:0.9rem;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🚪 Cerrar sesión</button>
-  </div>
-</div>
 </body>
 </html>`;
 
@@ -28125,323 +28010,336 @@ function doShare(method) {
 
 
 // ════════════════════════════════════════
-// SECCIÓN PROCESO — Registro de aprendizaje
+// SECCIÓN PROCESO
 // ════════════════════════════════════════
-let activeProcesoCursoId = null;
-let procesoData      = {};  // { cursoId: { studentId: { regId: valor } } }
-let procesoRegistros = {};  // { cursoId: [ { id, fecha, nombre, tipo } ] }
-let _procesoTipo     = 'num';
-let _pcellStudentId  = null;
-let _pcellRegId      = null;
+var activeProcesoCursoId = null;
+var procesoRegistros = {};
+var procesoData = {};
+var _procesoTipo = 'num';
+var _pcellSid = null;
+var _pcellRid = null;
 
-function procesoListKey(cid) { return 'aa_proc_list_' + cid; }
-function procesoDataKey(cid) { return 'aa_proc_data_' + cid; }
+function procListKey(cid) { return 'aa_pl_' + cid; }
+function procDataKey(cid) { return 'aa_pd_' + cid; }
 
-function loadProcesoData(cid) {
-  try { procesoRegistros[cid] = JSON.parse(localStorage.getItem(procesoListKey(cid)) || '[]'); }
-  catch(e) { procesoRegistros[cid] = []; }
-  try { procesoData[cid] = JSON.parse(localStorage.getItem(procesoDataKey(cid)) || '{}'); }
-  catch(e) { procesoData[cid] = {}; }
+function procCargar(cid) {
+  try { procesoRegistros[cid] = JSON.parse(localStorage.getItem(procListKey(cid)) || '[]'); } catch(e) { procesoRegistros[cid] = []; }
+  try { procesoData[cid] = JSON.parse(localStorage.getItem(procDataKey(cid)) || '{}'); } catch(e) { procesoData[cid] = {}; }
 }
 
-function saveProcesoData(cid) {
-  localStorage.setItem(procesoListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
-  localStorage.setItem(procesoDataKey(cid), JSON.stringify(procesoData[cid] || {}));
+function procGuardar(cid) {
+  localStorage.setItem(procListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
+  localStorage.setItem(procDataKey(cid), JSON.stringify(procesoData[cid] || {}));
 }
 
-function onProcesoCursoChange() {
-  // Mantener por compatibilidad — ahora se usa procAbrirCurso
-  const sel = document.getElementById('proceso-curso-sel');
-  const id  = sel ? sel.value : '';
-  if (id) procAbrirCurso(id);
+function procMostrarGrid() {
+  activeProcesoCursoId = null;
+  var gv = document.getElementById('proc-grid-view');
+  var dv = document.getElementById('proc-detalle-view');
+  if (gv) gv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+  procRenderizarGrid();
 }
 
-function procRenderGrid() {
-  const grid     = document.getElementById('proc-grid');
-  const sinCursos = document.getElementById('proc-sin-cursos');
-  const vistaCursos = document.getElementById('proc-vista-cursos');
-  const vistaDetalle = document.getElementById('proc-vista-detalle');
+function procRenderizarGrid() {
+  var grid  = document.getElementById('proc-cursos-grid');
+  var empty = document.getElementById('proc-empty');
   if (!grid) return;
 
-  // Mostrar vista grilla, ocultar detalle
-  if (vistaCursos)  vistaCursos.style.display  = 'block';
-  if (vistaDetalle) vistaDetalle.style.display = 'none';
-
-  if (!cursos || !cursos.length) {
+  if (!cursos || cursos.length === 0) {
     grid.innerHTML = '';
-    if (sinCursos) sinCursos.style.display = 'flex';
+    if (empty) empty.style.display = 'flex';
     return;
   }
-  if (sinCursos) sinCursos.style.display = 'none';
+  if (empty) empty.style.display = 'none';
   grid.innerHTML = '';
-  cursos.forEach(c => {
-    const count = studentsOf(c.id).length;
-    const div = document.createElement('div');
+
+  for (var i = 0; i < cursos.length; i++) {
+    var c = cursos[i];
+    var count = studentsOf(c.id).length;
+    var div = document.createElement('div');
     div.className = 'curso-card';
     div.style.cursor = 'pointer';
-    div.onclick = () => procAbrirCurso(c.id);
-    div.innerHTML =
-      '<div class="curso-card-stripe" style="background:' + (c.color||'#0f9b8e') + '"></div>' +
-      '<div class="curso-card-name">' + c.nombre + '</div>' +
-      (c.materia ? '<div class="curso-card-meta">📖 ' + c.materia + '</div>' : '') +
-      (c.docente ? '<div class="curso-card-meta">👤 ' + c.docente + '</div>' : '') +
-      '<div class="curso-card-count">👥 ' + count + ' alumno' + (count!==1?'s':'') + '</div>' +
-      '<div class="curso-card-actions" style="margin-top:12px">' +
-        '<button class="btn btn-primary btn-sm" style="flex:1">📝 Ver proceso</button>' +
-      '</div>';
+    (function(curso) {
+      div.onclick = function() { procAbrirCurso(curso.id); };
+    })(c);
+    var stripe  = '<div class="curso-card-stripe" style="background:' + (c.color || '#0f9b8e') + '"></div>';
+    var nombre  = '<div class="curso-card-name">'  + c.nombre + '</div>';
+    var materia = c.materia ? '<div class="curso-card-meta">&#128214; ' + c.materia + '</div>' : '';
+    var docente = c.docente ? '<div class="curso-card-meta">&#128100; ' + c.docente + '</div>' : '';
+    var cant    = '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count !== 1 ? 's' : '') + '</div>';
+    var acciones = '<div class="curso-card-actions" style="margin-top:12px">' +
+                   '<button class="btn btn-primary btn-sm" style="flex:1">&#128221; Ver proceso</button>' +
+                   '</div>';
+    div.innerHTML = stripe + nombre + materia + docente + cant + acciones;
     grid.appendChild(div);
+  }
+}
+
+function procAbrirCurso(cid) {
+  activeProcesoCursoId = cid;
+  var c = getCurso(cid);
+  var gv = document.getElementById('proc-grid-view');
+  var dv = document.getElementById('proc-detalle-view');
+  if (gv) gv.style.display = 'none';
+  if (dv) dv.style.display = 'block';
+
+  var titulo = document.getElementById('proc-titulo-detalle');
+  if (titulo) titulo.textContent = c ? (c.nombre + (c.materia ? ' · ' + c.materia : '')) : 'Proceso';
+
+  var barra = document.getElementById('proc-barra-curso');
+  if (barra) barra.innerHTML = buildBar(cid);
+
+  // Conectar botones
+  var btnAgregar  = document.getElementById('proc-btn-agregar');
+  var btnEliminar = document.getElementById('proc-btn-eliminar');
+  var btnWord     = document.getElementById('proc-btn-word');
+  var btnVolver   = document.getElementById('proc-volver-btn');
+  if (btnAgregar)  btnAgregar.onclick  = openAddProcesoModal;
+  if (btnEliminar) btnEliminar.onclick = openDeleteProcesoModal;
+  if (btnWord)     btnWord.onclick     = exportProcesoWord;
+  if (btnVolver)   btnVolver.onclick   = procMostrarGrid;
+
+  procCargar(cid);
+  procRenderizarTabla();
+}
+
+function procRenderizarTabla() {
+  var cid  = activeProcesoCursoId;
+  if (!cid) return;
+
+  var list = studentsOf(cid).slice().sort(function(a,b) {
+    return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'', 'es');
   });
-}
+  var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b) {
+    return a.fecha.localeCompare(b.fecha);
+  });
 
-function procAbrirCurso(id) {
-  activeProcesoCursoId = id;
-  const c = getCurso(id);
-  const titulo = document.getElementById('proc-titulo');
-  if (titulo) titulo.textContent = '📝 ' + (c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Proceso');
-  const vistaCursos  = document.getElementById('proc-vista-cursos');
-  const vistaDetalle = document.getElementById('proc-vista-detalle');
-  if (vistaCursos)  vistaCursos.style.display  = 'none';
-  if (vistaDetalle) vistaDetalle.style.display = 'block';
-  const bar = document.getElementById('proceso-bar');
-  if (bar) bar.innerHTML = buildBar(id);
-  loadProcesoData(id);
-  renderProcesoTable();
-}
+  var tablaWrap  = document.getElementById('proc-tabla-wrap');
+  var sinRegs    = document.getElementById('proc-sin-registros');
+  var thead      = document.getElementById('proc-thead');
+  var tbody      = document.getElementById('proc-tbody');
 
-function procVolverGrid() {
-  activeProcesoCursoId = null;
-  procRenderGrid();
-}
-
-function renderProcesoTable() {
-  if (!activeProcesoCursoId) return;
-  const cid   = activeProcesoCursoId;
-  const list  = studentsOf(cid).slice().sort((a,b) =>
-    (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'));
-  const regs  = (procesoRegistros[cid] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
-
-  const tabla = document.getElementById('proceso-tabla-wrap');
-  const emR   = document.getElementById('proceso-empty-regs');
-  const thead = document.getElementById('proceso-thead-row');
-  const tbody = document.getElementById('proceso-body');
-
-  if (!list.length) {
-    if (tabla) tabla.style.display = 'none';
-    if (emR)   emR.style.display   = 'none';
+  if (!list.length || !regs.length) {
+    if (tablaWrap) tablaWrap.style.display = 'none';
+    if (sinRegs)   sinRegs.style.display   = !list.length ? 'none' : 'flex';
     return;
   }
 
-  if (!regs.length) {
-    if (tabla) tabla.style.display = 'none';
-    if (emR)   { emR.style.display = 'flex'; emR.style.flexDirection = 'column'; emR.style.alignItems = 'center'; }
-    return;
-  }
-
-  if (tabla) tabla.style.display = 'block';
-  if (emR)   emR.style.display   = 'none';
+  if (tablaWrap) tablaWrap.style.display = 'block';
+  if (sinRegs)   sinRegs.style.display   = 'none';
 
   // Cabecera
-  thead.innerHTML = '<th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th><th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>';
-  regs.forEach(r => {
-    const th = document.createElement('th');
-    th.className = 'proceso-col-header';
-    const tipoIcon = r.tipo==='num' ? '🔢' : r.tipo==='cual' ? '📋' : '🎯';
-    th.innerHTML = `${fmt(r.fecha)}<span class="proceso-col-type">${tipoIcon} ${r.nombre}</span>`;
-    th.title = r.nombre + ' · ' + r.fecha;
-    thead.appendChild(th);
-  });
+  var thHTML = '<th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th>' +
+               '<th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>';
+  for (var r = 0; r < regs.length; r++) {
+    var reg = regs[r];
+    var icon = reg.tipo === 'num' ? '&#128290;' : reg.tipo === 'cual' ? '&#128203;' : '&#127919;';
+    thHTML += '<th class="proceso-col-header" title="' + reg.nombre + ' &middot; ' + reg.fecha + '">' +
+              fmt(reg.fecha) + '<span class="proceso-col-type">' + icon + ' ' + reg.nombre + '</span></th>';
+  }
+  thead.innerHTML = thHTML;
 
   // Filas
-  tbody.innerHTML = list.map((s,i) => {
-    const cells = regs.map(r => {
-      const val = (procesoData[cid]?.[s.id])?.[r.id];
-      return `<td style="text-align:center;cursor:pointer;padding:6px 4px" onclick="openProcesoCell('${s.id}','${r.id}')">${renderProcesoBadge(val, r.tipo)}</td>`;
-    }).join('');
-    const obs = getObservationCount(s.id);
-    const obsBadge = obs > 0 ? ` <span style="font-size:0.65rem;background:var(--mist);color:var(--teal);border-radius:6px;padding:1px 5px;border:1px solid var(--teal)">${obs}</span>` : '';
-    return `<tr>
-      <td style="position:sticky;left:0;background:var(--paper);font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:var(--slate);text-align:center;padding:8px 6px">${String(i+1).padStart(2,'0')}</td>
-      <td style="position:sticky;left:36px;background:white;font-weight:700;font-size:0.88rem;padding:8px 12px;cursor:pointer;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis" onclick="openObservations('${s.id}')" title="Ver observaciones">${s.apellido ? s.apellido+', '+s.nombre : s.nombre}${obsBadge}</td>
-      ${cells}
-    </tr>`;
-  }).join('');
+  // Construir filas usando createElement para evitar problemas de comillas
+  tbody.innerHTML = '';
+  for (var s = 0; s < list.length; s++) {
+    var st = list[s];
+    var tr = document.createElement('tr');
+    // Celda número
+    var tdNum = document.createElement('td');
+    tdNum.style.cssText = 'position:sticky;left:0;background:var(--paper);font-family:monospace;font-size:0.75rem;font-weight:700;color:var(--slate);text-align:center;padding:8px 6px';
+    tdNum.textContent = String(s+1).padStart(2,'0');
+    tr.appendChild(tdNum);
+    // Celda nombre
+    var tdNombre = document.createElement('td');
+    tdNombre.style.cssText = 'position:sticky;left:36px;background:white;font-weight:700;font-size:0.88rem;padding:8px 12px;cursor:pointer';
+    tdNombre.title = 'Ver observaciones';
+    var obs = getObservationCount(st.id);
+    tdNombre.innerHTML = (st.apellido ? st.apellido + ', ' + st.nombre : st.nombre) +
+      (obs > 0 ? '<span style="font-size:0.65rem;background:var(--mist);color:var(--teal);border-radius:6px;padding:1px 5px;border:1px solid var(--teal)">' + obs + '</span>' : '');
+    (function(sid){ tdNombre.addEventListener('click', function(){ openObservations(sid); }); })(st.id);
+    tr.appendChild(tdNombre);
+    // Celdas de registros
+    for (var rr = 0; rr < regs.length; rr++) {
+      var reg2 = regs[rr];
+      var val  = procesoData[cid] && procesoData[cid][st.id] ? procesoData[cid][st.id][reg2.id] : undefined;
+      var tdCel = document.createElement('td');
+      tdCel.style.cssText = 'text-align:center;cursor:pointer;padding:6px 4px';
+      tdCel.innerHTML = procBadge(val, reg2.tipo);
+      (function(sid, rid){ tdCel.addEventListener('click', function(){ procAbrirCelda(sid, rid); }); })(st.id, reg2.id);
+      tr.appendChild(tdCel);
+    }
+    tbody.appendChild(tr);
+  }
 
-  // Scroll al final
-  setTimeout(() => {
-    const w = document.querySelector('#proceso-tabla-wrap .table-wrap');
+  setTimeout(function() {
+    var w = document.querySelector('#proc-tabla-wrap .table-wrap');
     if (w) w.scrollLeft = w.scrollWidth;
   }, 60);
 }
 
-function renderProcesoBadge(val, tipo) {
-  if (val === null || val === undefined)
-    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;color:#d1d5db;font-size:0.7rem">—</span>';
+function procBadge(val, tipo) {
+  if (val === null || val === undefined || val === '')
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;color:#d1d5db;font-size:0.7rem">&#8212;</span>';
   if (tipo === 'num') {
-    const n = parseInt(val);
-    const cls = n >= 9 ? 'pnota-10' : n === 8 ? 'pnota-8' : n === 7 ? 'pnota-7' : n === 6 ? 'pnota-6' : n === 5 ? 'pnota-5' : n === 4 ? 'pnota-4' : 'pnota-1';
-    return `<span class="proceso-badge ${cls}">${val}</span>`;
+    var n = parseInt(val);
+    var cls = n >= 9 ? 'pnota-10' : n === 8 ? 'pnota-8' : n === 7 ? 'pnota-7' : n === 6 ? 'pnota-6' : n === 5 ? 'pnota-5' : n === 4 ? 'pnota-4' : 'pnota-1';
+    return '<span class="proceso-badge ' + cls + '">' + val + '</span>';
   }
   if (tipo === 'cual') {
-    const map = {'MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
-    return `<span class="proceso-badge ${map[val]||''}" style="font-size:0.7rem;padding:3px 5px">${val}</span>`;
+    var map2 = {'MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
+    return '<span class="proceso-badge ' + (map2[val]||'') + '" style="font-size:0.7rem;padding:3px 5px">' + val + '</span>';
   }
-  return `<span style="font-size:1.1rem">${val}</span>`;
+  return '<span style="font-size:1.1rem">' + val + '</span>';
 }
 
-function selectProcesoTipo(tipo) {
-  _procesoTipo = tipo;
-  ['num','cual','simb'].forEach(t => {
-    const el = document.getElementById('ptipo-'+t);
-    if (el) el.classList.toggle('selected', t===tipo);
-  });
-}
-
-function openAddProcesoModal() {
-  if (!activeProcesoCursoId) return;
-  document.getElementById('proceso-add-date').value  = new Date().toISOString().split('T')[0];
-  document.getElementById('proceso-add-nombre').value = '';
-  selectProcesoTipo('num');
-  document.getElementById('add-proceso-modal').classList.add('open');
-  setTimeout(() => document.getElementById('proceso-add-nombre').focus(), 100);
-}
-
-function confirmAddProceso() {
-  const fecha  = document.getElementById('proceso-add-date').value;
-  const nombre = document.getElementById('proceso-add-nombre').value.trim();
-  if (!fecha)  { showToast('⚠ Seleccioná una fecha'); return; }
-  if (!nombre) { showToast('⚠ Ingresá un nombre'); return; }
-  const cid = activeProcesoCursoId;
-  if (!procesoRegistros[cid]) procesoRegistros[cid] = [];
-  procesoRegistros[cid].push({ id: genId(), fecha, nombre, tipo: _procesoTipo });
-  if (!procesoData[cid]) procesoData[cid] = {};
-  saveProcesoData(cid);
-  document.getElementById('add-proceso-modal').classList.remove('open');
-  renderProcesoTable();
-  showToast('✅ Registro "' + nombre + '" agregado');
-}
-
-function openDeleteProcesoModal() {
-  if (!activeProcesoCursoId) return;
-  const regs = (procesoRegistros[activeProcesoCursoId] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
-  if (!regs.length) { showToast('⚠ No hay registros para eliminar'); return; }
-  const sel = document.getElementById('delete-proceso-select');
-  sel.innerHTML = '<option value="">— Seleccioná —</option>' +
-    regs.map(r => `<option value="${r.id}">${fmt(r.fecha)} · ${r.nombre}</option>`).join('');
-  document.getElementById('delete-proceso-modal').classList.add('open');
-}
-
-function confirmDeleteProceso() {
-  const id = document.getElementById('delete-proceso-select').value;
-  if (!id) { showToast('⚠ Seleccioná un registro'); return; }
-  const cid = activeProcesoCursoId;
-  procesoRegistros[cid] = (procesoRegistros[cid] || []).filter(r => r.id !== id);
-  const data = procesoData[cid] || {};
-  Object.keys(data).forEach(sid => { if (data[sid]) delete data[sid][id]; });
-  saveProcesoData(cid);
-  document.getElementById('delete-proceso-modal').classList.remove('open');
-  renderProcesoTable();
-  showToast('🗑 Registro eliminado');
-}
-
-function openProcesoCell(studentId, regId) {
-  const s   = students.find(x => x.id === studentId);
-  const reg = (procesoRegistros[activeProcesoCursoId] || []).find(r => r.id === regId);
+function procAbrirCelda(sid, rid) {
+  var s   = students.find(function(x){ return x.id === sid; });
+  var reg = (procesoRegistros[activeProcesoCursoId]||[]).find(function(x){ return x.id === rid; });
   if (!s || !reg) return;
-  _pcellStudentId = studentId;
-  _pcellRegId     = regId;
-  document.getElementById('pcell-student-name').textContent  = s.apellido ? s.apellido+', '+s.nombre : s.nombre;
-  document.getElementById('pcell-registro-name').textContent = reg.nombre + ' · ' + fmt(reg.fecha);
-  document.getElementById('pcell-num-options').style.display  = reg.tipo==='num'  ? 'block' : 'none';
-  document.getElementById('pcell-cual-options').style.display = reg.tipo==='cual' ? 'block' : 'none';
-  document.getElementById('pcell-simb-options').style.display = reg.tipo==='simb' ? 'block' : 'none';
+  _pcellSid = sid;
+  _pcellRid = rid;
+  var nameEl = document.getElementById('pcell-student-name');
+  var regEl  = document.getElementById('pcell-registro-name');
+  if (nameEl) nameEl.textContent = s.apellido ? s.apellido + ', ' + s.nombre : s.nombre;
+  if (regEl)  regEl.textContent  = reg.nombre + ' · ' + fmt(reg.fecha);
+  var numOpts  = document.getElementById('pcell-num-options');
+  var cualOpts = document.getElementById('pcell-cual-options');
+  var simbOpts = document.getElementById('pcell-simb-options');
+  if (numOpts)  numOpts.style.display  = reg.tipo === 'num'  ? 'block' : 'none';
+  if (cualOpts) cualOpts.style.display = reg.tipo === 'cual' ? 'block' : 'none';
+  if (simbOpts) simbOpts.style.display = reg.tipo === 'simb' ? 'block' : 'none';
   document.getElementById('proceso-cell-modal').classList.add('open');
 }
 
 function setProcesoVal(val) {
-  if (!_pcellStudentId || !_pcellRegId || !activeProcesoCursoId) return;
-  const cid = activeProcesoCursoId;
+  if (!_pcellSid || !_pcellRid || !activeProcesoCursoId) return;
+  var cid = activeProcesoCursoId;
   if (!procesoData[cid]) procesoData[cid] = {};
-  if (!procesoData[cid][_pcellStudentId]) procesoData[cid][_pcellStudentId] = {};
-  if (val === null) delete procesoData[cid][_pcellStudentId][_pcellRegId];
-  else procesoData[cid][_pcellStudentId][_pcellRegId] = val;
-  saveProcesoData(cid);
+  if (!procesoData[cid][_pcellSid]) procesoData[cid][_pcellSid] = {};
+  if (val === null) delete procesoData[cid][_pcellSid][_pcellRid];
+  else procesoData[cid][_pcellSid][_pcellRid] = val;
+  procGuardar(cid);
   document.getElementById('proceso-cell-modal').classList.remove('open');
-  renderProcesoTable();
+  procRenderizarTabla();
+}
+
+function selectProcesoTipo(tipo) {
+  _procesoTipo = tipo;
+  var tipos = ['num','cual','simb'];
+  for (var t = 0; t < tipos.length; t++) {
+    var el = document.getElementById('ptipo-' + tipos[t]);
+    if (el) { if (tipos[t] === tipo) el.classList.add('selected'); else el.classList.remove('selected'); }
+  }
+}
+
+function openAddProcesoModal() {
+  if (!activeProcesoCursoId) return;
+  var dateEl  = document.getElementById('proceso-add-date');
+  var nameEl  = document.getElementById('proceso-add-nombre');
+  if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+  if (nameEl) { nameEl.value = ''; setTimeout(function(){ nameEl.focus(); }, 100); }
+  selectProcesoTipo('num');
+  document.getElementById('add-proceso-modal').classList.add('open');
+}
+
+function confirmAddProceso() {
+  var fecha  = document.getElementById('proceso-add-date').value;
+  var nombre = document.getElementById('proceso-add-nombre').value.trim();
+  if (!fecha)  { showToast('Selecciona una fecha'); return; }
+  if (!nombre) { showToast('Ingresa un nombre'); return; }
+  var cid = activeProcesoCursoId;
+  if (!procesoRegistros[cid]) procesoRegistros[cid] = [];
+  procesoRegistros[cid].push({ id: genId(), fecha: fecha, nombre: nombre, tipo: _procesoTipo });
+  if (!procesoData[cid]) procesoData[cid] = {};
+  procGuardar(cid);
+  document.getElementById('add-proceso-modal').classList.remove('open');
+  procRenderizarTabla();
+  showToast('Registro "' + nombre + '" agregado');
+}
+
+function openDeleteProcesoModal() {
+  if (!activeProcesoCursoId) return;
+  var regs = (procesoRegistros[activeProcesoCursoId] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+  if (!regs.length) { showToast('No hay registros para eliminar'); return; }
+  var sel = document.getElementById('delete-proceso-select');
+  sel.innerHTML = '<option value="">Selecciona...</option>';
+  for (var i = 0; i < regs.length; i++) {
+    sel.innerHTML += '<option value="' + regs[i].id + '">' + fmt(regs[i].fecha) + ' · ' + regs[i].nombre + '</option>';
+  }
+  document.getElementById('delete-proceso-modal').classList.add('open');
+}
+
+function confirmDeleteProceso() {
+  var id  = document.getElementById('delete-proceso-select').value;
+  if (!id) { showToast('Selecciona un registro'); return; }
+  var cid = activeProcesoCursoId;
+  procesoRegistros[cid] = (procesoRegistros[cid] || []).filter(function(r){ return r.id !== id; });
+  var data = procesoData[cid] || {};
+  var sids = Object.keys(data);
+  for (var i = 0; i < sids.length; i++) { if (data[sids[i]]) delete data[sids[i]][id]; }
+  procGuardar(cid);
+  document.getElementById('delete-proceso-modal').classList.remove('open');
+  procRenderizarTabla();
+  showToast('Registro eliminado');
 }
 
 async function exportProcesoWord() {
   if (!activeProcesoCursoId) return;
-  if (typeof docx === 'undefined') { showToast('⚠ Librería Word no disponible'); return; }
-  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-          AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign } = docx;
-  const cid  = activeProcesoCursoId;
-  const c    = getCurso(cid);
-  const list = studentsOf(cid).slice().sort((a,b) => (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'));
-  const regs = (procesoRegistros[cid] || []).slice().sort((a,b) => a.fecha.localeCompare(b.fecha));
-  if (!regs.length) { showToast('⚠ Sin registros para exportar'); return; }
-  showToast('⏳ Generando Word...');
-  const C = { teal:'0F9B8E', tealLight:'1bc5b4', slate:'2D3561', ink:'1A1A2E',
-               white:'FFFFFF', gray:'9CA3AF', mist:'E8F4F2', paper:'F0EDE4',
-               g10:'27AE60', g8:'52C97A', y:'F1C40F', o:'E67E22', r:'E74C3C', dr:'C0392B' };
-  const W = 9360;
-  const bdr = { style:BorderStyle.SINGLE, size:1, color:'DDDDDD' };
-  const B = { top:bdr, bottom:bdr, left:bdr, right:bdr };
-  const NB = { top:{style:BorderStyle.NONE,size:0,color:'FFF'}, bottom:{style:BorderStyle.NONE,size:0,color:'FFF'}, left:{style:BorderStyle.NONE,size:0,color:'FFF'}, right:{style:BorderStyle.NONE,size:0,color:'FFF'} };
-  const mk = (text, {bg=C.white,w,bold=false,align=AlignmentType.CENTER,color=C.ink,size=18,nb=false}={}) =>
-    new TableCell({ borders:nb?NB:B, width:w?{size:w,type:WidthType.DXA}:undefined,
-      shading:{fill:bg,type:ShadingType.CLEAR}, verticalAlign:VerticalAlign.CENTER,
-      margins:{top:80,bottom:80,left:120,right:120},
-      children:[new Paragraph({alignment:align, children:[new TextRun({text:String(text??''),bold,color,size,font:'Arial'})]})] });
-  const notaBg = (val,tipo) => {
-    if (tipo==='num') { const n=parseInt(val); return n>=9?C.g10:n===8?C.g8:n===7?'8FDA6E':n===6?C.y:n===5?C.o:n===4?C.r:C.dr; }
-    if (tipo==='cual') { const m={'MB+':C.g10,'MB':C.g8,'B+':'8FDA6E','B':'D4EDDA','S':'FFF3CD','S-':'FFE0B2','I':'FFCCCC','I-':C.dr}; return m[val]||C.mist; }
-    return C.mist;
-  };
-  const colW = Math.max(500, Math.floor((W-3600)/Math.max(regs.length,1)));
-  const curso = c ? c.nombre+(c.materia?' · '+c.materia:'') : 'Curso';
-  const docente = c&&c.docente ? 'Prof. '+c.docente : '';
-  const fechaGen = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
-  const hdr = new Table({ width:{size:W,type:WidthType.DXA}, columnWidths:[W], rows:[
-    new TableRow({ children:[new TableCell({ borders:NB, shading:{fill:C.slate,type:ShadingType.CLEAR}, margins:{top:180,bottom:180,left:300,right:300},
-      children:[
-        new Paragraph({alignment:AlignmentType.CENTER, children:[new TextRun({text:'Asist',size:48,color:C.white,font:'Georgia'}),new TextRun({text:'App',size:48,color:C.tealLight,font:'Georgia'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:30}, children:[new TextRun({text:'Registro de Proceso de Aprendizaje',size:18,color:C.mist,font:'Arial'})]}),
-      ]})]}),
-    new TableRow({ children:[new TableCell({ borders:NB, shading:{fill:C.teal,type:ShadingType.CLEAR}, margins:{top:120,bottom:120,left:300,right:300},
-      children:[
-        new Paragraph({alignment:AlignmentType.CENTER, children:[new TextRun({text:curso,bold:true,size:26,color:C.white,font:'Arial'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:20}, children:[new TextRun({text:[docente,`Generado: ${fechaGen}`].filter(Boolean).join('  ·  '),size:16,color:C.mist,font:'Georgia'})]}),
-      ]})]}),
-  ]});
-  const headerRow = new TableRow({ children:[
-    mk('#',{bg:C.slate,bold:true,color:C.white,w:400}),
-    mk('Apellido y Nombre',{bg:C.slate,bold:true,color:C.white,w:3200,align:AlignmentType.LEFT}),
-    ...regs.map(r => mk(fmt(r.fecha)+' '+r.nombre,{bg:C.slate,bold:true,color:C.white,w:colW,size:15})),
-  ]});
-  const dataRows = list.map((s,i) => {
-    const bg = i%2===0 ? C.white : 'F7F9FC';
-    return new TableRow({ children:[
-      mk(String(i+1).padStart(2,'0'),{bg:C.paper,color:C.slate,bold:true,w:400,size:15}),
-      mk(s.apellido?s.apellido+', '+s.nombre:s.nombre,{bg,color:C.ink,align:AlignmentType.LEFT,w:3200}),
-      ...regs.map(r => {
-        const val = (procesoData[cid]?.[s.id])?.[r.id];
-        const display = val!=null ? String(val) : '—';
-        const nbg = val!=null ? notaBg(val,r.tipo) : bg;
-        return mk(display,{bg:nbg,bold:val!=null,w:colW,size:val!=null?19:15});
-      }),
-    ]});
-  });
-  const tabla = new Table({ width:{size:W,type:WidthType.DXA}, columnWidths:[400,3200,...regs.map(()=>colW)], rows:[headerRow,...dataRows] });
-  const sp = () => new Paragraph({children:[new TextRun({text:'',size:12})]});
+  if (typeof docx === 'undefined') { showToast('Libreria Word no disponible'); return; }
+  showToast('Generando Word...');
+  var cid  = activeProcesoCursoId;
+  var c    = getCurso(cid);
+  var list = studentsOf(cid).slice().sort(function(a,b){ return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'); });
+  var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+  if (!regs.length) { showToast('Sin registros para exportar'); return; }
   try {
-    const doc2 = new Document({ sections:[{ properties:{}, children:[hdr,sp(),sp(),tabla,sp(),
-      new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Desarrollado por DIGITAL SHOP · AsistApp',size:14,color:C.gray,font:'Georgia'})]}),
+    var D = docx; var W = 9360;
+    var bdr = {style:D.BorderStyle.SINGLE,size:1,color:'DDDDDD'};
+    var B = {top:bdr,bottom:bdr,left:bdr,right:bdr};
+    var NB = {top:{style:D.BorderStyle.NONE,size:0,color:'FFF'},bottom:{style:D.BorderStyle.NONE,size:0,color:'FFF'},left:{style:D.BorderStyle.NONE,size:0,color:'FFF'},right:{style:D.BorderStyle.NONE,size:0,color:'FFF'}};
+    var mk = function(text, opts) {
+      opts = opts || {};
+      return new D.TableCell({borders:opts.nb?NB:B, width:opts.w?{size:opts.w,type:D.WidthType.DXA}:undefined,
+        shading:{fill:opts.bg||'FFFFFF',type:D.ShadingType.CLEAR}, verticalAlign:D.VerticalAlign.CENTER,
+        margins:{top:80,bottom:80,left:120,right:120},
+        children:[new D.Paragraph({alignment:opts.align||D.AlignmentType.CENTER,
+          children:[new D.TextRun({text:String(text||''),bold:opts.bold||false,color:opts.color||'1A1A2E',size:opts.size||18,font:'Arial'})]})]});
+    };
+    var cW = Math.max(500, Math.floor((W-3600)/Math.max(regs.length,1)));
+    var curso = c ? c.nombre + (c.materia?' · '+c.materia:'') : 'Curso';
+    var hdrRow = new D.TableRow({children:[
+      mk('#',{bg:'2D3561',bold:true,color:'FFFFFF',w:400}),
+      mk('Apellido y Nombre',{bg:'2D3561',bold:true,color:'FFFFFF',w:3200,align:D.AlignmentType.LEFT})
+    ].concat(regs.map(function(r){ return mk(fmt(r.fecha)+' '+r.nombre,{bg:'2D3561',bold:true,color:'FFFFFF',w:cW,size:15}); }))});
+    var rows = [hdrRow].concat(list.map(function(st,i){
+      var bg = i%2===0?'FFFFFF':'F7F9FC';
+      return new D.TableRow({children:[
+        mk(String(i+1).padStart(2,'0'),{bg:'F0EDE4',color:'2D3561',bold:true,w:400,size:15}),
+        mk(st.apellido?st.apellido+', '+st.nombre:st.nombre,{bg:bg,color:'1A1A2E',align:D.AlignmentType.LEFT,w:3200})
+      ].concat(regs.map(function(r){
+        var val = procesoData[cid]&&procesoData[cid][st.id]?procesoData[cid][st.id][r.id]:undefined;
+        var display = val!=null?String(val):'—';
+        return mk(display,{bg:bg,bold:val!=null,w:cW,size:val!=null?19:15});
+      }))});
+    }));
+    var tabla = new D.Table({width:{size:W,type:D.WidthType.DXA},columnWidths:[400,3200].concat(regs.map(function(){ return cW; })),rows:rows});
+    var sp = new D.Paragraph({children:[new D.TextRun({text:'',size:12})]});
+    var doc = new D.Document({sections:[{properties:{},children:[
+      new D.Paragraph({children:[new D.TextRun({text:'AsistApp - Registro de Proceso - '+curso,bold:true,size:28,font:'Arial'})]}),
+      new D.Paragraph({children:[new D.TextRun({text:'Generado: '+new Date().toLocaleDateString('es-AR'),size:18,font:'Arial',color:'9CA3AF'})]}),
+      sp, tabla, sp,
+      new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'Desarrollado por DIGITAL SHOP · AsistApp',size:14,color:'9CA3AF',font:'Georgia'})]})
     ]}]});
-    const blob = await Packer.toBlob(doc2);
-    const clean = s => (s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-]/g,'');
-    showShareModal(blob, `Proceso_${clean(c?c.nombre:'')}_${new Date().toISOString().slice(0,10)}.docx`);
-  } catch(e) { showToast('❌ Error: '+e.message); }
+    var blob = await D.Packer.toBlob(doc);
+    var fname = 'Proceso_' + (c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso') + '_' + new Date().toISOString().slice(0,10) + '.docx';
+    showShareModal(blob, fname);
+  } catch(e) { showToast('Error: ' + e.message); }
 }
+
+// Alias para compatibilidad con showView
+function procRenderGrid() { procMostrarGrid(); }
 
 
 async function enterApp(userName) {
