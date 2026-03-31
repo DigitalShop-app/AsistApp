@@ -22173,7 +22173,7 @@ var __async = (__this, __arguments, generator) => {
                   }
                 })
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              }), 
+              }),
               patchText,
               context,
               keepOriginalStyles
@@ -25798,6 +25798,8 @@ function applyRoleUI() {
   if (formPreceptor) formPreceptor.style.display = isPreceptor() ? 'block' : 'none';
   if (editFormProf)  editFormProf.style.display  = isPreceptor() ? 'none' : 'block';
   if (editFormPrec)  editFormPrec.style.display  = isPreceptor() ? 'block' : 'none';
+  // Siempre actualizar el botón flotante
+  updateToggleRoleBtn();
 
   // Botón flotante de cambio de rol: siempre visible para todos
   updateToggleRoleBtn();
@@ -25830,6 +25832,16 @@ function toggleRole() {
   selectRole(newRole);
   applyRoleUI();
   updateToggleRoleBtn();
+  // Persistir el rol elegido en la sesión para que se restaure al recargar
+  try {
+    localStorage.setItem('aa_role', newRole);
+    const saved = localStorage.getItem('aa_sb_session');
+    if (saved) {
+      const s = JSON.parse(saved);
+      s.role = newRole;
+      localStorage.setItem('aa_sb_session', JSON.stringify(s));
+    }
+  } catch(e) {}
   // Recargar cursos filtrados por nuevo rol
   loadAllData().then(() => {
     renderCursosGrid();
@@ -28306,20 +28318,13 @@ async function enterApp(userName) {
             const GRACE_DAYS = 5;
             const isActive = status === 'active' && (!expires || expires >= now);
             const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
-            // Si status es null/undefined/trial = pendiente de webhook → no bloquear
-            const isDefinitelyInactive = (status === 'expired') || 
-              (status === 'active' && expires && expires < now) ||
-              (status === 'pending' && expires && expires < now);
             let inGrace = false, graceDaysLeft = 0;
             if (isExpired && expires) {
               const diffDays = Math.floor((now - expires) / 86400000);
               if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
             }
-            if (isDefinitelyInactive && !inGrace) { showPaywall(userName, isExpired); return; }
-            if (!isActive && !isDefinitelyInactive && !inGrace) {
-              // Status ambiguo (null, pending sin expiración) → dejar entrar sin bloquear
-              // El botón "Ya pagué" puede usarse para verificar manualmente
-            }
+            // Solo pueden entrar usuarios con suscripción activa o en período de gracia
+            if (!isActive && !inGrace) { showPaywall(userName, isExpired); return; }
             if (inGrace) {
               const userEmail = currentEmail;
               emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
