@@ -23109,6 +23109,8 @@ var __async = (__this, __arguments, generator) => {
   /* APP WRAPPER */
   #app-wrapper { display: none; }
   #app-wrapper.visible { display: block; }
+  #app-wrapper.visible.app-ready { opacity: 1; transition: opacity 0.15s ease; }
+  #app-wrapper.visible:not(.app-ready) { opacity: 0; }
 
   /* LOGOUT BUTTON - white text, rose background */
   #btn-logout {
@@ -23254,7 +23256,7 @@ var __async = (__this, __arguments, generator) => {
 </div>
 
 <!-- ═══ CURSOS ═══ -->
-<div class="view active" id="view-cursos">
+<div class="view" id="view-cursos">
   <div class="page-title">🏫 Mis Cursos</div>
   <p class="page-sub">Seleccioná un curso para gestionarlo, o creá uno nuevo al final de la página.</p>
 
@@ -24494,27 +24496,6 @@ function previewQRsSelected() {
   </div>
 </div>
 
-<!-- ═══ MODAL COMPARTIR ═══ -->
-<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px;text-align:center">
-    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
-    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
-      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
-      </button>
-      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">📧</span> Enviar por Email
-      </button>
-      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
-      </button>
-    </div>
-    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
-  </div>
-</div>
 
 </body>
 </html>`;
@@ -24677,7 +24658,7 @@ function printQRs() {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>QR Alumnos — ${cursoNombre}</title>
+  <title>AsistApp — QR Alumnos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -24693,7 +24674,7 @@ function printQRs() {
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
     .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
-    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
+    @media print { @page { size: A4 portrait; margin-top: 0mm; margin-bottom: 0mm; margin-left: 10mm; margin-right: 10mm; } body { -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
@@ -24706,239 +24687,7 @@ function printQRs() {
     <div class="header-right">
       <strong>${cursoNombre}</strong>
       ${docenteStr ? docenteStr : ''}
-    </div>
-  </div>
-  <div class="grid">${cardsHTML}</div>
-  <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
-    <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
-    <span>Sistema de Asistencia Digital</span>
-    <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
-  </div>
-</div>
-<script>
-  // Esperar a que las fuentes carguen antes de imprimir
-  document.fonts.ready.then(function(){ window.print(); });
-<\/script>
-
-<!-- ═══ PROCESO ═══ -->
-<!-- MODAL AGREGAR REGISTRO DE PROCESO -->
-
-<!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
-
-<!-- MODAL CALIFICAR CELDA DE PROCESO -->
-
-<!-- ═══ MODAL COMPARTIR ═══ -->
-<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px;text-align:center">
-    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
-    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
-      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
-      </button>
-      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">📧</span> Enviar por Email
-      </button>
-      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
-      </button>
-    </div>
-    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
-  </div>
-</div>
-
-</body>
-</html>`;
-
-    const w = window.open('', '_blank', 'width=980,height=750');
-    if (w) { w.document.write(pageHTML); w.document.close(); }
-    else showToast('⚠ Activá las ventanas emergentes en tu navegador');
-  });
-}
-
-function openModal(s) {
-  currentModalStudent = s;
-  const c = getCurso(s.cursoId);
-  const shortId = s.id.slice(-6).toUpperCase();
-  document.getElementById('modal-name').textContent = (s.apellido||s.nombre||'').toUpperCase() + (s.apellido && s.nombre ? ', ' + s.nombre.toUpperCase() : '');
-  document.getElementById('modal-curso-lbl').textContent = c ? '📚 '+c.nombre+(c.materia?' — '+c.materia:'') : '';
-  document.getElementById('modal-id').textContent = 'ID: '+shortId;
-  const con = document.getElementById('modal-qr-container'); con.innerHTML = '';
-  const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
-  new QRCode(con, { text: qrData, width:220,height:220,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H });
-  document.getElementById('qr-modal').classList.add('open');
-}
-
-function downloadQR() {
-  if (!currentModalStudent) return;
-  const s = currentModalStudent;
-  const c = getCurso(s.cursoId);
-
-  setTimeout(() => {
-    const qrCanvas = document.querySelector('#modal-qr-container canvas');
-    if (!qrCanvas) { showToast('⚠ Esperá que cargue el QR'); return; }
-
-    // Datos del alumno
-    const apellido  = (s.apellido || s.nombre || '').toUpperCase();
-    const nombre    = s.apellido ? (s.nombre || '') : '';
-    const shortId   = s.id.slice(-6).toUpperCase();
-    const metaLine  = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
-
-    // Canvas compuesto
-    const W = 220, PAD = 16;
-    const QR = 180;
-    // Calcular altura dinámica según líneas de texto
-    const lines = [apellido, nombre, metaLine, 'ID: ' + shortId].filter(Boolean);
-    const H = PAD + QR + PAD + lines.length * 22 + PAD;
-
-    const cv = document.createElement('canvas');
-    cv.width = W; cv.height = H;
-    const ctx = cv.getContext('2d');
-
-    // Fondo blanco
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, H);
-
-    // Barra superior teal
-    ctx.fillStyle = '#0f9b8e';
-    ctx.fillRect(0, 0, W, 5);
-
-    // QR centrado
-    const qrX = (W - QR) / 2;
-    ctx.drawImage(qrCanvas, qrX, PAD + 5, QR, QR);
-
-    // Textos
-    let y = PAD + 5 + QR + 14;
-
-    // Apellido — bold grande
-    ctx.fillStyle = '#1a1a2e';
-    ctx.font = 'bold 14px "Barlow Condensed", Arial';
-    ctx.textAlign = 'center';
-    ctx.letterSpacing = '0.8px';
-    ctx.fillText(apellido, W / 2, y);
-    y += 18;
-
-    if (nombre) {
-      ctx.fillStyle = '#2d3561';
-      ctx.font = '600 11px Nunito, Arial';
-      ctx.fillText(nombre, W / 2, y);
-      y += 17;
-    }
-
-    if (metaLine) {
-      ctx.fillStyle = '#6b7280';
-      ctx.font = '500 9px Nunito, Arial';
-      ctx.fillText(metaLine, W / 2, y);
-      y += 15;
-    }
-
-    // ID en teal con fondo
-    const idText = 'ID: ' + shortId;
-    ctx.font = 'bold 9px "DM Mono", monospace';
-    const idW = ctx.measureText(idText).width + 16;
-    const idX = (W - idW) / 2;
-    ctx.fillStyle = '#e8f4f2';
-    ctx.beginPath();
-    ctx.roundRect(idX, y - 11, idW, 16, 4);
-    ctx.fill();
-    ctx.fillStyle = '#0f9b8e';
-    ctx.fillText(idText, W / 2, y);
-
-    // Borde gris
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-
-    // Descargar
-    const a = document.createElement('a');
-    a.href = cv.toDataURL('image/png');
-    a.download = 'QR_' + s.full.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
-    a.click();
-    showToast('✅ QR descargado');
-  }, 300);
-}
-
-function printQRs() {
-  if (!activeQrId) return;
-  const list = studentsOf(activeQrId);
-  const c = getCurso(activeQrId);
-  if (!list.length) { showToast('⚠ No hay alumnos'); return; }
-
-  showToast('⏳ Generando QRs para impresión...');
-
-  // Primero generar todos los QR como imágenes base64 en canvas temporales
-  const qrPromises = list.map((s, i) => new Promise(resolve => {
-    const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
-    document.body.appendChild(tempDiv);
-    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
-    new QRCode(tempDiv, {
-      text: qrData, width: 130, height: 130,
-      colorDark: '#000000', colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    setTimeout(() => {
-      const canvas = tempDiv.querySelector('canvas');
-      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
-      document.body.removeChild(tempDiv);
-      resolve({ s, dataUrl });
-    }, 80 + i * 20);
-  }));
-
-  Promise.all(qrPromises).then(results => {
-    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
-    const docenteStr  = c && c.docente ? c.docente : '';
-
-    const cardsHTML = results.map(({ s, dataUrl }) => {
-      const shortId  = s.id.slice(-6).toUpperCase();
-      const apellido = (s.apellido || s.nombre || '').toUpperCase();
-      const nombre   = s.apellido ? (s.nombre || '') : '';
-      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
-      return `
-        <div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
-          ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
-          ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
-          ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
-        </div>`;
-    }).join('');
-
-    const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>QR Alumnos — ${cursoNombre}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Nunito', Arial, sans-serif; background: white; color: #1a1a2e; }
-    .page { padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto; }
-    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0f9b8e; padding-bottom: 12px; margin-bottom: 1.2rem; }
-    .logo-text { font-size: 1.5rem; font-weight: 900; color: #1a1a2e; font-family: 'Barlow Condensed', Georgia, serif; letter-spacing: 0.5px; }
-    .logo-text span { color: #0f9b8e; }
-    .logo-sub { font-size: 0.6rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; font-family: 'Nunito', sans-serif; }
-    .header-right { text-align: right; font-size: 12px; color: #6b7280; font-family: 'Nunito', sans-serif; }
-    .header-right strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; font-weight: 800; }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
-    .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
-    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
-  </style>
-</head>
-<body>
-<div class="page">
-  <div class="header">
-    <div>
-      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">📋 Asist<span style="color:#1bc5b4">App</span></div>
-      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia Digital</div>
-    </div>
-    <div class="header-right">
-      <strong>${cursoNombre}</strong>
-      ${docenteStr ? docenteStr : ''}
+      <span style="color:#9ca3af;font-size:11px">${new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
     </div>
   </div>
   <div class="grid">${cardsHTML}</div>
@@ -24961,28 +24710,6 @@ function printQRs() {
 <!-- MODAL CALIFICAR CELDA DE PROCESO -->
 
 
-<!-- ═══ MODAL COMPARTIR ═══ -->
-<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px;text-align:center">
-    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
-    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
-      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
-      </button>
-      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">📧</span> Enviar por Email
-      </button>
-      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
-      </button>
-    </div>
-    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
-  </div>
-</div>
-
 </body>
 </html>`;
 
@@ -25144,7 +24871,7 @@ function printQRs() {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>QR Alumnos — ${cursoNombre}</title>
+  <title>AsistApp — QR Alumnos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -25160,7 +24887,7 @@ function printQRs() {
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
     .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
-    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
+    @media print { @page { size: A4 portrait; margin-top: 0mm; margin-bottom: 0mm; margin-left: 10mm; margin-right: 10mm; } body { -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
@@ -25173,6 +24900,7 @@ function printQRs() {
     <div class="header-right">
       <strong>${cursoNombre}</strong>
       ${docenteStr ? docenteStr : ''}
+      <span style="color:#9ca3af;font-size:11px">${new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
     </div>
   </div>
   <div class="grid">${cardsHTML}</div>
@@ -25194,27 +24922,7 @@ function printQRs() {
 
 <!-- MODAL CALIFICAR CELDA DE PROCESO -->
 
-<!-- ═══ MODAL COMPARTIR ═══ -->
-<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px;text-align:center">
-    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
-    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
-      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
-      </button>
-      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">📧</span> Enviar por Email
-      </button>
-      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
-      </button>
-    </div>
-    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
-  </div>
-</div>
+
 
 </body>
 </html>`;
@@ -25377,7 +25085,7 @@ function printQRs() {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>QR Alumnos — ${cursoNombre}</title>
+  <title>AsistApp — QR Alumnos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -25393,7 +25101,7 @@ function printQRs() {
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
     .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
-    @media print { @page { margin: 1cm; size: A4 portrait; } body { -webkit-print-color-adjust: exact; } }
+    @media print { @page { size: A4 portrait; margin-top: 0mm; margin-bottom: 0mm; margin-left: 10mm; margin-right: 10mm; } body { -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
@@ -25406,6 +25114,220 @@ function printQRs() {
     <div class="header-right">
       <strong>${cursoNombre}</strong>
       ${docenteStr ? docenteStr : ''}
+      <span style="color:#9ca3af;font-size:11px">${new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
+    </div>
+  </div>
+  <div class="grid">${cardsHTML}</div>
+  <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
+    <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
+    <span>Sistema de Asistencia Digital</span>
+    <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
+  </div>
+</div>
+<script>
+  // Esperar a que las fuentes carguen antes de imprimir
+  document.fonts.ready.then(function(){ window.print(); });
+<\/script>
+
+<!-- ═══ PROCESO ═══ -->
+<!-- MODAL AGREGAR REGISTRO DE PROCESO -->
+
+<!-- MODAL ELIMINAR REGISTRO DE PROCESO -->
+
+<!-- MODAL CALIFICAR CELDA DE PROCESO -->
+
+
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=980,height=750');
+    if (w) { w.document.write(pageHTML); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes en tu navegador');
+  });
+}
+
+function openModal(s) {
+  currentModalStudent = s;
+  const c = getCurso(s.cursoId);
+  const shortId = s.id.slice(-6).toUpperCase();
+  document.getElementById('modal-name').textContent = (s.apellido||s.nombre||'').toUpperCase() + (s.apellido && s.nombre ? ', ' + s.nombre.toUpperCase() : '');
+  document.getElementById('modal-curso-lbl').textContent = c ? '📚 '+c.nombre+(c.materia?' — '+c.materia:'') : '';
+  document.getElementById('modal-id').textContent = 'ID: '+shortId;
+  const con = document.getElementById('modal-qr-container'); con.innerHTML = '';
+  const qrData = JSON.stringify({id:s.id, name:sanitizeForQR(s.full), cursoId:s.cursoId, app:'asistapp'});
+  new QRCode(con, { text: qrData, width:220,height:220,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H });
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function downloadQR() {
+  if (!currentModalStudent) return;
+  const s = currentModalStudent;
+  const c = getCurso(s.cursoId);
+
+  setTimeout(() => {
+    const qrCanvas = document.querySelector('#modal-qr-container canvas');
+    if (!qrCanvas) { showToast('⚠ Esperá que cargue el QR'); return; }
+
+    // Datos del alumno
+    const apellido  = (s.apellido || s.nombre || '').toUpperCase();
+    const nombre    = s.apellido ? (s.nombre || '') : '';
+    const shortId   = s.id.slice(-6).toUpperCase();
+    const metaLine  = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+
+    // Canvas compuesto
+    const W = 220, PAD = 16;
+    const QR = 180;
+    // Calcular altura dinámica según líneas de texto
+    const lines = [apellido, nombre, metaLine, 'ID: ' + shortId].filter(Boolean);
+    const H = PAD + QR + PAD + lines.length * 22 + PAD;
+
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+
+    // Fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Barra superior teal
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillRect(0, 0, W, 5);
+
+    // QR centrado
+    const qrX = (W - QR) / 2;
+    ctx.drawImage(qrCanvas, qrX, PAD + 5, QR, QR);
+
+    // Textos
+    let y = PAD + 5 + QR + 14;
+
+    // Apellido — bold grande
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = 'bold 14px "Barlow Condensed", Arial';
+    ctx.textAlign = 'center';
+    ctx.letterSpacing = '0.8px';
+    ctx.fillText(apellido, W / 2, y);
+    y += 18;
+
+    if (nombre) {
+      ctx.fillStyle = '#2d3561';
+      ctx.font = '600 11px Nunito, Arial';
+      ctx.fillText(nombre, W / 2, y);
+      y += 17;
+    }
+
+    if (metaLine) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '500 9px Nunito, Arial';
+      ctx.fillText(metaLine, W / 2, y);
+      y += 15;
+    }
+
+    // ID en teal con fondo
+    const idText = 'ID: ' + shortId;
+    ctx.font = 'bold 9px "DM Mono", monospace';
+    const idW = ctx.measureText(idText).width + 16;
+    const idX = (W - idW) / 2;
+    ctx.fillStyle = '#e8f4f2';
+    ctx.beginPath();
+    ctx.roundRect(idX, y - 11, idW, 16, 4);
+    ctx.fill();
+    ctx.fillStyle = '#0f9b8e';
+    ctx.fillText(idText, W / 2, y);
+
+    // Borde gris
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+
+    // Descargar
+    const a = document.createElement('a');
+    a.href = cv.toDataURL('image/png');
+    a.download = 'QR_' + s.full.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+    a.click();
+    showToast('✅ QR descargado');
+  }, 300);
+}
+
+function printQRs() {
+  if (!activeQrId) return;
+  const list = studentsOf(activeQrId);
+  const c = getCurso(activeQrId);
+  if (!list.length) { showToast('⚠ No hay alumnos'); return; }
+
+  showToast('⏳ Generando QRs para impresión...');
+
+  // Primero generar todos los QR como imágenes base64 en canvas temporales
+  const qrPromises = list.map((s, i) => new Promise(resolve => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tempDiv);
+    const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
+    new QRCode(tempDiv, {
+      text: qrData, width: 130, height: 130,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    setTimeout(() => {
+      const canvas = tempDiv.querySelector('canvas');
+      const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+      document.body.removeChild(tempDiv);
+      resolve({ s, dataUrl });
+    }, 80 + i * 20);
+  }));
+
+  Promise.all(qrPromises).then(results => {
+    const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
+    const docenteStr  = c && c.docente ? c.docente : '';
+
+    const cardsHTML = results.map(({ s, dataUrl }) => {
+      const shortId  = s.id.slice(-6).toUpperCase();
+      const apellido = (s.apellido || s.nombre || '').toUpperCase();
+      const nombre   = s.apellido ? (s.nombre || '') : '';
+      const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
+      return `
+        <div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+          ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+          ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+          ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AsistApp — QR Alumnos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: white; color: #1a1a2e; }
+    .page { padding: 1.5rem 2rem; max-width: 900px; margin: 0 auto; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #0f9b8e; padding-bottom: 12px; margin-bottom: 1.2rem; }
+    .logo-text { font-size: 1.5rem; font-weight: 900; color: #1a1a2e; font-family: 'Barlow Condensed', Georgia, serif; letter-spacing: 0.5px; }
+    .logo-text span { color: #0f9b8e; }
+    .logo-sub { font-size: 0.6rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; font-family: 'Nunito', sans-serif; }
+    .header-right { text-align: right; font-size: 12px; color: #6b7280; font-family: 'Nunito', sans-serif; }
+    .header-right strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; font-weight: 800; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .footer { margin-top: 1.5rem; border-top: 1px solid #e0e0e0; padding-top: 8px; text-align: center; font-size: 10px; color: #9ca3af; font-family: 'Nunito', sans-serif; }
+    .footer strong { color: #0f9b8e; text-transform: uppercase; letter-spacing: 0.5px; }
+    @media print { @page { size: A4 portrait; margin-top: 0mm; margin-bottom: 0mm; margin-left: 10mm; margin-right: 10mm; } body { -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">📋 Asist<span style="color:#1bc5b4">App</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Sistema de Asistencia Digital</div>
+    </div>
+    <div class="header-right">
+      <strong>${cursoNombre}</strong>
+      ${docenteStr ? docenteStr : ''}
+      <span style="color:#9ca3af;font-size:11px">${new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>
     </div>
   </div>
   <div class="grid">${cardsHTML}</div>
@@ -25434,27 +25356,6 @@ function printQRs() {
 
 <!-- MODAL CALIFICAR CELDA -->
 
-<!-- ═══ MODAL COMPARTIR ═══ -->
-<div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px;text-align:center">
-    <div style="font-size:2rem;margin-bottom:0.5rem">📤</div>
-    <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink);margin-bottom:0.3rem">¿Cómo querés compartirlo?</h3>
-    <p id="share-fname" style="font-size:0.78rem;color:#9ca3af;font-family:'DM Mono',monospace;margin-bottom:1.5rem;word-break:break-all"></p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem">
-      <button class="btn btn-success" onclick="doShare('whatsapp')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">💬</span> Compartir por WhatsApp
-      </button>
-      <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">📧</span> Enviar por Email
-      </button>
-      <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
-        <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
-      </button>
-    </div>
-    <p style="font-size:0.72rem;color:#b0b8c4;line-height:1.5">💡 Para WhatsApp y Email el archivo se descargará primero. Luego se abrirá la app para que puedas adjuntarlo.</p>
-    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('share-modal').classList.remove('open')" style="margin-top:0.8rem;width:100%">Cancelar</button>
-  </div>
-</div>
 
 </body>
 </html>`;
@@ -27966,14 +27867,28 @@ function showShareModal(blob, fname) {
   _shareBlob = blob;
   _shareFname = fname;
   document.getElementById('share-fname').textContent = fname;
+  // Mostrar opción de familias solo para preceptor Y si el curso activo tiene familias con email
+  const btnFamilias = document.getElementById('btn-share-familias');
+  if (btnFamilias) {
+    const cursoActivo = activePlanillaId || activeCursoId || activeScanId;
+    const tieneEmails = cursoActivo && studentsOf(cursoActivo).some(s => s.emailFamilia);
+    btnFamilias.style.display = (isPreceptor() && tieneEmails) ? 'flex' : 'none';
+  }
   document.getElementById('share-modal').classList.add('open');
 }
 
 function _triggerDownload(blob, fname) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = fname; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  // Usar FileReader para convertir a base64 y evitar el aviso HTTPS en Android
+  const reader = new FileReader();
+  reader.onloadend = function() {
+    const a = document.createElement('a');
+    a.href = reader.result;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+  reader.readAsDataURL(blob);
 }
 
 function doShare(method) {
@@ -28004,6 +27919,19 @@ function doShare(method) {
       const body = encodeURIComponent('Hola,\n\nTe comparto el archivo adjunto generado con AsistApp.\nPodés encontrarlo en tus descargas: ' + _shareFname + '\n\nSaludos.');
       window.open('mailto:?subject=' + subject + '&body=' + body, '_blank');
       showToast('📧 Archivo descargado. Adjuntalo en tu email.');
+    }, 800);
+  } else if (method === 'familias') {
+    // Enviar a todos los emails de familias del curso activo
+    const cursoActivo = activePlanillaId || activeCursoId || activeScanId;
+    const alumnos = cursoActivo ? studentsOf(cursoActivo) : [];
+    const emails = [...new Set(alumnos.filter(s => s.emailFamilia).map(s => s.emailFamilia))];
+    if (!emails.length) { showToast('⚠ No hay emails de familias registrados en este curso'); return; }
+    setTimeout(() => {
+      const subject = encodeURIComponent('Informe de Asistencia — AsistApp');
+      const body = encodeURIComponent('Estimadas familias,\n\nLes comparto el informe de asistencia generado con AsistApp.\nEl archivo adjunto se llama: ' + _shareFname + '\n\nSaludos.');
+      const mailto = 'mailto:' + emails.join(',') + '?subject=' + subject + '&body=' + body;
+      window.open(mailto, '_blank');
+      showToast('📧 Se abrirá el email con ' + emails.length + ' destinatario' + (emails.length !== 1 ? 's' : ''));
     }, 800);
   }
 }
@@ -28436,12 +28364,18 @@ async function enterApp(userName) {
       const btn = document.querySelector('.nav-btn[onclick*="' + lastView + '"]');
       showView(lastView, btn || null);
     } else {
-      renderCursosGrid();
+      const cursosBtn = document.querySelector('.nav-btn[onclick*="cursos"]');
+      showView('cursos', cursosBtn);
     }
   } catch(e) {
     console.warn('Error restaurando vista:', e);
     renderCursosGrid();
   }
+  // Marcar app como lista — hace visible el contenido suavemente
+  requestAnimationFrame(() => {
+    const aw = document.getElementById('app-wrapper');
+    if (aw) aw.classList.add('app-ready');
+  });
 }
 
 function showAppLoading(on) {
@@ -29235,6 +29169,10 @@ function showGraceModal(userName, daysLeft) {
       </button>
       <button class="btn btn-primary" onclick="doShare('email')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
         <span style="font-size:1.3rem">📧</span> Enviar por Email
+      </button>
+      <!-- Opción exclusiva para Preceptor: enviar a familias registradas -->
+      <button id="btn-share-familias" class="btn btn-slate" onclick="doShare('familias')" style="display:none;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
+        <span style="font-size:1.3rem">👨‍👩‍👧</span> Enviar a familias del curso
       </button>
       <button class="btn btn-secondary" onclick="doShare('download')" style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.95rem">
         <span style="font-size:1.3rem">⬇️</span> Descargar en el dispositivo
