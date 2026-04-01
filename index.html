@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -24284,7 +24283,7 @@ function previewQRsSelected() {
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
     const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
-    new QRCode(tempDiv, { text: qrData, width: 130, height: 130, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(tempDiv, { text: qrData, width: 130, height: 130, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
     setTimeout(() => {
       const canvas = tempDiv.querySelector('canvas');
       const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
@@ -24293,80 +24292,69 @@ function previewQRsSelected() {
     }, 80 + i * 20);
   }));
 
-  Promise.all(qrPromises).then(results => {
+  Promise.all(qrPromises).then(function(results) {
     const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
     const docenteStr  = c && c.docente ? c.docente : '';
     const fechaGen    = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
     const n           = list.length;
 
-    const cardsHTML = results.map(({ s, dataUrl }) => {
+    const cardsHTML = results.map(function(item) {
+      const s = item.s, dataUrl = item.dataUrl;
       const shortId  = s.id.slice(-6).toUpperCase();
       const apellido = (s.apellido || s.nombre || '').toUpperCase();
       const nombre   = s.apellido ? (s.nombre || '') : '';
       const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
       return '<div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">' +
         (dataUrl ? '<img src="' + dataUrl + '" width="110" height="110" style="display:block;margin:0 auto;">' : '') +
-        '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">' + apellido + '</div>' +
-        (nombre ? '<div style="font-family:Nunito,sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">' + nombre + '</div>' : '') +
-        (metaLine ? '<div style="font-family:Nunito,sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">' + metaLine + '</div>' : '') +
-        '<div style="font-family:DM Mono,monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ' + shortId + '</div>' +
+        '<div style="font-size:13px;font-weight:800;text-transform:uppercase;color:#1a1a2e;margin-top:7px;">' + apellido + '</div>' +
+        (nombre ? '<div style="font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">' + nombre + '</div>' : '') +
+        (metaLine ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">' + metaLine + '</div>' : '') +
+        '<div style="font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ' + shortId + '</div>' +
         '</div>';
     }).join('');
 
-    const pageHTML = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>QR Seleccionados — ${cursoNombre}</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Raleway:wght@400;700&family=Barlow+Condensed:wght@700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Nunito',Arial,sans-serif; background:#f5f5f0; color:#1a1a2e; }
-    .toolbar { background:#1a1a2e; color:white; padding:12px 24px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10; }
-    .toolbar .info { flex:1; font-family:'DM Mono',monospace; font-size:0.78rem; color:rgba(255,255,255,0.6); }
-    .toolbar button { padding:8px 20px; border:none; border-radius:8px; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.85rem; cursor:pointer; }
-    .btn-print { background:#0f9b8e; color:white; }
-    .btn-close { background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2) !important; }
-    .page { padding:1.5rem 2rem; max-width:960px; margin:0 auto; }
-    .header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #0f9b8e; padding-bottom:12px; margin-bottom:1.4rem; }
-    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    .footer { margin-top:2rem; border-top:1px solid #e0e0e0; padding-top:10px; display:flex; align-items:center; justify-content:space-between; font-family:'Raleway',sans-serif; font-size:0.82rem; color:#9ca3af; }
-    @media print { .toolbar { display:none !important; } body { background:white; } @page { margin:1.5cm; } }
-    @media (max-width:600px) { .grid { grid-template-columns:repeat(2,1fr); } }
-  </style>
-</head>
-<body>
-  <div class="toolbar">
-    <div class="info">${n} QR seleccionado${n !== 1 ? 's' : ''} &nbsp;·&nbsp; ${cursoNombre}</div>
-    <button class="btn-print" onclick="window.print()">&#128424; Imprimir</button>
-    <button class="btn-close" onclick="window.close()">&#x2715; Cerrar</button>
-  </div>
-  <div class="page">
-    <div class="header">
-      <div>
-        <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">&#128203; Asist<span style="color:#1bc5b4">App</span></div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Códigos QR de Alumnos</div>
-      </div>
-      <div style="text-align:right;font-size:12px;color:#6b7280;font-family:'Nunito',sans-serif;line-height:1.6">
-        <div style="font-weight:800;color:#1a1a2e;font-size:14px">${cursoNombre}</div>
-        ${docenteStr ? '<div style="color:#2d3561;font-weight:700">' + docenteStr + '</div>' : ''}
-        <div style="color:#0f9b8e;font-weight:700">${fechaGen}</div>
-      </div>
-    </div>
-    <div class="grid">${cardsHTML}</div>
-    <div class="footer">
-      <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e">Asist<span style="color:#1bc5b4">App</span></span>
-      <span>Sistema de Asistencia Digital</span>
-      <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;font-family:'Century Gothic',sans-serif">DIGITAL SHOP</span></span>
-    </div>
-  </div>
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">';
+    html += '<title>QR Seleccionados</title>';
+    html += '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">';
+    html += '<style>* { box-sizing:border-box; margin:0; padding:0; }';
+    html += 'body { font-family: Nunito, Arial, sans-serif; background:#f5f5f0; }';
+    html += '.toolbar { background:#1a1a2e; color:white; padding:12px 24px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10; }';
+    html += '.toolbar .info { flex:1; font-size:0.78rem; color:rgba(255,255,255,0.6); }';
+    html += '.btn-print { background:#0f9b8e; color:white; padding:8px 20px; border:none; border-radius:8px; font-weight:800; cursor:pointer; }';
+    html += '.btn-close { background:rgba(255,255,255,0.1); color:white; padding:8px 20px; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-weight:800; cursor:pointer; }';
+    html += '.page { padding:1.5rem 2rem; max-width:960px; margin:0 auto; }';
+    html += '.header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #0f9b8e; padding-bottom:12px; margin-bottom:1.5rem; }';
+    html += '.grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }';
+    html += '.footer { margin-top:2rem; border-top:1px solid #e0e0e0; padding-top:10px; display:flex; align-items:center; justify-content:space-between; font-size:10px; color:#9ca3af; }';
+    html += '@media print { .toolbar { display:none !important; } body { background:white; } @page { margin:1.5cm; } }';
+    html += '@media (max-width:600px) { .grid { grid-template-columns:repeat(2,1fr); } }';
+    html += '</style></head><body onload="window.print()">';
+    html += '<div class="toolbar">';
+    html += '<div class="info">' + n + ' QR seleccionado' + (n !== 1 ? 's' : '') + ' &nbsp;·&nbsp; ' + cursoNombre + '</div>';
+    html += '<button class="btn-print" onclick="window.print()">&#128424; Imprimir</button>';
+    html += '<button class="btn-close" onclick="window.close()">&#x2715; Cerrar</button>';
+    html += '</div>';
+    html += '<div class="page">';
+    html += '<div class="header"><div>';
+    html += '<div style="font-size:1.55rem;color:#1a1a2e;font-weight:900;">Asist<span style="color:#1bc5b4">App</span></div>';
+    html += '<div style="font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;">Codigos QR de Alumnos</div>';
+    html += '</div><div style="text-align:right;font-size:12px;color:#6b7280;">';
+    html += '<div style="font-weight:800;color:#1a1a2e;font-size:14px">' + cursoNombre + '</div>';
+    html += (docenteStr ? '<div style="color:#2d3561;font-weight:700">' + docenteStr + '</div>' : '');
+    html += '<div style="color:#0f9b8e;font-weight:700">' + fechaGen + '</div>';
+    html += '</div></div>';
+    html += '<div class="grid">' + cardsHTML + '</div>';
+    html += '<div class="footer">';
+    html += '<span>AsistApp</span><span>Sistema de Asistencia Digital</span>';
+    html += '<span>Desarrollado por <strong>DIGITAL SHOP</strong></span>';
+    html += '</div></div></body></html>';
 
-  <script>document.fonts.ready.then(()=>window.print());<${''}/script>
-  </body></html>`;
-  const w = window.open('','_blank','width=1100,height=750');
-  if (w) { w.document.write(pageHTML); w.document.close(); }
-  else showToast('⚠ Activá las ventanas emergentes para imprimir');
+    const w = window.open('', '_blank', 'width=1100,height=750');
+    if (w) { w.document.write(html); w.document.close(); }
+    else showToast('⚠ Activá las ventanas emergentes para imprimir');
+  });
 }
+
 
 function printReport() {
   if (!_reportData) return;
@@ -24414,7 +24402,6 @@ function printReport() {
   </table>
   ${buildPrintFooter()}
   </div>
-  <script>document.fonts.ready.then(()=>window.print());<${''}/script>
   </body></html>`;
   const w = window.open('','_blank','width=960,height=700');
   if (w) { w.document.write(html); w.document.close(); }
@@ -25884,7 +25871,6 @@ function exportObsPDF() {
       <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
     </div>
   </div>
-  <script>window.onload = function(){ window.print(); }<${''}/script>
   </body></html>`;
 
   const w = window.open('', '_blank', 'width=900,height=700');
