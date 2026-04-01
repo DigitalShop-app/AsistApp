@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-  <meta name="asistapp-version" content="v20260331-INJECT">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AsistApp — Sistema de Asistencia Digital</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -24283,7 +24282,7 @@ function previewQRsSelected() {
     tempDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(tempDiv);
     const qrData = JSON.stringify({id: s.id, name: sanitizeForQR(s.full), cursoId: s.cursoId, app: 'asistapp'});
-    new QRCode(tempDiv, { text: qrData, width: 130, height: 130, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    new QRCode(tempDiv, { text: qrData, width: 130, height: 130, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
     setTimeout(() => {
       const canvas = tempDiv.querySelector('canvas');
       const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
@@ -24292,69 +24291,77 @@ function previewQRsSelected() {
     }, 80 + i * 20);
   }));
 
-  Promise.all(qrPromises).then(function(results) {
+  Promise.all(qrPromises).then(results => {
     const cursoNombre = c ? c.nombre + (c.materia ? ' — ' + c.materia : '') : '';
     const docenteStr  = c && c.docente ? c.docente : '';
     const fechaGen    = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
     const n           = list.length;
 
-    const cardsHTML = results.map(function(item) {
-      const s = item.s, dataUrl = item.dataUrl;
+    const cardsHTML = results.map(({ s, dataUrl }) => {
       const shortId  = s.id.slice(-6).toUpperCase();
       const apellido = (s.apellido || s.nombre || '').toUpperCase();
       const nombre   = s.apellido ? (s.nombre || '') : '';
       const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
-      return '<div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">' +
-        (dataUrl ? '<img src="' + dataUrl + '" width="110" height="110" style="display:block;margin:0 auto;">' : '') +
-        '<div style="font-size:13px;font-weight:800;text-transform:uppercase;color:#1a1a2e;margin-top:7px;">' + apellido + '</div>' +
-        (nombre ? '<div style="font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">' + nombre + '</div>' : '') +
-        (metaLine ? '<div style="font-size:9px;color:#6b7280;margin-top:3px;">' + metaLine + '</div>' : '') +
-        '<div style="font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ' + shortId + '</div>' +
-        '</div>';
+      return `<div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
+        ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
+        ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
+        ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
+      </div>`;
     }).join('');
 
-    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">';
-    html += '<title>QR Seleccionados</title>';
-    html += '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">';
-    html += '<style>* { box-sizing:border-box; margin:0; padding:0; }';
-    html += 'body { font-family: Nunito, Arial, sans-serif; background:#f5f5f0; }';
-    html += '.toolbar { background:#1a1a2e; color:white; padding:12px 24px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10; }';
-    html += '.toolbar .info { flex:1; font-size:0.78rem; color:rgba(255,255,255,0.6); }';
-    html += '.btn-print { background:#0f9b8e; color:white; padding:8px 20px; border:none; border-radius:8px; font-weight:800; cursor:pointer; }';
-    html += '.btn-close { background:rgba(255,255,255,0.1); color:white; padding:8px 20px; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-weight:800; cursor:pointer; }';
-    html += '.page { padding:1.5rem 2rem; max-width:960px; margin:0 auto; }';
-    html += '.header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #0f9b8e; padding-bottom:12px; margin-bottom:1.5rem; }';
-    html += '.grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }';
-    html += '.footer { margin-top:2rem; border-top:1px solid #e0e0e0; padding-top:10px; display:flex; align-items:center; justify-content:space-between; font-size:10px; color:#9ca3af; }';
-    html += '@media print { .toolbar { display:none !important; } body { background:white; } @page { margin:1.5cm; } }';
-    html += '@media (max-width:600px) { .grid { grid-template-columns:repeat(2,1fr); } }';
-    html += '</style></head><body onload="window.print()">';
-    html += '<div class="toolbar">';
-    html += '<div class="info">' + n + ' QR seleccionado' + (n !== 1 ? 's' : '') + ' &nbsp;·&nbsp; ' + cursoNombre + '</div>';
-    html += '<button class="btn-print" onclick="window.print()">&#128424; Imprimir</button>';
-    html += '<button class="btn-close" onclick="window.close()">&#x2715; Cerrar</button>';
-    html += '</div>';
-    html += '<div class="page">';
-    html += '<div class="header"><div>';
-    html += '<div style="font-size:1.55rem;color:#1a1a2e;font-weight:900;">Asist<span style="color:#1bc5b4">App</span></div>';
-    html += '<div style="font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;">Codigos QR de Alumnos</div>';
-    html += '</div><div style="text-align:right;font-size:12px;color:#6b7280;">';
-    html += '<div style="font-weight:800;color:#1a1a2e;font-size:14px">' + cursoNombre + '</div>';
-    html += (docenteStr ? '<div style="color:#2d3561;font-weight:700">' + docenteStr + '</div>' : '');
-    html += '<div style="color:#0f9b8e;font-weight:700">' + fechaGen + '</div>';
-    html += '</div></div>';
-    html += '<div class="grid">' + cardsHTML + '</div>';
-    html += '<div class="footer">';
-    html += '<span>AsistApp</span><span>Sistema de Asistencia Digital</span>';
-    html += '<span>Desarrollado por <strong>DIGITAL SHOP</strong></span>';
-    html += '</div></div></body></html>';
-
-    const w = window.open('', '_blank', 'width=1100,height=750');
-    if (w) { w.document.write(html); w.document.close(); }
-    else showToast('⚠ Activá las ventanas emergentes para imprimir');
-  });
+    const pageHTML = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Seleccionados — ${cursoNombre}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Raleway:wght@400;700&family=Barlow+Condensed:wght@700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Nunito',Arial,sans-serif; background:#f5f5f0; color:#1a1a2e; }
+    .toolbar { background:#1a1a2e; color:white; padding:12px 24px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10; }
+    .toolbar .info { flex:1; font-family:'DM Mono',monospace; font-size:0.78rem; color:rgba(255,255,255,0.6); }
+    .toolbar button { padding:8px 20px; border:none; border-radius:8px; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.85rem; cursor:pointer; }
+    .btn-print { background:#0f9b8e; color:white; }
+    .btn-close { background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2) !important; }
+    .page { padding:1.5rem 2rem; max-width:960px; margin:0 auto; }
+    .header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #0f9b8e; padding-bottom:12px; margin-bottom:1.4rem; }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .footer { margin-top:2rem; border-top:1px solid #e0e0e0; padding-top:10px; display:flex; align-items:center; justify-content:space-between; font-family:'Raleway',sans-serif; font-size:0.82rem; color:#9ca3af; }
+    @media print { .toolbar { display:none !important; } body { background:white; } @page { margin:1.5cm; } }
+    @media (max-width:600px) { .grid { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="info">${n} QR seleccionado${n !== 1 ? 's' : ''} &nbsp;·&nbsp; ${cursoNombre}</div>
+    <button class="btn-print" onclick="window.print()">&#128424; Imprimir</button>
+    <button class="btn-close" onclick="window.close()">&#x2715; Cerrar</button>
+  </div>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.55rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">&#128203; Asist<span style="color:#1bc5b4">App</span></div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Códigos QR de Alumnos</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#6b7280;font-family:'Nunito',sans-serif;line-height:1.6">
+        <div style="font-weight:800;color:#1a1a2e;font-size:14px">${cursoNombre}</div>
+        ${docenteStr ? `<div style="color:#2d3561;font-weight:700">${docenteStr}</div>` : ''}
+        <div style="color:#0f9b8e;font-weight:700">${fechaGen}</div>
+      </div>
+    </div>
+    <div class="grid">${cardsHTML}</div>
+    <div class="footer">
+      <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e">Asist<span style="color:#1bc5b4">App</span></span>
+      <span>Sistema de Asistencia Digital</span>
+      <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;font-family:'Century Gothic',sans-serif">DIGITAL SHOP</span></span>
+    </div>
+  </div>`;
+  const w = window.open('','_blank','width=1100,height=750');
+  if (w) { w.document.write(html); w.document.close(); }
+  else showToast('⚠ Activá las ventanas emergentes para imprimir');
 }
-
 
 function printReport() {
   if (!_reportData) return;
@@ -24402,6 +24409,7 @@ function printReport() {
   </table>
   ${buildPrintFooter()}
   </div>
+  
   </body></html>`;
   const w = window.open('','_blank','width=960,height=700');
   if (w) { w.document.write(html); w.document.close(); }
@@ -24893,44 +24901,33 @@ function procAbrirCurso(cid) {
   procRenderizarTabla();
 }
 
-
 function calcularEstadoProceso(studentId, cid) {
   var regs = procesoRegistros[cid] || [];
   var data = (procesoData[cid] || {})[studentId] || {};
   var vals = regs.map(function(r){ return data[r.id]; }).filter(function(v){ return v !== undefined && v !== null && v !== ''; });
   if (!vals.length) return { label: '—', color: '#d1d5db', bg: '#f9fafb' };
-  
-  // Si hay valores numéricos, calcular promedio
-  var nums = vals.filter(function(v){ return typeof v === 'number' || (!isNaN(parseInt(v)) && typeof v !== 'string' || ['1','2','3','4','5','6','7','8','9','10'].indexOf(String(v)) !== -1); });
+  var nums = vals.filter(function(v){ return !isNaN(parseFloat(v)) && ['EX','MB+','MB','B+','B','S','S-','I','I-'].indexOf(String(v)) === -1 && String(v).indexOf(String.fromCodePoint(9989)) === -1; });
   if (nums.length > 0) {
     var prom = nums.reduce(function(a,b){ return a + parseFloat(b); }, 0) / nums.length;
     if (prom >= 9)  return { label: 'Excelente', color: '#fff', bg: '#27ae60' };
     if (prom >= 7)  return { label: 'Muy Bueno', color: '#fff', bg: '#2ecc71' };
-    if (prom >= 6)  return { label: 'Bueno', color: '#fff', bg: '#f1c40f' };
+    if (prom >= 6)  return { label: 'Bueno',     color: '#1a1a2e', bg: '#f1c40f' };
     if (prom >= 4)  return { label: 'En riesgo', color: '#fff', bg: '#e67e22' };
-    return { label: 'Crítico', color: '#fff', bg: '#e74c3c' };
+    return { label: 'Critico', color: '#fff', bg: '#e74c3c' };
   }
-  
-  // Si hay valores cualitativos
-  var cuales = vals.filter(function(v){ return typeof v === 'string' && ['EX','MB+','MB','B+','B','S','S-','I','I-'].indexOf(v) !== -1; });
+  var scores = {'EX':10,'MB+':9,'MB':8,'B+':7,'B':6,'S':5,'S-':4,'I':3,'I-':1};
+  var cuales = vals.filter(function(v){ return scores[String(v)] !== undefined; });
   if (cuales.length > 0) {
-    var scores = {'EX':10,'MB+':9,'MB':8,'B+':7,'B':6,'S':5,'S-':4,'I':3,'I-':1};
-    var prom2 = cuales.reduce(function(a,b){ return a + (scores[b]||5); }, 0) / cuales.length;
+    var prom2 = cuales.reduce(function(a,b){ return a + (scores[String(b)]||5); }, 0) / cuales.length;
     if (prom2 >= 9)  return { label: 'Excelente', color: '#fff', bg: '#27ae60' };
     if (prom2 >= 7)  return { label: 'Muy Bueno', color: '#fff', bg: '#2ecc71' };
-    if (prom2 >= 6)  return { label: 'Bueno', color: '#fff', bg: '#f1c40f' };
+    if (prom2 >= 6)  return { label: 'Bueno',     color: '#1a1a2e', bg: '#f1c40f' };
     if (prom2 >= 4)  return { label: 'En riesgo', color: '#fff', bg: '#e67e22' };
-    return { label: 'Crítico', color: '#fff', bg: '#e74c3c' };
+    return { label: 'Critico', color: '#fff', bg: '#e74c3c' };
   }
-  
-  // Simbólico: contar logros vs no logros
-  var logros = vals.filter(function(v){ return ['✅','⭐','🙋','😄','📎'].indexOf(v) !== -1; }).length;
-  var total = vals.length;
-  var pct = logros / total;
-  if (pct >= 0.8) return { label: 'Excelente', color: '#fff', bg: '#27ae60' };
-  if (pct >= 0.6) return { label: 'Bueno', color: '#fff', bg: '#f1c40f' };
-  return { label: 'En riesgo', color: '#fff', bg: '#e67e22' };
+  return { label: '—', color: '#d1d5db', bg: '#f9fafb' };
 }
+
 function procRenderizarTabla() {
   var cid  = activeProcesoCursoId;
   if (!cid) return;
@@ -24999,12 +24996,11 @@ function procRenderizarTabla() {
       (function(sid, rid){ tdCel.addEventListener('click', function(){ procAbrirCelda(sid, rid); }); })(st.id, reg2.id);
       tr.appendChild(tdCel);
     }
-    // Celda de estado
-    var estado = calcularEstadoProceso(st.id, cid);
-    var tdEstado = document.createElement('td');
-    tdEstado.style.cssText = 'position:sticky;right:0;text-align:center;padding:6px 4px;border-left:2px solid #e5e7eb;';
-    tdEstado.innerHTML = '<span style="display:inline-block;background:' + estado.bg + ';color:' + estado.color + ';font-size:0.65rem;font-weight:800;padding:3px 6px;border-radius:8px;white-space:nowrap;font-family:Nunito,sans-serif;letter-spacing:0.3px">' + estado.label + '</span>';
-    tr.appendChild(tdEstado);
+    var est = calcularEstadoProceso(st.id, cid);
+    var tdEst = document.createElement('td');
+    tdEst.style.cssText = 'position:sticky;right:0;text-align:center;padding:6px 4px;border-left:2px solid #e5e7eb;background:white;';
+    tdEst.innerHTML = '<span style="display:inline-block;background:' + est.bg + ';color:' + est.color + ';font-size:0.65rem;font-weight:800;padding:3px 6px;border-radius:8px;white-space:nowrap">' + est.label + '</span>';
+    tr.appendChild(tdEst);
     tbody.appendChild(tr);
   }
 
@@ -25126,18 +25122,37 @@ function openSelectAlumnoModal() {
   var list = studentsOf(activeProcesoCursoId).slice().sort(function(a,b){
     return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es');
   });
+  var existing = document.getElementById('modal-select-alumno');
+  if (!existing) {
+    var div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.id = 'modal-select-alumno';
+    div.onclick = function(e){ if(e.target===div) div.classList.remove('open'); };
+    div.innerHTML = '<div class="modal" style="max-width:400px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">' +
+      '<h3 style="font-family:DM Serif Display,serif;font-size:1.1rem;color:var(--slate)">Informe individual</h3>' +
+      '<button onclick="document.getElementById('modal-select-alumno').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">&#x2715;</button>' +
+      '</div>' +
+      '<div class="field"><label>Selecciona el alumno</label>' +
+      '<select id="select-alumno-proceso" style="width:100%"></select></div>' +
+      '<div style="display:flex;gap:8px;margin-top:1rem">' +
+      '<button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('modal-select-alumno').classList.remove('open')">Cancelar</button>' +
+      '<button class="btn btn-gold" style="flex:2" onclick="confirmarInformeAlumno()">&#128196; Generar informe</button>' +
+      '</div></div>';
+    document.body.appendChild(div);
+  }
   var sel = document.getElementById('select-alumno-proceso');
   if (sel) {
     sel.innerHTML = list.map(function(s){
       return '<option value="' + s.id + '">' + (s.apellido ? s.apellido + ', ' + s.nombre : s.nombre) + '</option>';
     }).join('');
-    document.getElementById('modal-select-alumno').classList.add('open');
   }
+  document.getElementById('modal-select-alumno').classList.add('open');
 }
 
 function confirmarInformeAlumno() {
   var sel = document.getElementById('select-alumno-proceso');
-  if (!sel || !sel.value) { showToast('Seleccioná un alumno'); return; }
+  if (!sel || !sel.value) { showToast('Selecciona un alumno'); return; }
   document.getElementById('modal-select-alumno').classList.remove('open');
   exportProcesoWord(sel.value);
 }
@@ -25145,7 +25160,7 @@ function confirmarInformeAlumno() {
 
 async function exportProcesoWord(alumnoId) {
   if (!activeProcesoCursoId) return;
-  if (typeof docx === 'undefined') { showToast('Librería Word no disponible'); return; }
+  if (typeof docx === 'undefined') { showToast('Libreria Word no disponible'); return; }
   var D = docx;
   var cid  = activeProcesoCursoId;
   var c    = getCurso(cid);
@@ -25153,21 +25168,19 @@ async function exportProcesoWord(alumnoId) {
   var list = alumnoId ? allList.filter(function(s){ return s.id === alumnoId; }) : allList;
   var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
   if (!regs.length) { showToast('Sin registros para exportar'); return; }
-  showToast('⏳ Generando informe Word...');
+  showToast('Generando informe Word...');
 
-  var curso = c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Curso';
-  var docente = c && c.docente ? 'Prof. ' + c.docente : '';
+  var curso    = c ? c.nombre + (c.materia ? ' · ' + c.materia : '') : 'Curso';
+  var docente  = c && c.docente ? 'Prof. ' + c.docente : '';
   var fechaGen = new Date().toLocaleDateString('es-AR', {day:'2-digit', month:'long', year:'numeric'});
-  var alumnoTitulo = alumnoId && list[0] ? list[0].apellido + ', ' + list[0].nombre : 'Todos los alumnos';
+  var alumnoTitulo = alumnoId && list[0] ? (list[0].apellido ? list[0].apellido + ', ' + list[0].nombre : list[0].nombre) : 'Todos los alumnos';
 
-  // Paleta de colores
-  var C = { slate:'2D3561', teal:'0F9B8E', tealLight:'1BC5B4', white:'FFFFFF',
+  var C = { slate:'2D3561', teal:'0F9B8E', tealL:'1BC5B4', white:'FFFFFF',
             paper:'F0EDE4', mist:'E8F4F2', gray:'9CA3AF', ink:'1A1A2E',
             g10:'27AE60', g8:'2ECC71', y:'F1C40F', o:'E67E22', r:'E74C3C', dr:'C0392B' };
-
   var BS = D.BorderStyle;
   var bdr = { style:BS.SINGLE, size:1, color:'DDDDDD' };
-  var B = { top:bdr, bottom:bdr, left:bdr, right:bdr };
+  var B  = { top:bdr, bottom:bdr, left:bdr, right:bdr };
   var NB = { top:{style:BS.NONE,size:0,color:'FFF'}, bottom:{style:BS.NONE,size:0,color:'FFF'}, left:{style:BS.NONE,size:0,color:'FFF'}, right:{style:BS.NONE,size:0,color:'FFF'} };
 
   function mk(text, opts) {
@@ -25175,158 +25188,137 @@ async function exportProcesoWord(alumnoId) {
     return new D.TableCell({
       borders: opts.nb ? NB : B,
       width: opts.w ? {size:opts.w, type:D.WidthType.DXA} : undefined,
-      shading: { fill: opts.bg || C.white, type:D.ShadingType.CLEAR },
+      shading: {fill:opts.bg||C.white, type:D.ShadingType.CLEAR},
       verticalAlign: D.VerticalAlign.CENTER,
       margins: {top:80, bottom:80, left:120, right:120},
       children: [new D.Paragraph({
         alignment: opts.align || D.AlignmentType.CENTER,
-        children: [new D.TextRun({ text:String(text||''), bold:opts.bold||false, color:opts.color||C.ink, size:opts.size||18, font:'Arial' })]
+        children: [new D.TextRun({text:String(text||''), bold:opts.bold||false, color:opts.color||C.ink, size:opts.size||18, font:'Arial'})]
       })]
     });
   }
-
   function sp() { return new D.Paragraph({children:[new D.TextRun({text:'',size:10})]}); }
 
   function notaBg(val, tipo) {
-    if (tipo === 'num') {
-      var n = parseInt(val);
-      return n>=9?C.g10:n===8?C.g8:n===7?'8FDA6E':n===6?C.y:n===5?C.o:n===4?C.r:C.dr;
-    }
-    if (tipo === 'cual') {
-      var m={'EX':C.g10,'MB+':C.g10,'MB':C.g8,'B+':'8FDA6E','B':'D4EDDA','S':'FFF3CD','S-':'FFE0B2','I':'FFCCCC','I-':C.dr};
-      return m[val] || C.mist;
-    }
+    if (tipo === 'num') { var n=parseInt(val); return n>=9?C.g10:n===8?C.g8:n===7?'8FDA6E':n===6?C.y:n===5?C.o:n===4?C.r:C.dr; }
+    if (tipo === 'cual') { var m={'EX':C.g10,'MB+':C.g10,'MB':C.g8,'B+':'8FDA6E','B':'D4EDDA','S':'FFF3CD','S-':'FFE0B2','I':'FFCCCC','I-':C.dr}; return m[val]||C.mist; }
     return C.mist;
   }
 
   var W = 9360;
   var nameW = 2800;
-  var colW = Math.max(400, Math.floor((W - nameW - 500) / Math.max(regs.length, 1)));
+  var colW = Math.max(400, Math.floor((W - nameW - 500 - 800) / Math.max(regs.length, 1)));
 
-  // ── HEADER ──
-  var header = new D.Table({ width:{size:W, type:D.WidthType.DXA}, columnWidths:[W], rows:[
-    new D.TableRow({ children:[new D.TableCell({ borders:NB, shading:{fill:C.slate, type:D.ShadingType.CLEAR}, margins:{top:200,bottom:160,left:400,right:400},
+  // HEADER
+  var header = new D.Table({ width:{size:W,type:D.WidthType.DXA}, columnWidths:[W], rows:[
+    new D.TableRow({children:[new D.TableCell({borders:NB, shading:{fill:C.slate,type:D.ShadingType.CLEAR}, margins:{top:180,bottom:140,left:400,right:400},
       children:[
         new D.Paragraph({alignment:D.AlignmentType.CENTER, children:[
-          new D.TextRun({text:'Asist', size:52, color:C.white, bold:true, font:'Georgia'}),
-          new D.TextRun({text:'App', size:52, color:C.tealLight, bold:true, font:'Georgia'}),
-        ]}),
-        new D.Paragraph({alignment:D.AlignmentType.CENTER, spacing:{before:30}, children:[
-          new D.TextRun({text:'Sistema de Asistencia Digital', size:16, color:C.gray, font:'Arial'}),
-        ]}),
-      ]
-    })]})
-  ]});
-
-  var subHeader = new D.Table({ width:{size:W, type:D.WidthType.DXA}, columnWidths:[W], rows:[
-    new D.TableRow({ children:[new D.TableCell({ borders:NB, shading:{fill:C.teal, type:D.ShadingType.CLEAR}, margins:{top:140,bottom:140,left:400,right:400},
-      children:[
-        new D.Paragraph({alignment:D.AlignmentType.CENTER, children:[
-          new D.TextRun({text:curso, size:28, color:C.white, bold:true, font:'Arial'}),
-        ]}),
-        new D.Paragraph({alignment:D.AlignmentType.CENTER, spacing:{before:40}, children:[
-          new D.TextRun({text:[docente, 'Registro de Proceso'].filter(Boolean).join('  ·  '), size:17, color:C.mist, font:'Arial'}),
+          new D.TextRun({text:'Asist', size:48, color:C.white, bold:true, font:'Georgia'}),
+          new D.TextRun({text:'App',   size:48, color:C.tealL, bold:true, font:'Georgia'}),
         ]}),
         new D.Paragraph({alignment:D.AlignmentType.CENTER, spacing:{before:20}, children:[
-          new D.TextRun({text:'Generado el ' + fechaGen + (alumnoId ? '  ·  Alumno: ' + alumnoTitulo : ''), size:15, color:C.mist, font:'Arial'}),
+          new D.TextRun({text:'Sistema de Asistencia Digital', size:15, color:C.gray, font:'Arial'}),
         ]}),
       ]
     })]})
   ]});
 
-  // ── ANÁLISIS DEL PERÍODO ──
-  var analisisRows = [];
+  var subHeader = new D.Table({ width:{size:W,type:D.WidthType.DXA}, columnWidths:[W], rows:[
+    new D.TableRow({children:[new D.TableCell({borders:NB, shading:{fill:C.teal,type:D.ShadingType.CLEAR}, margins:{top:140,bottom:120,left:400,right:400},
+      children:[
+        new D.Paragraph({alignment:D.AlignmentType.CENTER, children:[
+          new D.TextRun({text:curso, size:26, color:C.white, bold:true, font:'Arial'}),
+        ]}),
+        new D.Paragraph({alignment:D.AlignmentType.CENTER, spacing:{before:30}, children:[
+          new D.TextRun({text:[docente,'Registro de Proceso de Aprendizaje'].filter(Boolean).join('  ·  '), size:16, color:C.mist, font:'Arial'}),
+        ]}),
+        new D.Paragraph({alignment:D.AlignmentType.CENTER, spacing:{before:20}, children:[
+          new D.TextRun({text:'Generado el ' + fechaGen + (alumnoId ? '  ·  Alumno: ' + alumnoTitulo : ''), size:14, color:C.mist, font:'Arial'}),
+        ]}),
+      ]
+    })]})
+  ]});
+
+  // ANÁLISIS DEL PERÍODO
   var stats = list.map(function(s) {
-    var data = (procesoData[cid] || {})[s.id] || {};
-    var vals = regs.map(function(r){ return data[r.id]; }).filter(function(v){ return v !== undefined && v !== null && v !== ''; });
-    var estado = calcularEstadoProceso(s.id, cid);
-    return { s:s, vals:vals, estado:estado };
+    return { s:s, estado: calcularEstadoProceso(s.id, cid) };
   });
+  var excelentes = stats.filter(function(x){ return x.estado.label === 'Excelente'; }).length;
+  var muyBuenos  = stats.filter(function(x){ return x.estado.label === 'Muy Bueno'; }).length;
+  var buenos     = stats.filter(function(x){ return x.estado.label === 'Bueno'; }).length;
+  var enRiesgo   = stats.filter(function(x){ return x.estado.label === 'En riesgo'; }).length;
+  var criticos   = stats.filter(function(x){ return x.estado.label === 'Critico' || x.estado.label === 'Crítico'; }).length;
 
-  var totalAlumnos = list.length;
-  var excelentes  = stats.filter(function(x){ return x.estado.label === 'Excelente'; }).length;
-  var muyBuenos   = stats.filter(function(x){ return x.estado.label === 'Muy Bueno'; }).length;
-  var buenos      = stats.filter(function(x){ return x.estado.label === 'Bueno'; }).length;
-  var enRiesgo    = stats.filter(function(x){ return x.estado.label === 'En riesgo'; }).length;
-  var criticos    = stats.filter(function(x){ return x.estado.label === 'Crítico'; }).length;
+  var analisisTitulo = new D.Paragraph({spacing:{before:240,after:100},
+    children:[new D.TextRun({text:'Análisis del Período', bold:true, size:22, color:C.slate, font:'Arial'})]});
 
-  var analisisTitulo = new D.Paragraph({
-    spacing:{before:240, after:120},
-    children:[new D.TextRun({text:'Análisis del Período', bold:true, size:24, color:C.slate, font:'Arial'})]
-  });
-
-  var resumenTable = new D.Table({ width:{size:W, type:D.WidthType.DXA}, columnWidths:[1872,1872,1872,1872,1872], rows:[
-    new D.TableRow({ children:[
-      mk('✅ Excelente',  {bg:C.g10, bold:true, color:C.white, size:15}),
-      mk('😊 Muy Bueno',  {bg:C.g8,  bold:true, color:C.white, size:15}),
-      mk('👍 Bueno',      {bg:'F1C40F', bold:true, color:C.ink,  size:15}),
-      mk('⚠ En riesgo',  {bg:C.o,   bold:true, color:C.white, size:15}),
-      mk('🚨 Crítico',    {bg:C.r,   bold:true, color:C.white, size:15}),
+  var resumenTable = new D.Table({ width:{size:W,type:D.WidthType.DXA}, columnWidths:[1872,1872,1872,1872,1872], rows:[
+    new D.TableRow({children:[
+      mk('Excelente',  {bg:C.g10, bold:true, color:C.white, size:15}),
+      mk('Muy Bueno',  {bg:C.g8,  bold:true, color:C.white, size:15}),
+      mk('Bueno',      {bg:'D4A017', bold:true, color:C.white, size:15}),
+      mk('En riesgo',  {bg:C.o,   bold:true, color:C.white, size:15}),
+      mk('Critico',    {bg:C.r,   bold:true, color:C.white, size:15}),
     ]}),
-    new D.TableRow({ children:[
-      mk(excelentes,  {bg:C.mist, bold:true, size:28, color:C.g10}),
-      mk(muyBuenos,   {bg:C.mist, bold:true, size:28, color:C.g8}),
-      mk(buenos,      {bg:C.mist, bold:true, size:28, color:'D4A017'}),
-      mk(enRiesgo,    {bg:C.mist, bold:true, size:28, color:C.o}),
-      mk(criticos,    {bg:C.mist, bold:true, size:28, color:C.r}),
+    new D.TableRow({children:[
+      mk(excelentes, {bg:C.mist, bold:true, size:28, color:C.g10}),
+      mk(muyBuenos,  {bg:C.mist, bold:true, size:28, color:C.g8}),
+      mk(buenos,     {bg:C.mist, bold:true, size:28, color:'D4A017'}),
+      mk(enRiesgo,   {bg:C.mist, bold:true, size:28, color:C.o}),
+      mk(criticos,   {bg:C.mist, bold:true, size:28, color:C.r}),
     ]}),
-    new D.TableRow({ children:[
-      mk('alumnos', {bg:C.white, size:14, color:C.gray}),
-      mk('alumnos', {bg:C.white, size:14, color:C.gray}),
-      mk('alumnos', {bg:C.white, size:14, color:C.gray}),
-      mk('alumnos', {bg:C.white, size:14, color:C.gray}),
-      mk('alumnos', {bg:C.white, size:14, color:C.gray}),
+    new D.TableRow({children:[
+      mk('alumnos',{bg:C.white,size:13,color:C.gray}),
+      mk('alumnos',{bg:C.white,size:13,color:C.gray}),
+      mk('alumnos',{bg:C.white,size:13,color:C.gray}),
+      mk('alumnos',{bg:C.white,size:13,color:C.gray}),
+      mk('alumnos',{bg:C.white,size:13,color:C.gray}),
     ]}),
   ]});
 
-  // ── TABLA DE REGISTROS ──
-  var tablaTitulo = new D.Paragraph({
-    spacing:{before:300, after:120},
-    children:[new D.TextRun({text:'Planilla de Registros', bold:true, size:24, color:C.slate, font:'Arial'})]
-  });
+  // TABLA DE REGISTROS
+  var tablaTitulo = new D.Paragraph({spacing:{before:280,after:100},
+    children:[new D.TextRun({text:'Planilla de Registros', bold:true, size:22, color:C.slate, font:'Arial'})]});
 
-  // Cabecera de tabla
   var headerCells = [
-    mk('#', {bg:C.slate, bold:true, color:C.white, w:500, size:16}),
-    mk('Apellido y Nombre', {bg:C.slate, bold:true, color:C.white, w:nameW, align:D.AlignmentType.LEFT, size:16}),
+    mk('#', {bg:C.slate,bold:true,color:C.white,w:500,size:15}),
+    mk('Apellido y Nombre', {bg:C.slate,bold:true,color:C.white,w:nameW,align:D.AlignmentType.LEFT,size:15}),
   ];
   regs.forEach(function(r) {
-    var periodoLabel = r.periodo ? ' [' + r.periodo + ']' : '';
-    headerCells.push(mk(fmt(r.fecha) + ' ' + r.nombre + periodoLabel, {bg:C.slate, bold:true, color:C.white, w:colW, size:13}));
+    var pl = r.periodo ? ' [' + r.periodo + ']' : '';
+    headerCells.push(mk(fmt(r.fecha) + ' ' + r.nombre + pl, {bg:C.slate,bold:true,color:C.white,w:colW,size:12}));
   });
-  headerCells.push(mk('Estado', {bg:C.teal, bold:true, color:C.white, w:800, size:15}));
+  headerCells.push(mk('Estado', {bg:C.teal,bold:true,color:C.white,w:800,size:14}));
 
   var dataRows = list.map(function(s, i) {
-    var data = (procesoData[cid] || {})[s.id] || {};
+    var data  = (procesoData[cid]||{})[s.id]||{};
     var estado = calcularEstadoProceso(s.id, cid);
-    var rowBg = i % 2 === 0 ? C.white : 'F7F9FC';
+    var rowBg = i%2===0 ? C.white : 'F7F9FC';
     var cells = [
-      mk(String(i+1).padStart(2,'0'), {bg:C.paper, bold:true, color:C.slate, w:500, size:15}),
-      mk(s.apellido ? s.apellido + ', ' + s.nombre : s.nombre, {bg:rowBg, align:D.AlignmentType.LEFT, w:nameW, size:17}),
+      mk(String(i+1).padStart(2,'0'), {bg:C.paper,bold:true,color:C.slate,w:500,size:14}),
+      mk(s.apellido?s.apellido+', '+s.nombre:s.nombre, {bg:rowBg,align:D.AlignmentType.LEFT,w:nameW,size:16}),
     ];
     regs.forEach(function(r) {
       var val = data[r.id];
-      var display = val !== undefined && val !== null ? String(val) : '—';
-      var bg = val !== undefined && val !== null ? notaBg(val, r.tipo) : rowBg;
-      cells.push(mk(display, {bg:bg, bold:(val !== undefined && val !== null), w:colW, size:val !== undefined && val !== null ? 20 : 15}));
+      var display = (val!==undefined&&val!==null) ? String(val) : '—';
+      var bg = (val!==undefined&&val!==null) ? notaBg(val,r.tipo) : rowBg;
+      cells.push(mk(display, {bg:bg, bold:(val!==undefined&&val!==null), w:colW, size:(val!==undefined&&val!==null)?19:14}));
     });
-    cells.push(mk(estado.label, {bg:estado.bg.replace('#',''), bold:true, color:estado.color.replace('#',''), w:800, size:14}));
-    return new D.TableRow({ children: cells });
+    cells.push(mk(estado.label, {bg:estado.bg.replace('#',''), bold:true, color:estado.color.replace('#',''), w:800, size:13}));
+    return new D.TableRow({children:cells});
   });
 
-  var tablaWidth = 500 + nameW + (colW * regs.length) + 800;
   var colWidths = [500, nameW].concat(regs.map(function(){ return colW; })).concat([800]);
   var planillaTable = new D.Table({
-    width: {size:Math.min(tablaWidth, W), type:D.WidthType.DXA},
-    columnWidths: colWidths,
-    rows: [new D.TableRow({children:headerCells})].concat(dataRows)
+    width:{size:W,type:D.WidthType.DXA},
+    columnWidths:colWidths,
+    rows:[new D.TableRow({children:headerCells})].concat(dataRows)
   });
 
-  // ── FOOTER ──
-  var footer = new D.Paragraph({
-    alignment:D.AlignmentType.CENTER, spacing:{before:300},
-    children:[new D.TextRun({text:'AsistApp  ·  Sistema de Asistencia Digital  ·  Desarrollado por DIGITAL SHOP', size:14, color:C.gray, font:'Arial'})]
-  });
+  // FOOTER
+  var footer = new D.Paragraph({alignment:D.AlignmentType.CENTER, spacing:{before:280},
+    children:[new D.TextRun({text:'AsistApp  ·  Sistema de Asistencia Digital  ·  Desarrollado por DIGITAL SHOP', size:13, color:C.gray, font:'Arial'})]});
 
   try {
     var doc2 = new D.Document({ sections:[{ properties:{}, children:[
@@ -25336,12 +25328,11 @@ async function exportProcesoWord(alumnoId) {
       footer
     ]}]});
     var blob = await D.Packer.toBlob(doc2);
-    var cleanNombre = function(s){ return (s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-]/g,''); };
-    var sufijo = alumnoId && list[0] ? cleanNombre(list[0].apellido) : 'Curso_completo';
-    showShareModal(blob, 'Proceso_' + cleanNombre(c?c.nombre:'') + '_' + sufijo + '_' + new Date().toISOString().slice(0,10) + '.docx');
+    var clean = function(s){ return (s||'').trim().replace(/\s+/g,'_').replace(/[^\w\-]/g,''); };
+    var sufijo = alumnoId && list[0] ? clean(list[0].apellido||list[0].nombre) : 'Curso_completo';
+    showShareModal(blob, 'Proceso_' + clean(c?c.nombre:'') + '_' + sufijo + '_' + new Date().toISOString().slice(0,10) + '.docx');
   } catch(e) {
-    showToast('❌ Error generando informe: ' + e.message);
-    console.error(e);
+    showToast('Error generando informe: ' + e.message);
   }
 }
 
@@ -25438,8 +25429,8 @@ async function enterApp(userName) {
     console.warn('Error restaurando vista:', e);
     renderCursosGrid();
   }
-  requestAnimationFrame(() => {
-    const aw = document.getElementById('app-wrapper');
+  requestAnimationFrame(function() {
+    var aw = document.getElementById('app-wrapper');
     if (aw) aw.classList.add('app-ready');
   });
 }
@@ -25870,6 +25861,7 @@ function exportObsPDF() {
       <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
     </div>
   </div>
+  
   </body></html>`;
 
   const w = window.open('', '_blank', 'width=900,height=700');
@@ -26161,168 +26153,71 @@ function showGraceModal(userName, daysLeft) {
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
-
 // ─── INYECTAR VISTAS DINÁMICAS ───
 (function injectViews() {
   var appWrapper = document.getElementById('app-wrapper');
   if (!appWrapper) return;
-  // Insertar view-proceso antes del footer
   var footer = appWrapper.querySelector('footer');
   var container = document.createElement('div');
-  container.innerHTML = `
-<div class="view" id="view-proceso">
-  <div id="proc-grid-view">
-    <div class="page-title">&#128221; Registro de Proceso</div>
-    <p class="page-sub">Selecciona un curso para ver y registrar el proceso de aprendizaje</p>
-    <div class="cursos-grid" id="proc-cursos-grid"></div>
-    <div id="proc-empty" class="empty-state" style="display:none">
-      <div class="ei">&#128221;</div>
-      <p>No hay cursos cargados</p>
-      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Crea un curso primero en la seccion Cursos</p>
-    </div>
-  </div>
-  <div id="proc-detalle-view" style="display:none">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
-      <button class="btn btn-secondary btn-sm" id="proc-volver-btn">&#8592; Cursos</button>
-      <div class="page-title" style="margin:0;font-size:1.3rem" id="proc-titulo-detalle">Proceso</div>
-    </div>
-    <div class="curso-bar" id="proc-barra-curso" style="margin-bottom:1rem"></div>
-    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" id="proc-btn-agregar">&#43; Agregar registro</button>
-      <button class="btn btn-secondary btn-sm" id="proc-btn-eliminar">&#128465; Eliminar registro</button>
-      <button class="btn btn-gold btn-sm" id="proc-btn-word">&#128196; Informe del curso</button>
-      <button class="btn btn-slate btn-sm" id="proc-btn-alumno">&#128100; Informe por alumno</button>
-    </div>
-    <div id="proc-tabla-wrap" style="display:none">
-      <div class="table-wrap">
-        <table id="proc-tabla" class="proceso-table">
-          <thead><tr id="proc-thead"></tr></thead>
-          <tbody id="proc-tbody"></tbody>
-        </table>
-      </div>
-      <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:'DM Mono',monospace">Clic en celda para calificar &middot; Clic en nombre para observaciones</p>
-    </div>
-    <div id="proc-sin-registros" class="empty-state" style="display:none">
-      <div class="ei">&#128203;</div>
-      <p style="font-size:1rem;color:#6b7280;font-weight:600">Sin registros aún</p>
-      <p style="font-size:1rem;color:#9ca3af;margin-top:0.4rem">Usá "Agregar registro" para crear la primera columna</p>
-    </div>
-  </div>
-</div>
-<div class="modal-overlay" id="add-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:440px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--slate)">➕ Nuevo registro</h3>
-      <button onclick="document.getElementById('add-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field"><label>📅 Fecha</label><input type="date" id="proceso-add-date"></div>
-    <div class="field"><label>📌 Nombre</label><input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3..."></div>
-    <div class="field">
-      <label>📆 Período</label>
-      <select id="proceso-add-periodo" style="width:100%">
-        <option value="1C">1° Cuatrimestre</option>
-        <option value="2C">2° Cuatrimestre</option>
-        <option value="Rec">Recuperatorio</option>
-        <option value="Int">Intensificación</option>
-        <option value="Anual">Anual</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>📊 Tipo</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="role-btn selected" id="ptipo-num" onclick="selectProcesoTipo('num')">🔢 Numérica</button>
-        <button class="role-btn" id="ptipo-cual" onclick="selectProcesoTipo('cual')">📋 Cualitativa</button>
-        <button class="role-btn" id="ptipo-simb" onclick="selectProcesoTipo('simb')">🎯 Simbólica</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
-      <button class="btn btn-secondary" onclick="document.getElementById('add-proceso-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmAddProceso()">✅ Agregar</button>
-    </div>
-  </div>
-</div>
-<div class="modal-overlay" id="delete-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--rose)">🗑 Eliminar registro</h3>
-      <button onclick="document.getElementById('delete-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field"><label>Registro a eliminar</label><select id="delete-proceso-select" style="width:100%"><option value="">— Seleccioná —</option></select></div>
-    <div style="display:flex;gap:8px;margin-top:1rem">
-      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('delete-proceso-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-danger" style="flex:2" onclick="confirmDeleteProceso()">🗑 Eliminar</button>
-    </div>
-  </div>
-</div>
-<div class="modal-overlay" id="proceso-cell-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:380px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <div>
-        <div id="pcell-student-name" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--slate);text-transform:uppercase;font-weight:800"></div>
-        <div id="pcell-registro-name" style="font-size:0.78rem;color:#9ca3af;margin-top:2px"></div>
-      </div>
-      <button onclick="document.getElementById('proceso-cell-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div id="pcell-num-options">
-      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala numérica</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:1rem">
-        <button class="proceso-badge pnota-10" onclick="setProcesoVal(10)">10</button>
-        <button class="proceso-badge pnota-9"  onclick="setProcesoVal(9)">9</button>
-        <button class="proceso-badge pnota-8"  onclick="setProcesoVal(8)">8</button>
-        <button class="proceso-badge pnota-7"  onclick="setProcesoVal(7)">7</button>
-        <button class="proceso-badge pnota-6"  onclick="setProcesoVal(6)">6</button>
-        <button class="proceso-badge pnota-5"  onclick="setProcesoVal(5)">5</button>
-        <button class="proceso-badge pnota-4"  onclick="setProcesoVal(4)">4</button>
-        <button class="proceso-badge pnota-3"  onclick="setProcesoVal(3)">3</button>
-        <button class="proceso-badge pnota-2"  onclick="setProcesoVal(2)">2</button>
-        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
-      </div>
-    </div>
-    <div id="pcell-cual-options" style="display:none">
-      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala cualitativa</p>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:1rem">
-        <button class="proceso-badge pcual-mb_plus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('EX')">EX · Excelente</button>
-        <button class="proceso-badge pcual-mb"      style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('MB')">MB · Muy Bueno</button>
-        <button class="proceso-badge pcual-b_plus"  style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('B+')">B+ · Bueno +</button>
-        <button class="proceso-badge pcual-b"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('B')">B · Bueno</button>
-        <button class="proceso-badge pcual-s"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S')">S · Suficiente</button>
-        <button class="proceso-badge pcual-s_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
-        <button class="proceso-badge pcual-i"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I')">I · Insuficiente</button>
-        <button class="proceso-badge pcual-i_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
-      </div>
-    </div>
-    <div id="pcell-simb-options" style="display:none">
-      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Registro simbólico</p>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem">
-        <button class="proceso-badge psimb" title="Logrado"        onclick="setProcesoVal('✅')">✅</button>
-        <button class="proceso-badge psimb" title="No cumplió"     onclick="setProcesoVal('❌')">❌</button>
-        <button class="proceso-badge psimb" title="Pendiente"      onclick="setProcesoVal('⏳')">⏳</button>
-        <button class="proceso-badge psimb" title="Excelente"      onclick="setProcesoVal('⭐')">⭐</button>
-        <button class="proceso-badge psimb" title="Participó"      onclick="setProcesoVal('🙋')">🙋</button>
-        <button class="proceso-badge psimb" title="Muy bien"       onclick="setProcesoVal('😄')">😄</button>
-        <button class="proceso-badge psimb" title="En proceso"     onclick="setProcesoVal('🤔')">🤔</button>
-        <button class="proceso-badge psimb" title="Necesita apoyo" onclick="setProcesoVal('😟')">😟</button>
-        <button class="proceso-badge psimb" title="Entregó"        onclick="setProcesoVal('📎')">📎</button>
-        <button class="proceso-badge psimb" title="No entregó"     onclick="setProcesoVal('🚫')">🚫</button>
-      </div>
-    </div>
-    <button class="btn btn-secondary btn-sm" style="width:100%" onclick="setProcesoVal(null)">🗑 Borrar calificación</button>
-  </div>
-</div>`;
-  if (footer) {
-    appWrapper.insertBefore(container.firstChild, footer);
-    // Insertar modales restantes
-    var remaining = container.childNodes;
-    while (container.firstChild) {
-      appWrapper.insertBefore(container.firstChild, footer);
-    }
-  } else {
-    while (container.firstChild) {
-      appWrapper.appendChild(container.firstChild);
-    }
-  }
+  container.innerHTML = [
+    '<div class="view" id="view-proceso">',
+    '  <div id="proc-grid-view">',
+    '    <div class="page-title">\u{1F4DD} Registro de Proceso</div>',
+    '    <p class="page-sub">Selecciona un curso para ver y registrar el proceso de aprendizaje</p>',
+    '    <div class="cursos-grid" id="proc-cursos-grid"></div>',
+    '    <div id="proc-empty" class="empty-state" style="display:none">',
+    '      <div class="ei">\u{1F4DD}</div>',
+    '      <p>No hay cursos cargados</p>',
+    '    </div>',
+    '  </div>',
+    '  <div id="proc-detalle-view" style="display:none">',
+    '    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">',
+    '      <button class="btn btn-secondary btn-sm" id="proc-volver-btn">&#8592; Cursos</button>',
+    '      <div class="page-title" style="margin:0;font-size:1.3rem" id="proc-titulo-detalle">Proceso</div>',
+    '    </div>',
+    '    <div class="curso-bar" id="proc-barra-curso" style="margin-bottom:1rem"></div>',
+    '    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap">',
+    '      <button class="btn btn-primary btn-sm" id="proc-btn-agregar">+ Agregar registro</button>',
+    '      <button class="btn btn-secondary btn-sm" id="proc-btn-eliminar">&#128465; Eliminar registro</button>',
+    '      <button class="btn btn-gold btn-sm" id="proc-btn-word">&#128196; Informe del curso</button>',
+    '      <button class="btn btn-slate btn-sm" id="proc-btn-alumno">&#128100; Informe por alumno</button>',
+    '    </div>',
+    '    <div id="proc-tabla-wrap" style="display:none">',
+    '      <div class="table-wrap">',
+    '        <table id="proc-tabla" class="proceso-table">',
+    '          <thead><tr id="proc-thead"></tr></thead>',
+    '          <tbody id="proc-tbody"></tbody>',
+    '        </table>',
+    '      </div>',
+    '      <p style="font-size:0.72rem;color:#9ca3af;margin:6px 2px;font-family:monospace">Clic en celda para calificar</p>',
+    '    </div>',
+    '    <div id="proc-sin-registros" class="empty-state" style="display:none">',
+    '      <div class="ei">&#128203;</div>',
+    '      <p style="font-size:1rem;color:#6b7280;font-weight:600">Sin registros a&uacute;n</p>',
+    '      <p style="font-size:1rem;color:#9ca3af;margin-top:0.4rem">Us&aacute; &quot;Agregar registro&quot; para crear la primera columna</p>',
+    '    </div>',
+    '  </div>',
+    '</div>'
+  ].join('\n');
+  var nodes = Array.from(container.childNodes);
+  nodes.forEach(function(node) {
+    if (footer) appWrapper.insertBefore(node, footer);
+    else appWrapper.appendChild(node);
+  });
 })();
 
+
+function setTodayDate() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year:'numeric', month:'2-digit', day:'2-digit',
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  }).formatToParts(now);
+  const y = parts.find(p=>p.type==='year').value;
+  const m = parts.find(p=>p.type==='month').value;
+  const d = parts.find(p=>p.type==='day').value;
+  document.getElementById('scan-date').value = `${y}-${m}-${d}`;
+}
 
 (async function init() {
   setTodayDate();
@@ -26384,24 +26279,6 @@ function showGraceModal(userName, daysLeft) {
 <!-- MODAL ELIMINAR REGISTRO -->
 
 <!-- MODAL CALIFICAR CELDA -->
-
-<!-- MODAL SELECCIONAR ALUMNO PARA INFORME -->
-<div class="modal-overlay" id="modal-select-alumno" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:400px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--slate)">👤 Informe individual</h3>
-      <button onclick="document.getElementById('modal-select-alumno').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div class="field">
-      <label>Seleccioná el alumno</label>
-      <select id="select-alumno-proceso" style="width:100%"></select>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:1rem">
-      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('modal-select-alumno').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-gold" style="flex:2" onclick="confirmarInformeAlumno()">📄 Generar informe</button>
-    </div>
-  </div>
-</div>
 
 <!-- ═══ MODAL COMPARTIR ═══ -->
 <div class="modal-overlay" id="share-modal" onclick="if(event.target===this)this.classList.remove('open')">
