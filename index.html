@@ -24303,13 +24303,13 @@ function previewQRsSelected() {
       const apellido = (s.apellido || s.nombre || '').toUpperCase();
       const nombre   = s.apellido ? (s.nombre || '') : '';
       const metaLine = [c ? c.nombre : '', c && c.materia ? c.materia : ''].filter(Boolean).join(' · ');
-      return `<div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">
-        ${dataUrl ? `<img src="${dataUrl}" width="110" height="110" style="display:block;margin:0 auto;">` : ''}
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">${apellido}</div>
-        ${nombre ? `<div style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">${nombre}</div>` : ''}
-        ${metaLine ? `<div style="font-family:'Nunito',sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">${metaLine}</div>` : ''}
-        <div style="font-family:'DM Mono',monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ${shortId}</div>
-      </div>`;
+      return '<div style="text-align:center;border:1px solid #ddd;border-radius:8px;padding:10px 8px;break-inside:avoid;page-break-inside:avoid;border-top:3px solid #0f9b8e;">' +
+        (dataUrl ? '<img src="' + dataUrl + '" width="110" height="110" style="display:block;margin:0 auto;">' : '') +
+        '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#1a1a2e;margin-top:7px;line-height:1.2;">' + apellido + '</div>' +
+        (nombre ? '<div style="font-family:Nunito,sans-serif;font-size:11px;font-weight:700;color:#2d3561;margin-top:2px;">' + nombre + '</div>' : '') +
+        (metaLine ? '<div style="font-family:Nunito,sans-serif;font-size:9px;color:#6b7280;margin-top:3px;">' + metaLine + '</div>' : '') +
+        '<div style="font-family:DM Mono,monospace;font-size:9px;color:#0f9b8e;font-weight:700;margin-top:5px;">ID: ' + shortId + '</div>' +
+        '</div>';
     }).join('');
 
     const pageHTML = `<!DOCTYPE html>
@@ -24348,7 +24348,7 @@ function previewQRsSelected() {
       </div>
       <div style="text-align:right;font-size:12px;color:#6b7280;font-family:'Nunito',sans-serif;line-height:1.6">
         <div style="font-weight:800;color:#1a1a2e;font-size:14px">${cursoNombre}</div>
-        ${docenteStr ? `<div style="color:#2d3561;font-weight:700">${docenteStr}</div>` : ''}
+        ${docenteStr ? '<div style="color:#2d3561;font-weight:700">' + docenteStr + '</div>' : ''}
         <div style="color:#0f9b8e;font-weight:700">${fechaGen}</div>
       </div>
     </div>
@@ -24360,10 +24360,10 @@ function previewQRsSelected() {
     </div>
   </div>
 
-  <script>document.fonts.ready.then(()=>window.print());<\/script>
+  <script>document.fonts.ready.then(()=>window.print());<${''}/script>
   </body></html>`;
   const w = window.open('','_blank','width=1100,height=750');
-  if (w) { w.document.write(html); w.document.close(); }
+  if (w) { w.document.write(pageHTML); w.document.close(); }
   else showToast('⚠ Activá las ventanas emergentes para imprimir');
 }
 
@@ -24413,7 +24413,7 @@ function printReport() {
   </table>
   ${buildPrintFooter()}
   </div>
-  <script>document.fonts.ready.then(()=>window.print());<\/script>
+  <script>document.fonts.ready.then(()=>window.print());<${''}/script>
   </body></html>`;
   const w = window.open('','_blank','width=960,height=700');
   if (w) { w.document.write(html); w.document.close(); }
@@ -25883,7 +25883,7 @@ function exportObsPDF() {
       <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
     </div>
   </div>
-  <script>window.onload = function(){ window.print(); }<\/script>
+  <script>window.onload = function(){ window.print(); }<${''}/script>
   </body></html>`;
 
   const w = window.open('', '_blank', 'width=900,height=700');
