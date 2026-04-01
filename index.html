@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-  <meta name="asistapp-version" content="v20260331-PROCESO-OK">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AsistApp — Sistema de Asistencia Digital</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -23110,8 +23109,6 @@ var __async = (__this, __arguments, generator) => {
   /* APP WRAPPER */
   #app-wrapper { display: none; }
   #app-wrapper.visible { display: block; }
-  #app-wrapper.visible.app-ready { opacity: 1; transition: opacity 0.15s ease; }
-  #app-wrapper.visible:not(.app-ready) { opacity: 0; }
 
   /* LOGOUT BUTTON - white text, rose background */
   #btn-logout {
@@ -23133,16 +23130,16 @@ var __async = (__this, __arguments, generator) => {
   }
 
   /* ── PAYWALL ── */
-  #paywall-screen-main { display:none; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:99999; align-items:flex-start; justify-content:center; overflow-y:auto; padding:1rem 0; }
+  #paywall-screen-main { display:none; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:99999; align-items:center; justify-content:center; }
   #paywall-screen-main.visible { display:flex; }
-  .paywall-card { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:1.8rem 2rem; max-width:440px; width:90%; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.4); margin:auto; }
-  .paywall-icon { font-size:2.5rem; margin-bottom:0.5rem; }
-  .paywall-title { font-family:'DM Serif Display',serif; font-size:1.6rem; color:#fff; margin-bottom:0.3rem; }
+  .paywall-card { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:3rem 2.5rem; max-width:480px; width:90%; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.4); }
+  .paywall-icon { font-size:3.5rem; margin-bottom:1rem; }
+  .paywall-title { font-family:'DM Serif Display',serif; font-size:2rem; color:#fff; margin-bottom:0.5rem; }
   .paywall-sub { font-size:0.9rem; color:#94a3b8; margin-bottom:2rem; line-height:1.6; }
-  .paywall-price { background:rgba(15,155,142,0.15); border:1px solid rgba(15,155,142,0.3); border-radius:16px; padding:0.8rem; margin-bottom:1.2rem; }
-  .paywall-price-amount { font-size:2rem; font-weight:900; color:#1bc5b4; font-family:'DM Mono',monospace; }
+  .paywall-price { background:rgba(15,155,142,0.15); border:1px solid rgba(15,155,142,0.3); border-radius:16px; padding:1.2rem; margin-bottom:2rem; }
+  .paywall-price-amount { font-size:2.5rem; font-weight:900; color:#1bc5b4; font-family:'DM Mono',monospace; }
   .paywall-price-period { font-size:0.85rem; color:#94a3b8; font-weight:600; }
-  .paywall-features { text-align:left; margin-bottom:1.2rem; }
+  .paywall-features { text-align:left; margin-bottom:2rem; }
   .paywall-feature { display:flex; gap:10px; align-items:center; padding:6px 0; font-size:0.88rem; color:#cbd5e1; }
   .paywall-feature span:first-child { color:#1bc5b4; font-size:1rem; }
   .btn-paywall { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:1rem; background:linear-gradient(135deg,#0f9b8e,#0d7a70); color:white; font-family:'Nunito',sans-serif; font-weight:800; font-size:1rem; border:none; border-radius:12px; cursor:pointer; text-decoration:none; box-shadow:0 4px 20px rgba(15,155,142,0.4); transition:all 0.2s; margin-bottom:1rem; }
@@ -23257,7 +23254,7 @@ var __async = (__this, __arguments, generator) => {
 </div>
 
 <!-- ═══ CURSOS ═══ -->
-<div class="view" id="view-cursos">
+<div class="view active" id="view-cursos">
   <div class="page-title">🏫 Mis Cursos</div>
   <p class="page-sub">Seleccioná un curso para gestionarlo, o creá uno nuevo al final de la página.</p>
 
@@ -23852,7 +23849,7 @@ function showView(id, btn) {
   if (id === 'planilla') { syncSelects(); }
   if (id === 'proceso')  {
     activeProcesoCursoId = null;
-    procMostrarGrid();
+    try { procRenderGrid(); } catch(e) { console.warn('procRenderGrid error:', e); }
   }
 
 }
@@ -24360,6 +24357,1193 @@ function previewQRsSelected() {
     </div>
   </div>
 
+// ════════════════════════════════════════
+// SECCIÓN PROCESO
+// ════════════════════════════════════════
+var activeProcesoCursoId = null;
+var procesoRegistros = {};
+var procesoData = {};
+var _procesoTipo = 'num';
+var _pcellSid = null;
+var _pcellRid = null;
+
+function procListKey(cid) { return 'aa_pl_' + cid; }
+function procDataKey(cid) { return 'aa_pd_' + cid; }
+
+function procCargar(cid) {
+  try { procesoRegistros[cid] = JSON.parse(localStorage.getItem(procListKey(cid)) || '[]'); } catch(e) { procesoRegistros[cid] = []; }
+  try { procesoData[cid] = JSON.parse(localStorage.getItem(procDataKey(cid)) || '{}'); } catch(e) { procesoData[cid] = {}; }
+}
+
+function procGuardar(cid) {
+  localStorage.setItem(procListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
+  localStorage.setItem(procDataKey(cid), JSON.stringify(procesoData[cid] || {}));
+}
+
+function procMostrarGrid() {
+  activeProcesoCursoId = null;
+  var gv = document.getElementById('proc-grid-view');
+  var dv = document.getElementById('proc-detalle-view');
+  if (gv) gv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+  procRenderizarGrid();
+}
+
+function procRenderizarGrid() {
+  var grid  = document.getElementById('proc-cursos-grid');
+  var empty = document.getElementById('proc-empty');
+  if (!grid) return;
+
+  if (!cursos || cursos.length === 0) {
+    grid.innerHTML = '';
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  grid.innerHTML = '';
+
+  for (var i = 0; i < cursos.length; i++) {
+    var c = cursos[i];
+    var count = studentsOf(c.id).length;
+    var div = document.createElement('div');
+    div.className = 'curso-card';
+    div.style.cursor = 'pointer';
+    (function(curso) {
+      div.onclick = function() { procAbrirCurso(curso.id); };
+    })(c);
+    var stripe  = '<div class="curso-card-stripe" style="background:' + (c.color || '#0f9b8e') + '"></div>';
+    var nombre  = '<div class="curso-card-name">'  + c.nombre + '</div>';
+    var materia = c.materia ? '<div class="curso-card-meta">&#128214; ' + c.materia + '</div>' : '';
+    var docente = c.docente ? '<div class="curso-card-meta">&#128100; ' + c.docente + '</div>' : '';
+    var cant    = '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count !== 1 ? 's' : '') + '</div>';
+    var acciones = '<div class="curso-card-actions" style="margin-top:12px">' +
+                   '<button class="btn btn-primary btn-sm" style="flex:1">&#128221; Ver proceso</button>' +
+                   '</div>';
+    div.innerHTML = stripe + nombre + materia + docente + cant + acciones;
+    grid.appendChild(div);
+  }
+}
+
+function procAbrirCurso(cid) {
+  activeProcesoCursoId = cid;
+  var c = getCurso(cid);
+  var gv = document.getElementById('proc-grid-view');
+  var dv = document.getElementById('proc-detalle-view');
+  if (gv) gv.style.display = 'none';
+  if (dv) dv.style.display = 'block';
+
+  var titulo = document.getElementById('proc-titulo-detalle');
+  if (titulo) titulo.textContent = c ? (c.nombre + (c.materia ? ' · ' + c.materia : '')) : 'Proceso';
+
+  var barra = document.getElementById('proc-barra-curso');
+  if (barra) barra.innerHTML = buildBar(cid);
+
+  // Conectar botones
+  var btnAgregar  = document.getElementById('proc-btn-agregar');
+  var btnEliminar = document.getElementById('proc-btn-eliminar');
+  var btnWord     = document.getElementById('proc-btn-word');
+  var btnVolver   = document.getElementById('proc-volver-btn');
+  if (btnAgregar)  btnAgregar.onclick  = openAddProcesoModal;
+  if (btnEliminar) btnEliminar.onclick = openDeleteProcesoModal;
+  if (btnWord)     btnWord.onclick     = exportProcesoWord;
+  if (btnVolver)   btnVolver.onclick   = procMostrarGrid;
+
+  procCargar(cid);
+  procRenderizarTabla();
+}
+
+function procRenderizarTabla() {
+  var cid  = activeProcesoCursoId;
+  if (!cid) return;
+
+  var list = studentsOf(cid).slice().sort(function(a,b) {
+    return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'', 'es');
+  });
+  var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b) {
+    return a.fecha.localeCompare(b.fecha);
+  });
+
+  var tablaWrap  = document.getElementById('proc-tabla-wrap');
+  var sinRegs    = document.getElementById('proc-sin-registros');
+  var thead      = document.getElementById('proc-thead');
+  var tbody      = document.getElementById('proc-tbody');
+
+  if (!list.length || !regs.length) {
+    if (tablaWrap) tablaWrap.style.display = 'none';
+    if (sinRegs)   sinRegs.style.display   = !list.length ? 'none' : 'flex';
+    return;
+  }
+
+  if (tablaWrap) tablaWrap.style.display = 'block';
+  if (sinRegs)   sinRegs.style.display   = 'none';
+
+  // Cabecera
+  var thHTML = '<th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th>' +
+               '<th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>';
+  for (var r = 0; r < regs.length; r++) {
+    var reg = regs[r];
+    var icon = reg.tipo === 'num' ? '&#128290;' : reg.tipo === 'cual' ? '&#128203;' : '&#127919;';
+    thHTML += '<th class="proceso-col-header" title="' + reg.nombre + ' &middot; ' + reg.fecha + '">' +
+              fmt(reg.fecha) + '<span class="proceso-col-type">' + icon + ' ' + reg.nombre + '</span></th>';
+  }
+  thead.innerHTML = thHTML;
+
+  // Filas
+  // Construir filas usando createElement para evitar problemas de comillas
+  tbody.innerHTML = '';
+  for (var s = 0; s < list.length; s++) {
+    var st = list[s];
+    var tr = document.createElement('tr');
+    // Celda número
+    var tdNum = document.createElement('td');
+    tdNum.style.cssText = 'position:sticky;left:0;background:var(--paper);font-family:monospace;font-size:0.75rem;font-weight:700;color:var(--slate);text-align:center;padding:8px 6px';
+    tdNum.textContent = String(s+1).padStart(2,'0');
+    tr.appendChild(tdNum);
+    // Celda nombre
+    var tdNombre = document.createElement('td');
+    tdNombre.style.cssText = 'position:sticky;left:36px;background:white;font-weight:700;font-size:0.88rem;padding:8px 12px;cursor:pointer';
+    tdNombre.title = 'Ver observaciones';
+    var obs = getObservationCount(st.id);
+    tdNombre.innerHTML = (st.apellido ? st.apellido + ', ' + st.nombre : st.nombre) +
+      (obs > 0 ? '<span style="font-size:0.65rem;background:var(--mist);color:var(--teal);border-radius:6px;padding:1px 5px;border:1px solid var(--teal)">' + obs + '</span>' : '');
+    (function(sid){ tdNombre.addEventListener('click', function(){ openObservations(sid); }); })(st.id);
+    tr.appendChild(tdNombre);
+    // Celdas de registros
+    for (var rr = 0; rr < regs.length; rr++) {
+      var reg2 = regs[rr];
+      var val  = procesoData[cid] && procesoData[cid][st.id] ? procesoData[cid][st.id][reg2.id] : undefined;
+      var tdCel = document.createElement('td');
+      tdCel.style.cssText = 'text-align:center;cursor:pointer;padding:6px 4px';
+      tdCel.innerHTML = procBadge(val, reg2.tipo);
+      (function(sid, rid){ tdCel.addEventListener('click', function(){ procAbrirCelda(sid, rid); }); })(st.id, reg2.id);
+      tr.appendChild(tdCel);
+    }
+    tbody.appendChild(tr);
+  }
+
+  setTimeout(function() {
+    var w = document.querySelector('#proc-tabla-wrap .table-wrap');
+    if (w) w.scrollLeft = w.scrollWidth;
+  }, 60);
+}
+
+function procBadge(val, tipo) {
+  if (val === null || val === undefined || val === '')
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;color:#d1d5db;font-size:0.7rem">&#8212;</span>';
+  if (tipo === 'num') {
+    var n = parseInt(val);
+    var cls = n >= 9 ? 'pnota-10' : n === 8 ? 'pnota-8' : n === 7 ? 'pnota-7' : n === 6 ? 'pnota-6' : n === 5 ? 'pnota-5' : n === 4 ? 'pnota-4' : 'pnota-1';
+    return '<span class="proceso-badge ' + cls + '">' + val + '</span>';
+  }
+  if (tipo === 'cual') {
+    var map2 = {'MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
+    return '<span class="proceso-badge ' + (map2[val]||'') + '" style="font-size:0.7rem;padding:3px 5px">' + val + '</span>';
+  }
+  return '<span style="font-size:1.1rem">' + val + '</span>';
+}
+
+function procAbrirCelda(sid, rid) {
+  var s   = students.find(function(x){ return x.id === sid; });
+  var reg = (procesoRegistros[activeProcesoCursoId]||[]).find(function(x){ return x.id === rid; });
+  if (!s || !reg) return;
+  _pcellSid = sid;
+  _pcellRid = rid;
+  var nameEl = document.getElementById('pcell-student-name');
+  var regEl  = document.getElementById('pcell-registro-name');
+  if (nameEl) nameEl.textContent = s.apellido ? s.apellido + ', ' + s.nombre : s.nombre;
+  if (regEl)  regEl.textContent  = reg.nombre + ' · ' + fmt(reg.fecha);
+  var numOpts  = document.getElementById('pcell-num-options');
+  var cualOpts = document.getElementById('pcell-cual-options');
+  var simbOpts = document.getElementById('pcell-simb-options');
+  if (numOpts)  numOpts.style.display  = reg.tipo === 'num'  ? 'block' : 'none';
+  if (cualOpts) cualOpts.style.display = reg.tipo === 'cual' ? 'block' : 'none';
+  if (simbOpts) simbOpts.style.display = reg.tipo === 'simb' ? 'block' : 'none';
+  document.getElementById('proceso-cell-modal').classList.add('open');
+}
+
+function setProcesoVal(val) {
+  if (!_pcellSid || !_pcellRid || !activeProcesoCursoId) return;
+  var cid = activeProcesoCursoId;
+  if (!procesoData[cid]) procesoData[cid] = {};
+  if (!procesoData[cid][_pcellSid]) procesoData[cid][_pcellSid] = {};
+  if (val === null) delete procesoData[cid][_pcellSid][_pcellRid];
+  else procesoData[cid][_pcellSid][_pcellRid] = val;
+  procGuardar(cid);
+  document.getElementById('proceso-cell-modal').classList.remove('open');
+  procRenderizarTabla();
+}
+
+function selectProcesoTipo(tipo) {
+  _procesoTipo = tipo;
+  var tipos = ['num','cual','simb'];
+  for (var t = 0; t < tipos.length; t++) {
+    var el = document.getElementById('ptipo-' + tipos[t]);
+    if (el) { if (tipos[t] === tipo) el.classList.add('selected'); else el.classList.remove('selected'); }
+  }
+}
+
+function openAddProcesoModal() {
+  if (!activeProcesoCursoId) return;
+  var dateEl  = document.getElementById('proceso-add-date');
+  var nameEl  = document.getElementById('proceso-add-nombre');
+  if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+  if (nameEl) { nameEl.value = ''; setTimeout(function(){ nameEl.focus(); }, 100); }
+  selectProcesoTipo('num');
+  document.getElementById('add-proceso-modal').classList.add('open');
+}
+
+function confirmAddProceso() {
+  var fecha  = document.getElementById('proceso-add-date').value;
+  var nombre = document.getElementById('proceso-add-nombre').value.trim();
+  if (!fecha)  { showToast('Selecciona una fecha'); return; }
+  if (!nombre) { showToast('Ingresa un nombre'); return; }
+  var cid = activeProcesoCursoId;
+  if (!procesoRegistros[cid]) procesoRegistros[cid] = [];
+  procesoRegistros[cid].push({ id: genId(), fecha: fecha, nombre: nombre, tipo: _procesoTipo });
+  if (!procesoData[cid]) procesoData[cid] = {};
+  procGuardar(cid);
+  document.getElementById('add-proceso-modal').classList.remove('open');
+  procRenderizarTabla();
+  showToast('Registro "' + nombre + '" agregado');
+}
+
+function openDeleteProcesoModal() {
+  if (!activeProcesoCursoId) return;
+  var regs = (procesoRegistros[activeProcesoCursoId] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+  if (!regs.length) { showToast('No hay registros para eliminar'); return; }
+  var sel = document.getElementById('delete-proceso-select');
+  sel.innerHTML = '<option value="">Selecciona...</option>';
+  for (var i = 0; i < regs.length; i++) {
+    sel.innerHTML += '<option value="' + regs[i].id + '">' + fmt(regs[i].fecha) + ' · ' + regs[i].nombre + '</option>';
+  }
+  document.getElementById('delete-proceso-modal').classList.add('open');
+}
+
+function confirmDeleteProceso() {
+  var id  = document.getElementById('delete-proceso-select').value;
+  if (!id) { showToast('Selecciona un registro'); return; }
+  var cid = activeProcesoCursoId;
+  procesoRegistros[cid] = (procesoRegistros[cid] || []).filter(function(r){ return r.id !== id; });
+  var data = procesoData[cid] || {};
+  var sids = Object.keys(data);
+  for (var i = 0; i < sids.length; i++) { if (data[sids[i]]) delete data[sids[i]][id]; }
+  procGuardar(cid);
+  document.getElementById('delete-proceso-modal').classList.remove('open');
+  procRenderizarTabla();
+  showToast('Registro eliminado');
+}
+
+async function exportProcesoWord() {
+  if (!activeProcesoCursoId) return;
+  if (typeof docx === 'undefined') { showToast('Libreria Word no disponible'); return; }
+  showToast('Generando Word...');
+  var cid  = activeProcesoCursoId;
+  var c    = getCurso(cid);
+  var list = studentsOf(cid).slice().sort(function(a,b){ return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'); });
+  var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+  if (!regs.length) { showToast('Sin registros para exportar'); return; }
+  try {
+    var D = docx; var W = 9360;
+    var bdr = {style:D.BorderStyle.SINGLE,size:1,color:'DDDDDD'};
+    var B = {top:bdr,bottom:bdr,left:bdr,right:bdr};
+    var NB = {top:{style:D.BorderStyle.NONE,size:0,color:'FFF'},bottom:{style:D.BorderStyle.NONE,size:0,color:'FFF'},left:{style:D.BorderStyle.NONE,size:0,color:'FFF'},right:{style:D.BorderStyle.NONE,size:0,color:'FFF'}};
+    var mk = function(text, opts) {
+      opts = opts || {};
+      return new D.TableCell({borders:opts.nb?NB:B, width:opts.w?{size:opts.w,type:D.WidthType.DXA}:undefined,
+        shading:{fill:opts.bg||'FFFFFF',type:D.ShadingType.CLEAR}, verticalAlign:D.VerticalAlign.CENTER,
+        margins:{top:80,bottom:80,left:120,right:120},
+        children:[new D.Paragraph({alignment:opts.align||D.AlignmentType.CENTER,
+          children:[new D.TextRun({text:String(text||''),bold:opts.bold||false,color:opts.color||'1A1A2E',size:opts.size||18,font:'Arial'})]})]});
+    };
+    var cW = Math.max(500, Math.floor((W-3600)/Math.max(regs.length,1)));
+    var curso = c ? c.nombre + (c.materia?' · '+c.materia:'') : 'Curso';
+    var hdrRow = new D.TableRow({children:[
+      mk('#',{bg:'2D3561',bold:true,color:'FFFFFF',w:400}),
+      mk('Apellido y Nombre',{bg:'2D3561',bold:true,color:'FFFFFF',w:3200,align:D.AlignmentType.LEFT})
+    ].concat(regs.map(function(r){ return mk(fmt(r.fecha)+' '+r.nombre,{bg:'2D3561',bold:true,color:'FFFFFF',w:cW,size:15}); }))});
+    var rows = [hdrRow].concat(list.map(function(st,i){
+      var bg = i%2===0?'FFFFFF':'F7F9FC';
+      return new D.TableRow({children:[
+        mk(String(i+1).padStart(2,'0'),{bg:'F0EDE4',color:'2D3561',bold:true,w:400,size:15}),
+        mk(st.apellido?st.apellido+', '+st.nombre:st.nombre,{bg:bg,color:'1A1A2E',align:D.AlignmentType.LEFT,w:3200})
+      ].concat(regs.map(function(r){
+        var val = procesoData[cid]&&procesoData[cid][st.id]?procesoData[cid][st.id][r.id]:undefined;
+        var display = val!=null?String(val):'—';
+        return mk(display,{bg:bg,bold:val!=null,w:cW,size:val!=null?19:15});
+      }))});
+    }));
+    var tabla = new D.Table({width:{size:W,type:D.WidthType.DXA},columnWidths:[400,3200].concat(regs.map(function(){ return cW; })),rows:rows});
+    var sp = new D.Paragraph({children:[new D.TextRun({text:'',size:12})]});
+    var doc = new D.Document({sections:[{properties:{},children:[
+      new D.Paragraph({children:[new D.TextRun({text:'AsistApp - Registro de Proceso - '+curso,bold:true,size:28,font:'Arial'})]}),
+      new D.Paragraph({children:[new D.TextRun({text:'Generado: '+new Date().toLocaleDateString('es-AR'),size:18,font:'Arial',color:'9CA3AF'})]}),
+      sp, tabla, sp,
+      new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'Desarrollado por DIGITAL SHOP · AsistApp',size:14,color:'9CA3AF',font:'Georgia'})]})
+    ]}]});
+    var blob = await D.Packer.toBlob(doc);
+    var fname = 'Proceso_' + (c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso') + '_' + new Date().toISOString().slice(0,10) + '.docx';
+    showShareModal(blob, fname);
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// Alias para compatibilidad con showView
+function procRenderGrid() { procMostrarGrid(); }
+
+
+async function enterApp(userName) {
+
+  // Verificar suscripción consultando directamente la tabla profiles
+  if (_sbUserId && _sbToken) {
+    try {
+      // El admin siempre tiene acceso — nunca mostrar paywall
+      const currentEmail = _sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '';
+      if (currentEmail === ADMIN_EMAIL) {
+        // Admin: pasar directo sin chequeo de suscripción, y forzar rol profesor
+        _userRole = 'profesor';
+      } else {
+        // Intentar refrescar token
+        await sbRefreshToken().catch(()=>false);
+        // Consultar perfil usando el token actualizado
+        const profileRes = await fetch(
+          SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended,subscription_status,subscription_expires_at',
+          { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
+        );
+        // Si hay error de red o servidor, dejar pasar (no penalizar al usuario)
+        // Solo mostrar paywall si definitivamente NO tiene suscripción activa
+        if (profileRes.ok) {
+          const profileArr = await profileRes.json();
+          if (profileArr && profileArr.length) {
+            const profile = profileArr[0];
+            if (profile.suspended === true) {
+              localStorage.removeItem('aa_sb_session');
+              _sbToken = null; _sbUserId = null;
+              showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
+              return;
+            }
+            const status = profile.subscription_status;
+            const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+            const now = new Date();
+            const GRACE_DAYS = 5;
+            const isActive = status === 'active' && (!expires || expires >= now);
+            const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
+            // Si status es null/undefined/trial = pendiente de webhook → no bloquear
+            const isDefinitelyInactive = (status === 'expired') || 
+              (status === 'active' && expires && expires < now) ||
+              (status === 'pending' && expires && expires < now);
+            let inGrace = false, graceDaysLeft = 0;
+            if (isExpired && expires) {
+              const diffDays = Math.floor((now - expires) / 86400000);
+              if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
+            }
+            if (isDefinitelyInactive && !inGrace) { showPaywall(userName, isExpired); return; }
+            if (!isActive && !isDefinitelyInactive && !inGrace) {
+              // Status ambiguo (null, pending sin expiración) → dejar entrar sin bloquear
+              // El botón "Ya pagué" puede usarse para verificar manualmente
+            }
+            if (inGrace) {
+              const userEmail = currentEmail;
+              emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
+              showGraceModal(userName, graceDaysLeft);
+            }
+          } else {
+            // Sin perfil en Supabase → mostrar paywall (usuario nuevo sin suscripción)
+            showPaywall(userName, false); return;
+          }
+        }
+        // Si profileRes no es ok (error de red, 5xx, token issue) → dejar entrar
+        // para no bloquear usuarios activos por problemas de conectividad
+      }
+    } catch(e) {
+      // Error inesperado (red caída, JSON inválido, etc.) → no mostrar paywall
+      // Solo bloquear si hay certeza de que no tiene suscripción
+      console.warn('[AsistApp] Error en chequeo de suscripción, permitiendo acceso:', e.message);
+    }
+  }
+  document.getElementById('header-user').textContent = '👤 ' + userName;
+  document.getElementById('header-user').style.display = 'inline-flex';
+  document.getElementById('btn-logout').style.display  = 'inline-flex';
+  updateToggleRoleBtn();
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-wrapper').classList.add('visible');
+  const savedSession = localStorage.getItem('aa_sb_session');
+  const session = savedSession ? JSON.parse(savedSession) : null;
+  const isAdmin = session && (await getSessionEmail()) === ADMIN_EMAIL;
+  const adminBtn = document.getElementById('nav-admin');
+  if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+  showAppLoading(true);
+  await loadAllData();
+  showAppLoading(false);
+  setTodayDate();
+  renderCursosGrid();
+  syncSelects();
+  applyRoleUI();
+  // Restaurar la vista donde estaba el usuario antes de recargar
+  try {
+    const lastView = localStorage.getItem('aa_last_view');
+    if (lastView && lastView !== 'cursos') {
+      const btn = document.querySelector('.nav-btn[onclick*="' + lastView + '"]');
+      showView(lastView, btn || null);
+    } else {
+      renderCursosGrid();
+    }
+  } catch(e) {
+    console.warn('Error restaurando vista:', e);
+    renderCursosGrid();
+  }
+}
+
+function showAppLoading(on) {
+  let el = document.getElementById('app-loading');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'app-loading';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,243,0.85);z-index:99;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:Nunito,sans-serif;font-weight:700;color:#0f9b8e;font-size:1rem;backdrop-filter:blur(2px)';
+    el.innerHTML = '<div style="font-size:2.5rem;animation:spin 1s linear infinite">⏳</div><span>Cargando datos...</span>';
+    document.body.appendChild(el);
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  el.style.display = on ? 'flex' : 'none';
+}
+
+async function doLogout() {
+  localStorage.removeItem('aa_sb_session');
+  localStorage.removeItem('aa_last_view');
+  _sbToken=null; _sbUserId=null; _sbSession=null;
+  cursos=[]; students=[]; attendance={}; procesoData={}; procesoRegistros={}; activeProcesoCursoId=null;
+  activeCursoId=null; activeQrId=null; activeScanId=null; activePlanillaId=null;
+  stopScanner();
+  // Ocultar paywall si estaba visible
+  const paywall = document.getElementById('paywall-screen-main');
+  if (paywall) paywall.style.cssText = 'display:none';
+  // Ocultar app-wrapper
+  const appWrapper = document.getElementById('app-wrapper');
+  if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = ''; }
+  // Mostrar login (remover todos los estilos inline que showPaywall pudo haber puesto)
+  const loginScreen = document.getElementById('login-screen');
+  if (loginScreen) { loginScreen.classList.remove('hidden'); loginScreen.style.display = ''; }
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').classList.remove('show');
+  switchLoginTab('login');
+}
+
+// ════════════════════════════════════════
+// DATA LAYER — Supabase REST
+// ════════════════════════════════════════
+async function loadAllData() {
+  if (!_sbUserId) return;
+  try {
+    const [c, s, a] = await Promise.all([
+      sbFetch(`cursos?user_id=eq.${_sbUserId}&order=created_at.asc`),
+      sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
+      sbFetch(`attendance?user_id=eq.${_sbUserId}`)
+    ]);
+    const todosLosCursos = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e',rol:(r.rol==='docente'?'profesor':r.rol)||'profesor'}));
+    cursos = todosLosCursos.filter(r => r.rol === _userRole);
+    students = s.map(r => ({id:r.id,cursoId:r.curso_id,apellido:r.apellido||'',nombre:r.nombre||'',full:r.full_name||'',emailAlumno:r.email_alumno||'',emailPadre:r.email_padre||'',emailFamilia:r.email_padre||'',whatsappFamilia:r.whatsapp_familia||''}));
+    attendance = {};
+    a.forEach(r => {
+      if (!attendance[r.student_id]) attendance[r.student_id] = {};
+      attendance[r.student_id][r.fecha] = r.estado === 'P' ? true : r.estado;
+    });
+  } catch(e) { console.error('loadAllData error:', e); showToast('⚠ Error cargando datos: ' + e.message); }
+}
+
+async function sbSaveCurso(c) {
+  await sbFetch('cursos',{method:'POST',prefer:'return=minimal',body:{id:c.id,user_id:_sbUserId,nombre:c.nombre,materia:c.materia||null,docente:c.docente||null,color:c.color,rol:c.rol||_userRole}});
+}
+async function sbDeleteCurso(id) {
+  await sbFetch(`cursos?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
+}
+async function sbSaveStudent(s) {
+  await sbFetch('students',{method:'POST',prefer:'return=minimal',body:{id:s.id,user_id:_sbUserId,curso_id:s.cursoId,apellido:s.apellido||null,nombre:s.nombre||null,full_name:s.full,email_alumno:s.emailAlumno||null,email_padre:s.emailPadre||null,whatsapp_familia:s.whatsappFamilia||null}});
+}
+async function sbDeleteStudent(id) {
+  await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
+}
+async function sbDeleteStudentsByCurso(cursoId) {
+  await sbFetch(`students?curso_id=eq.${cursoId}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
+}
+async function sbSaveAttendance(studentId, fecha, estado) {
+  const estadoStr = estado === true ? 'P' : estado;
+  try {
+    await sbFetch('attendance',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{student_id:studentId,user_id:_sbUserId,fecha,estado:estadoStr}});
+  } catch(e) {
+    // Si falla por duplicado (409), intentar PATCH para actualizar el registro existente
+    if (e.message && (e.message.includes('duplicate') || e.message.includes('409') || e.message.includes('unique'))) {
+      await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`,
+        {method:'PATCH', prefer:'return=minimal', body:{estado:estadoStr}});
+    } else {
+      throw e;
+    }
+  }
+}
+async function sbDeleteAttendance(studentId, fecha) {
+  await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
+}
+
+// ════════════════════════════════════════
+// OFFLINE MODE & SYNC
+// ════════════════════════════════════════
+let isOnline = navigator.onLine;
+let pendingSync = [];
+
+function initOfflineMode() {
+  try { pendingSync = JSON.parse(localStorage.getItem('aa_pending_sync')||'[]'); } catch(e) { pendingSync = []; }
+  updateOfflineBanner();
+  window.addEventListener('online',  () => { isOnline = true;  updateOfflineBanner(); syncPending(); });
+  window.addEventListener('offline', () => { isOnline = false; updateOfflineBanner(); });
+  // Al volver al tab en mobile: refrescar token y sincronizar pendientes
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isOnline && _sbToken) {
+      sbRefreshToken().catch(()=>{}).then(() => {
+        if (pendingSync.length > 0) syncPending();
+      });
+    }
+  });
+}
+
+function updateOfflineBanner() {
+  const banner = document.getElementById('offline-banner'); if (!banner) return;
+  if (!isOnline) {
+    banner.classList.add('show');
+    const pc = document.getElementById('pending-count-banner');
+    if (pc && pendingSync.length > 0) pc.textContent = ` (${pendingSync.length} pendientes)`;
+  } else { banner.classList.remove('show'); }
+}
+
+function queueSync(studentId, fecha, estado) {
+  pendingSync = pendingSync.filter(p => !(p.studentId===studentId && p.fecha===fecha));
+  pendingSync.push({studentId, fecha, estado, ts: Date.now()});
+  localStorage.setItem('aa_pending_sync', JSON.stringify(pendingSync));
+  updateOfflineBanner();
+}
+
+async function syncPending() {
+  if (!isOnline || pendingSync.length === 0) return;
+  // Refrescar token antes de sincronizar
+  await sbRefreshToken().catch(()=>{});
+  const queue = [...pendingSync];
+  let synced = 0;
+  for (const item of queue) {
+    try {
+      if (item.estado === null) await sbFetch(`attendance?student_id=eq.${item.studentId}&fecha=eq.${item.fecha}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
+      else await sbSaveAttendance(item.studentId, item.fecha, item.estado);
+      pendingSync = pendingSync.filter(p => !(p.studentId===item.studentId && p.fecha===item.fecha));
+      synced++;
+    } catch(e) {}
+  }
+  localStorage.setItem('aa_pending_sync', JSON.stringify(pendingSync));
+  if (synced > 0) showToast(`✅ ${synced} registro${synced!==1?'s':''} sincronizado${synced!==1?'s':''}`);
+}
+
+// ════════════════════════════════════════
+// CONSECUTIVE ABSENCES
+// ════════════════════════════════════════
+function getConsecutiveAbsences(studentId) {
+  const att = attendance[studentId] || {};
+  const dates = Object.keys(att).sort().reverse();
+  let count = 0;
+  for (const d of dates) { if (att[d] === 'A') count++; else break; }
+  return count;
+}
+
+// ════════════════════════════════════════
+// OBSERVATIONS
+// ════════════════════════════════════════
+let observations = {};
+
+function loadObservations() {
+  try { observations = JSON.parse(localStorage.getItem('aa_observations')||'{}'); } catch(e) { observations = {}; }
+}
+function saveObservations() {
+  localStorage.setItem('aa_observations', JSON.stringify(observations));
+}
+function getObservationCount(studentId) {
+  return (observations[studentId]||[]).length;
+}
+
+let obsCurrentStudentId = null;
+let obsCurrentFiles = [];
+let obsCurrentCategory = 'general';
+
+const CAT_INFO = {
+  general:   { label:'📋 General',     cls:'cat-general' },
+  academico: { label:'📚 Académico',   cls:'cat-academico' },
+  conducta:  { label:'⚠️ Conducta',    cls:'cat-conducta' },
+  salud:     { label:'🏥 Salud',       cls:'cat-salud' },
+  logro:     { label:'⭐ Logro',        cls:'cat-logro' },
+  familia:   { label:'👨‍👩‍👧 Familia',   cls:'cat-familia' }
+};
+
+function selectCat(cat, el) {
+  obsCurrentCategory = cat;
+  document.querySelectorAll('.cat-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ─── EMOJI PICKER ───
+const EMOJIS = ['😊','😄','😃','🎉','✅','⚠️','❌','📚','📋','💡','🌟','⭐','🏆','👍','👎','👏','🙌','😢','😔','😤','🤒','🏥','👨‍👩‍👧','💬','📝','🔔','📌','🔴','🟡','🟢'];
+
+function initEmojiPicker() {
+  const picker = document.getElementById('obs-emoji-picker');
+  picker.innerHTML = '';
+  EMOJIS.forEach(em => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-btn-item';
+    btn.textContent = em;
+    btn.onclick = (e) => { e.stopPropagation(); insertEmoji(em); };
+    picker.appendChild(btn);
+  });
+}
+
+function toggleEmojiPicker(e) {
+  e.stopPropagation();
+  const picker = document.getElementById('obs-emoji-picker');
+  picker.classList.toggle('open');
+  // Position near the button
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const modalRect = document.getElementById('obs-modal').getBoundingClientRect();
+  picker.style.position = 'absolute';
+  picker.style.bottom = 'auto';
+  picker.style.top = (rect.bottom - modalRect.top + 8) + 'px';
+  picker.style.left = (rect.left - modalRect.left) + 'px';
+}
+
+function insertEmoji(emoji) {
+  const ta = document.getElementById('obs-text-input');
+  const start = ta.selectionStart || 0;
+  const end   = ta.selectionEnd   || 0;
+  ta.value = ta.value.substring(0, start) + emoji + ta.value.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + emoji.length;
+  ta.focus();
+  document.getElementById('obs-emoji-picker').classList.remove('open');
+}
+
+// Close emoji picker on outside click
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('obs-emoji-picker');
+  if (picker && !picker.contains(e.target) && !e.target.classList.contains('emoji-trigger')) {
+    picker.classList.remove('open');
+  }
+});
+
+function openObservations(studentId) {
+  const s = students.find(x=>x.id===studentId); if (!s) return;
+  obsCurrentStudentId = studentId;
+  obsCurrentFiles = [];
+  obsCurrentCategory = 'general';
+  document.getElementById('obs-student-name').textContent = s.full;
+  document.getElementById('obs-text-input').value = '';
+  document.getElementById('obs-file-preview').innerHTML = '';
+  renderObsList(studentId);
+
+  document.getElementById('obs-modal').classList.add('open');
+}
+
+function renderObsList(studentId) {
+  const list = (observations[studentId]||[]).slice().reverse();
+  const el = document.getElementById('obs-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;color:#9ca3af;font-size:0.85rem;padding:1rem">Sin observaciones registradas</div>';
+    return;
+  }
+  el.innerHTML = list.map((obs, idx) => {
+    const realIdx = (observations[studentId]||[]).length - 1 - idx;
+    const cat = CAT_INFO[obs.category||'general'] || CAT_INFO.general;
+    const filesHtml = (obs.files||[]).map(f => {
+      if (f.type && f.type.startsWith('image/')) {
+        return `<img src="${f.data}" class="obs-file-thumb" onclick="openObsLightbox('${f.data.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}')" title="🔍 ${f.name} — clic para ampliar">`;
+      } else if (f.type && f.type.startsWith('audio/')) {
+        return `<div class="obs-file-doc">🎵 ${f.name}<audio controls src="${f.data}" style="height:24px;margin-left:6px"></audio></div>`;
+      } else {
+        return `<div class="obs-file-doc" onclick="downloadObsFile('${studentId}',${realIdx},'${f.name}')">📄 ${f.name}</div>`;
+      }
+    }).join('');
+    return `<div class="obs-entry">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="obs-entry-date">${obs.date}${obs.time?' · '+obs.time:''}</span>
+        <span style="margin-left:auto;display:flex;gap:6px">
+          <button onclick="editObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--teal);font-size:0.75rem;font-weight:700">✏️ Editar</button>
+          <button onclick="deleteObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--rose);font-size:0.75rem;font-weight:700">✕ Eliminar</button>
+        </span>
+      </div>
+      <div class="obs-entry-text">${obs.text||''}</div>
+      ${filesHtml ? `<div class="obs-entry-files">${filesHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function obsPreviewFiles(input) {
+  const preview = document.getElementById('obs-file-preview');
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      obsCurrentFiles.push({name:file.name,type:file.type,data:e.target.result});
+      if (file.type.startsWith('image/')) {
+        const img = document.createElement('img'); img.src = e.target.result; img.className = 'obs-file-thumb'; preview.appendChild(img);
+      } else {
+        const d = document.createElement('div'); d.className = 'obs-file-doc'; d.textContent = (file.type.startsWith('audio/')?'🎵 ':'📄 ')+file.name; preview.appendChild(d);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function openObsLightbox(src, name) {
+  const lb  = document.getElementById('obs-lightbox');
+  const img = document.getElementById('obs-lightbox-img');
+  img.src = src;
+  img.alt = name || 'Imagen adjunta';
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeObsLightbox() {
+  document.getElementById('obs-lightbox').classList.remove('open');
+  document.getElementById('obs-lightbox-img').src = '';
+  document.body.style.overflow = '';
+}
+
+function saveObservation() {
+  const text = document.getElementById('obs-text-input').value.trim();
+  if (!text && obsCurrentFiles.length === 0) { showToast('⚠ Escribí una observación o adjuntá un archivo'); return; }
+  if (!observations[obsCurrentStudentId]) observations[obsCurrentStudentId] = [];
+  const now = new Date();
+  observations[obsCurrentStudentId].push({
+    id: Date.now(),
+    date: now.toLocaleDateString('es-AR'),
+    time: now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),
+    text,
+    category: obsCurrentCategory,
+    files: [...obsCurrentFiles]
+  });
+  saveObservations();
+  obsCurrentFiles = [];
+  document.getElementById('obs-text-input').value = '';
+  document.getElementById('obs-file-preview').innerHTML = '';
+  obsCurrentCategory = 'general';
+  document.querySelectorAll('.cat-opt').forEach(e=>e.classList.remove('selected'));
+  const g = document.querySelector('.cat-opt[data-cat="general"]'); if(g) g.classList.add('selected');
+  renderObsList(obsCurrentStudentId);
+  renderStudentList();
+  showToast('✅ Observación guardada');
+}
+
+function deleteObservation(studentId, idx) {
+  if (!observations[studentId]) return;
+  observations[studentId].splice(idx, 1);
+  saveObservations();
+  renderObsList(studentId);
+  renderStudentList();
+}
+
+function editObservation(studentId, idx) {
+  const obs = (observations[studentId]||[])[idx]; if (!obs) return;
+  const newText = prompt('Editá la observación:', obs.text);
+  if (newText === null) return;
+  observations[studentId][idx].text = newText.trim();
+  saveObservations();
+  renderObsList(studentId);
+}
+
+function downloadObsFile(studentId, idx, fileName) {
+  const obs = (observations[studentId]||[])[idx]; if (!obs) return;
+  const file = (obs.files||[]).find(f=>f.name===fileName); if (!file) return;
+  const a = document.createElement('a'); a.href = file.data; a.download = file.name; a.click();
+}
+
+// ─── EXPORT OBSERVATIONS PDF ───
+function exportObsPDF() {
+  if (!obsCurrentStudentId) return;
+  const s = students.find(x=>x.id===obsCurrentStudentId);
+  const c = s ? getCurso(s.cursoId) : null;
+  const list = (observations[obsCurrentStudentId]||[]).slice().reverse(); // newest first
+  if (!list.length) { showToast('⚠ Sin observaciones para exportar'); return; }
+
+  const now = new Date().toLocaleDateString('es-AR');
+
+  const obsHTML = list.map((obs, i) => {
+    const fileImgs = (obs.files||[]).filter(f=>f.type&&f.type.startsWith('image/')).map(f=>
+      `<img src="${f.data}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:3px">`
+    ).join('');
+    const safeText = (obs.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div style="border-left:4px solid #0f9b8e;background:#fafafa;border-radius:6px;padding:12px 16px;margin-bottom:14px;page-break-inside:avoid">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="background:#0f9b8e;color:white;font-family:'Barlow Condensed',Arial,sans-serif;font-size:13px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:0.3px">${obs.date}${obs.time?' · '+obs.time:''}</span>
+        <span style="margin-left:auto;font-size:10px;color:#aaa;font-weight:700">Registro #${list.length - i}</span>
+      </div>
+      <p style="margin:0;font-size:13px;line-height:1.65;color:#1a1a2e;white-space:pre-wrap">${safeText}</p>
+      ${fileImgs?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${fileImgs}</div>`:''}
+    </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Observaciones — ${s?s.full:''}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Nunito:wght@400;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Nunito', Arial, sans-serif; margin: 0; padding: 0; color: #1a1a2e; }
+    .page { max-width: 800px; margin: 0 auto; padding: 2rem 2.5rem; }
+    @media print { body { margin: 0; } .no-print { display: none; } }
+  </style>
+  </head><body>
+  <div class="page">
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0f9b8e;padding-bottom:14px;margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.9rem;line-height:1">📋</span>
+        <div>
+          <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.65rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">Asist<span style="color:#1bc5b4">App</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Registro de Observaciones</div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#6b7280;line-height:1.6;font-family:'Nunito',sans-serif">
+        <div style="font-weight:800;color:#1a1a2e;font-size:15px">${s?s.full:''}</div>
+        ${c?`<div style="color:#0f9b8e;font-weight:700">${c.nombre}${c.materia?' — '+c.materia:''}</div>`:''}
+        <div>Emitido: ${now}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;display:flex;gap:10px">
+      <span style="background:#e8f4f2;color:#0f9b8e;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid #0f9b8e40">${list.length} registro${list.length!==1?'s':''}</span>
+    </div>
+    ${obsHTML}
+    <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
+      <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
+      <span>Sistema de Asistencia Digital</span>
+      <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
+    </div>
+  </div>
+  <script>window.onload = function(){ window.print(); }<\/script>
+  </body></html>`;
+
+  const w = window.open('', '_blank', 'width=900,height=700');
+  if (w) { w.document.write(html); w.document.close(); }
+  else showToast('⚠ Activá las ventanas emergentes para exportar el PDF');
+}
+
+// ════════════════════════════════════════
+// ADMIN PANEL
+// ════════════════════════════════════════
+async function getSessionEmail() {
+  try {
+    const res = await fetch(SUPA_URL+'/auth/v1/user',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+_sbToken}});
+    const data = await res.json();
+    return data.email || '';
+  } catch(e) { return ''; }
+}
+
+async function loadAdminUsers() {
+  const el = document.getElementById('admin-users-list'); if (!el) return;
+  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Cargando...</div>';
+  try {
+    // Try to refresh token first if needed
+    await sbRefreshToken();
+    const users       = await sbFetch('admin_users?select=id,name,email,created_at,suspended&order=created_at.desc');
+    const cursosAll   = await sbFetch('cursos?select=id,user_id');
+    const studentsAll = await sbFetch('students?select=id,user_id');
+    if (!users.length) { el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">Sin usuarios registrados</div>'; return; }
+    const rows = users.map(p => {
+      const nCursos   = cursosAll.filter(c=>c.user_id===p.id).length;
+      const nStudents = studentsAll.filter(s=>s.user_id===p.id).length;
+      const fecha     = p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—';
+      const esAdmin   = p.email === ADMIN_EMAIL;
+      const isSuspended = p.suspended;
+      const acciones = esAdmin
+        ? '<span style="color:#9ca3af;font-size:0.8rem">— Admin —</span>'
+        : `<div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${isSuspended
+              ? `<button class="btn btn-sm" style="background:var(--success);color:white;border-color:var(--success)" onclick="adminToggleSuspend('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}',false)">✅ Reactivar</button>`
+              : `<button class="btn btn-sm" style="background:var(--gold);color:white;border-color:var(--gold)" onclick="adminToggleSuspend('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}',true)">🚫 Suspender</button>`
+            }
+            <button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}','${p.email||''}')">🗑 Eliminar</button>
+           </div>`;
+      return `<tr>
+        <td style="font-weight:700">${p.name||'—'} ${esAdmin?'<span class="admin-badge badge-admin">ADMIN</span>':''}</td>
+        <td style="font-size:0.8rem;color:#6b7280">${p.email||'—'}</td>
+        <td>${fecha}</td>
+        <td style="text-align:center"><strong>${nCursos}</strong></td>
+        <td style="text-align:center"><strong>${nStudents}</strong></td>
+        <td>${acciones}</td>
+      </tr>`;
+    }).join('');
+    el.innerHTML = `
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
+        <table class="admin-table">
+          <thead><tr><th>Nombre</th><th>Email</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acciones</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem;color:#9ca3af;margin-top:0.8rem;font-weight:600">Total: ${users.length} usuario${users.length!==1?'s':''} &nbsp;·&nbsp; Para desactivar el acceso de un usuario, eliminá sus datos y luego eliminalo en Supabase Auth.</p>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div>
+      <div style="margin-top:0.5rem;font-size:0.85rem;color:#6b7280">Si el error es de autenticación, intentá cerrar sesión y volver a ingresar.</div>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Reintentar</button>`;
+  }
+}
+
+async function adminToggleSuspend(userId, userName, suspend) {
+  const ok = await showConfirm(
+    `${suspend ? 'Suspender' : 'Reactivar'} a "${userName}"?`,
+    suspend ? 'El usuario no podrá iniciar sesión hasta que lo reactives.' : 'El usuario podrá volver a iniciar sesión normalmente.',
+    suspend ? '🚫' : '✅',
+    suspend ? 'Suspender cuenta' : 'Reactivar cuenta',
+    suspend ? 'btn-danger' : 'btn-primary'
+  );
+  if (!ok) return;
+  try {
+    // Llamar a función RPC que ejecuta con privilegios elevados
+    const res = await fetch(SUPA_URL + '/rest/v1/rpc/admin_set_suspended', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + _sbToken,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ target_user_id: userId, suspended_val: suspend })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.hint || 'Error desconocido');
+    }
+    showToast(suspend ? `🚫 ${userName} suspendido` : `✅ ${userName} reactivado`);
+    loadAdminUsers();
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+  }
+}
+
+async function adminDeleteUser(userId, userName, userEmail) {
+  const ok = await showConfirm(
+    `¿Eliminar completamente a "${userName}"?`,
+    `Se borrarán TODOS sus datos (cursos, nóminas, asistencias) y su acceso al sistema. Esta acción es irreversible.`,
+    '🗑️', 'Eliminar usuario', 'btn-danger'
+  );
+  if (!ok) return;
+
+  const el = document.getElementById('admin-users-list');
+  el.innerHTML = `<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Eliminando usuario ${userName}...</div>`;
+
+  try {
+    const SUPABASE_URL = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${_sbToken}`,
+        'apikey': SUPABASE_ANON
+      },
+      body: JSON.stringify({ userId })
+    });
+
+    let data;
+    try { data = await res.json(); } catch(e) { data = { error: 'Respuesta inválida del servidor (status ' + res.status + ')' }; }
+
+    if (!res.ok || data.error) {
+      const detail = data.details ? '<br><small style="color:#9ca3af">' + data.details.join('<br>') + '</small>' : '';
+      el.innerHTML = `<div style="background:#fde8ec;border-radius:12px;padding:1.2rem;border:1px solid var(--rose);margin-bottom:1rem">
+        <div style="font-weight:800;color:var(--rose);margin-bottom:0.5rem">⚠️ Error al eliminar</div>
+        <p style="font-size:0.85rem;color:#6b7280">${data.error || 'Error desconocido'} (HTTP ${res.status})${detail}</p>
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Actualizar lista</button>
+      </div>`;
+      return;
+    }
+
+    showToast('✅ Usuario eliminado completamente: ' + userName);
+    setTimeout(() => loadAdminUsers(), 800);
+
+  } catch(e) {
+    el.innerHTML = `<div style="background:#fde8ec;border-radius:12px;padding:1.2rem;border:1px solid var(--rose);margin-bottom:1rem">
+      <div style="font-weight:800;color:var(--rose);margin-bottom:0.5rem">⚠️ Error de conexión</div>
+      <p style="font-size:0.85rem;color:#6b7280">${e.message}</p>
+      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Reintentar</button>
+    </div>`;
+  }
+}
+
+const _origShowView = showView;
+window.showView = function(id, btn) {
+  _origShowView(id, btn);
+  if (id === 'admin') loadAdminUsers();
+  // Persistir la vista activa para restaurar tras recarga
+  try { localStorage.setItem('aa_last_view', id); } catch(e) {}
+};
+
+
+// Re-chequeo de suscripción desde el paywall (para usuarios que ya pagaron)
+async function recheckSubscription() {
+  const btn = document.querySelector('#paywall-screen-main button[onclick="recheckSubscription()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ VERIFICANDO...'; }
+
+  // Si no hay userId/token, intentar recuperar de localStorage
+  if (!_sbUserId || !_sbToken) {
+    const saved = localStorage.getItem('aa_sb_session');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        _sbToken = s.token; _sbUserId = s.userId;
+      } catch(e) {}
+    }
+  }
+
+  if (!_sbUserId) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+    showToast('⚠ Sesión no encontrada. Cerrá sesión e ingresá de nuevo.');
+    return;
+  }
+
+  try {
+    // Siempre refrescar el token antes de consultar
+    await sbRefreshToken().catch(()=>{});
+
+    const profileRes = await fetch(
+      SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=subscription_status,subscription_expires_at',
+      { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
+    );
+
+    if (!profileRes.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+      showToast('❌ Error al consultar. Cerrá sesión e ingresá de nuevo.');
+      return;
+    }
+
+    const arr = await profileRes.json();
+    if (!arr || !arr.length) {
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+      showToast('❌ No se encontró tu perfil. Contactá a soporte.');
+      return;
+    }
+
+    const profile = arr[0];
+    const status  = profile.subscription_status;
+    const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+    const now     = new Date();
+    const isActive = status === 'active' && (!expires || expires >= now);
+
+    if (isActive) {
+      // ✅ Suscripción activa — ocultar paywall y entrar
+      const paywall = document.getElementById('paywall-screen-main');
+      if (paywall) paywall.style.cssText = 'display:none !important';
+      const loginScreen = document.getElementById('login-screen');
+      if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
+      const appWrapper = document.getElementById('app-wrapper');
+      if (appWrapper) { appWrapper.style.display = ''; appWrapper.classList.add('visible'); }
+      // Nombre del usuario
+      const saved = localStorage.getItem('aa_sb_session');
+      const sess  = saved ? JSON.parse(saved) : null;
+      const uName = sess?.name || 'Usuario';
+      document.getElementById('header-user').textContent = '👤 ' + uName;
+      document.getElementById('header-user').style.display = 'inline-flex';
+      document.getElementById('btn-logout').style.display  = 'inline-flex';
+      updateToggleRoleBtn();
+      showAppLoading(true);
+      await loadAllData();
+      showAppLoading(false);
+      setTodayDate();
+      renderCursosGrid();
+      syncSelects();
+      applyRoleUI();
+      showToast('✅ ¡Suscripción verificada! Bienvenido/a ' + uName + '.');
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+      showToast('⏳ Pago aún no procesado. Esperá unos minutos e intentá de nuevo.');
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
+    showToast('❌ Error de conexión. Verificá tu internet.');
+  }
+}
+
+// ════════════════════════════════════════
+// PAYWALL
+// ════════════════════════════════════════
+const MP_PLAN_ID = '9344e4199be045509b8c6a0e3ffe3083';
+
+function showPaywall(userName, isExpired) {
+  // NO borrar la sesión aquí — el usuario puede haber pagado y necesita
+  // poder re-chequear sin volver a loguearse. Se borra solo en doLogout.
+  // Ocultar todo lo demás
+  const appWrapper = document.getElementById('app-wrapper');
+  if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = 'none'; }
+  const loginScreen = document.getElementById('login-screen');
+  if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
+  const msg = document.getElementById('paywall-msg-main');
+  if (msg) {
+    msg.textContent = isExpired
+      ? `Tu suscripción venció, ${userName}. Renovála para seguir usando AsistApp.`
+      : `Bienvenido/a ${userName}. Para acceder a AsistApp activá tu suscripción mensual.`;
+  }
+  // Generar link de suscripción con email del usuario
+  const email = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '');
+  const btn = document.getElementById('btn-suscribir-main');
+  if (btn) btn.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${email}`;
+  // Mostrar paywall con style directo (más confiable que classList en algunos navegadores)
+  const paywall = document.getElementById('paywall-screen-main');
+  if (paywall) {
+    paywall.style.cssText = 'display:flex !important; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:99999; align-items:center; justify-content:center;';
+  }
+}
+
+function showGraceModal(userName, daysLeft) {
+  // Crear modal si no existe
+  if (document.getElementById("grace-modal")) { document.getElementById("grace-modal").style.display="flex"; return; }
+  const mp_link = (() => { const e = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split(".")[1]))?.email || "" : ""); return `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${e}`; })();
+  const el = document.createElement("div");
+  el.id = "grace-modal";
+  el.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;display:flex;align-items:center;justify-content:center;";
+  el.innerHTML = `<div style="background:#1e293b;border:1px solid rgba(251,191,36,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="font-size:3rem;margin-bottom:1rem;">⏳</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:#fff;margin-bottom:0.5rem;">Período de gracia</div>
+    <p style="color:#cbd5e1;font-size:0.9rem;margin-bottom:1.5rem;line-height:1.6;">Hola <strong>${userName}</strong>, tu suscripción venció.<br>Tenés <strong style="color:#fbbf24;">${daysLeft} día${daysLeft!==1?"s":""} de gracia</strong> para renovarla.<br>Después de ese plazo no podrás ingresar.</p>
+    <a href="${mp_link}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:0.9rem;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;font-weight:800;font-size:1rem;border-radius:12px;text-decoration:none;margin-bottom:1rem;">💳 Renovar suscripción</a>
+    <button onclick="document.getElementById('grace-modal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:0.82rem;cursor:pointer;text-decoration:underline;">Continuar sin renovar</button>
+  </div>`;
+  document.body.appendChild(el);
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+(async function init() {
+  setTodayDate();
+  initOfflineMode();
+  loadObservations();
+  const saved = localStorage.getItem('aa_sb_session');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      _sbToken = s.token; _sbUserId = s.userId;
+      // Restaurar rol — admin siempre entra como profesor
+      const sessionEmail = s.token ? (() => { try { return JSON.parse(atob(s.token.split('.')[1]))?.email || ''; } catch(e) { return ''; } })() : '';
+      if (sessionEmail === ADMIN_EMAIL) {
+        _userRole = 'profesor';
+      } else if (s.role) {
+        _userRole = s.role === 'docente' ? 'profesor' : s.role;
+      } else {
+        const r = localStorage.getItem('aa_role');
+        if (r) _userRole = r === 'docente' ? 'profesor' : r;
+      }
+      await enterApp(s.name);
+      return;
+    } catch(e) {
+      // NO borrar la sesión por errores de red/timeout — solo si el token es inválido
+      console.warn('[AsistApp] Error en init, intentando continuar:', e.message);
+      // Solo limpiar si el token claramente expiró o es inválido (401)
+      if (e.message && (e.message.includes('401') || e.message.includes('JWT') || e.message.includes('invalid'))) {
+        localStorage.removeItem('aa_sb_session');
+      }
+      // En cualquier otro caso (red, timeout) mostrar login sin borrar
+    }
+  }
+  // Sin sesión → mostrar pantalla de login
+})();
+</script>
 <!-- ═══ PROCESO ═══ -->
 
 <div class="view" id="view-proceso">
@@ -24401,9 +25585,106 @@ function previewQRsSelected() {
   </div>
 </div>
 
+<!-- MODAL AGREGAR REGISTRO -->
+<div class="modal-overlay" id="add-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--slate)">➕ Nuevo registro</h3>
+      <button onclick="document.getElementById('add-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div class="field"><label>📅 Fecha</label><input type="date" id="proceso-add-date"></div>
+    <div class="field"><label>📌 Nombre</label><input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3..."></div>
+    <div class="field">
+      <label>📊 Tipo</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="role-btn selected" id="ptipo-num" onclick="selectProcesoTipo('num')">🔢 Numérica</button>
+        <button class="role-btn" id="ptipo-cual" onclick="selectProcesoTipo('cual')">📋 Cualitativa</button>
+        <button class="role-btn" id="ptipo-simb" onclick="selectProcesoTipo('simb')">🎯 Simbólica</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-secondary" onclick="document.getElementById('add-proceso-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmAddProceso()">✅ Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR REGISTRO -->
+<div class="modal-overlay" id="delete-proceso-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--rose)">🗑 Eliminar registro</h3>
+      <button onclick="document.getElementById('delete-proceso-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div class="field"><label>Registro a eliminar</label><select id="delete-proceso-select" style="width:100%"><option value="">— Seleccioná —</option></select></div>
+    <div style="display:flex;gap:8px;margin-top:1rem">
+      <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('delete-proceso-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" style="flex:2" onclick="confirmDeleteProceso()">🗑 Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CALIFICAR CELDA -->
+<div class="modal-overlay" id="proceso-cell-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:380px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div>
+        <div id="pcell-student-name" style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;color:var(--slate);text-transform:uppercase;font-weight:800"></div>
+        <div id="pcell-registro-name" style="font-size:0.78rem;color:#9ca3af;margin-top:2px"></div>
+      </div>
+      <button onclick="document.getElementById('proceso-cell-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div id="pcell-num-options">
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala numérica</p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:1rem">
+        <button class="proceso-badge pnota-10" onclick="setProcesoVal(10)">10</button>
+        <button class="proceso-badge pnota-9"  onclick="setProcesoVal(9)">9</button>
+        <button class="proceso-badge pnota-8"  onclick="setProcesoVal(8)">8</button>
+        <button class="proceso-badge pnota-7"  onclick="setProcesoVal(7)">7</button>
+        <button class="proceso-badge pnota-6"  onclick="setProcesoVal(6)">6</button>
+        <button class="proceso-badge pnota-5"  onclick="setProcesoVal(5)">5</button>
+        <button class="proceso-badge pnota-4"  onclick="setProcesoVal(4)">4</button>
+        <button class="proceso-badge pnota-3"  onclick="setProcesoVal(3)">3</button>
+        <button class="proceso-badge pnota-2"  onclick="setProcesoVal(2)">2</button>
+        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
+      </div>
+    </div>
+    <div id="pcell-cual-options" style="display:none">
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala cualitativa</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:1rem">
+        <button class="proceso-badge pcual-mb_plus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('MB+')">MB+ · Muy Bueno +</button>
+        <button class="proceso-badge pcual-mb"      style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('MB')">MB · Muy Bueno</button>
+        <button class="proceso-badge pcual-b_plus"  style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('B+')">B+ · Bueno +</button>
+        <button class="proceso-badge pcual-b"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('B')">B · Bueno</button>
+        <button class="proceso-badge pcual-s"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S')">S · Suficiente</button>
+        <button class="proceso-badge pcual-s_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
+        <button class="proceso-badge pcual-i"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I')">I · Insuficiente</button>
+        <button class="proceso-badge pcual-i_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
+      </div>
+    </div>
+    <div id="pcell-simb-options" style="display:none">
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Registro simbólico</p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1rem">
+        <button class="proceso-badge psimb" title="Logrado"        onclick="setProcesoVal('✅')">✅</button>
+        <button class="proceso-badge psimb" title="No cumplió"     onclick="setProcesoVal('❌')">❌</button>
+        <button class="proceso-badge psimb" title="Pendiente"      onclick="setProcesoVal('⏳')">⏳</button>
+        <button class="proceso-badge psimb" title="Excelente"      onclick="setProcesoVal('⭐')">⭐</button>
+        <button class="proceso-badge psimb" title="Participó"      onclick="setProcesoVal('🙋')">🙋</button>
+        <button class="proceso-badge psimb" title="Muy bien"       onclick="setProcesoVal('😄')">😄</button>
+        <button class="proceso-badge psimb" title="En proceso"     onclick="setProcesoVal('🤔')">🤔</button>
+        <button class="proceso-badge psimb" title="Necesita apoyo" onclick="setProcesoVal('😟')">😟</button>
+        <button class="proceso-badge psimb" title="Entregó"        onclick="setProcesoVal('📎')">📎</button>
+        <button class="proceso-badge psimb" title="No entregó"     onclick="setProcesoVal('🚫')">🚫</button>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" style="width:100%" onclick="setProcesoVal(null)">🗑 Borrar calificación</button>
+  </div>
+</div>
+
 
 </body>
-</html>`
+</html>`;
+
     const w = window.open('', '_blank', 'width=980,height=750');
     if (w) { w.document.write(pageHTML); w.document.close(); }
     else showToast('⚠ Activá las ventanas emergentes en tu navegador');
@@ -25702,8 +26983,6 @@ function applyRoleUI() {
   if (formPreceptor) formPreceptor.style.display = isPreceptor() ? 'block' : 'none';
   if (editFormProf)  editFormProf.style.display  = isPreceptor() ? 'none' : 'block';
   if (editFormPrec)  editFormPrec.style.display  = isPreceptor() ? 'block' : 'none';
-  // Siempre actualizar el botón flotante
-  updateToggleRoleBtn();
 
   // Botón flotante de cambio de rol: siempre visible para todos
   updateToggleRoleBtn();
@@ -25736,16 +27015,6 @@ function toggleRole() {
   selectRole(newRole);
   applyRoleUI();
   updateToggleRoleBtn();
-  // Persistir el rol elegido en la sesión para que se restaure al recargar
-  try {
-    localStorage.setItem('aa_role', newRole);
-    const saved = localStorage.getItem('aa_sb_session');
-    if (saved) {
-      const s = JSON.parse(saved);
-      s.role = newRole;
-      localStorage.setItem('aa_sb_session', JSON.stringify(s));
-    }
-  } catch(e) {}
   // Recargar cursos filtrados por nuevo rol
   loadAllData().then(() => {
     renderCursosGrid();
@@ -27794,17 +29063,10 @@ function showShareModal(blob, fname) {
 }
 
 function _triggerDownload(blob, fname) {
-  // Usar FileReader para convertir a base64 y evitar el aviso HTTPS en Android
-  const reader = new FileReader();
-  reader.onloadend = function() {
-    const a = document.createElement('a');
-    a.href = reader.result;
-    a.download = fname;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-  reader.readAsDataURL(blob);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 function doShare(method) {
@@ -27853,1192 +29115,6 @@ function doShare(method) {
 }
 
 
-// ════════════════════════════════════════
-// SECCIÓN PROCESO
-// ════════════════════════════════════════
-var activeProcesoCursoId = null;
-var procesoRegistros = {};
-var procesoData = {};
-var _procesoTipo = 'num';
-var _pcellSid = null;
-var _pcellRid = null;
-
-function procListKey(cid) { return 'aa_pl_' + cid; }
-function procDataKey(cid) { return 'aa_pd_' + cid; }
-
-function procCargar(cid) {
-  try { procesoRegistros[cid] = JSON.parse(localStorage.getItem(procListKey(cid)) || '[]'); } catch(e) { procesoRegistros[cid] = []; }
-  try { procesoData[cid] = JSON.parse(localStorage.getItem(procDataKey(cid)) || '{}'); } catch(e) { procesoData[cid] = {}; }
-}
-
-function procGuardar(cid) {
-  localStorage.setItem(procListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
-  localStorage.setItem(procDataKey(cid), JSON.stringify(procesoData[cid] || {}));
-}
-
-function procMostrarGrid() {
-  activeProcesoCursoId = null;
-  var gv = document.getElementById('proc-grid-view');
-  var dv = document.getElementById('proc-detalle-view');
-  if (gv) gv.style.display = 'block';
-  if (dv) dv.style.display = 'none';
-  procRenderizarGrid();
-}
-
-function procRenderizarGrid() {
-  var grid  = document.getElementById('proc-cursos-grid');
-  var empty = document.getElementById('proc-empty');
-  if (!grid) return;
-
-  if (!cursos || cursos.length === 0) {
-    grid.innerHTML = '';
-    if (empty) empty.style.display = 'flex';
-    return;
-  }
-  if (empty) empty.style.display = 'none';
-  grid.innerHTML = '';
-
-  for (var i = 0; i < cursos.length; i++) {
-    var c = cursos[i];
-    var count = studentsOf(c.id).length;
-    var div = document.createElement('div');
-    div.className = 'curso-card';
-    div.style.cursor = 'pointer';
-    (function(curso) {
-      div.onclick = function() { procAbrirCurso(curso.id); };
-    })(c);
-    var stripe  = '<div class="curso-card-stripe" style="background:' + (c.color || '#0f9b8e') + '"></div>';
-    var nombre  = '<div class="curso-card-name">'  + c.nombre + '</div>';
-    var materia = c.materia ? '<div class="curso-card-meta">&#128214; ' + c.materia + '</div>' : '';
-    var docente = c.docente ? '<div class="curso-card-meta">&#128100; ' + c.docente + '</div>' : '';
-    var cant    = '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count !== 1 ? 's' : '') + '</div>';
-    var acciones = '<div class="curso-card-actions" style="margin-top:12px">' +
-                   '<button class="btn btn-primary btn-sm" style="flex:1">&#128221; Ver proceso</button>' +
-                   '</div>';
-    div.innerHTML = stripe + nombre + materia + docente + cant + acciones;
-    grid.appendChild(div);
-  }
-}
-
-function procAbrirCurso(cid) {
-  activeProcesoCursoId = cid;
-  var c = getCurso(cid);
-  var gv = document.getElementById('proc-grid-view');
-  var dv = document.getElementById('proc-detalle-view');
-  if (gv) gv.style.display = 'none';
-  if (dv) dv.style.display = 'block';
-
-  var titulo = document.getElementById('proc-titulo-detalle');
-  if (titulo) titulo.textContent = c ? (c.nombre + (c.materia ? ' · ' + c.materia : '')) : 'Proceso';
-
-  var barra = document.getElementById('proc-barra-curso');
-  if (barra) barra.innerHTML = buildBar(cid);
-
-  // Conectar botones
-  var btnAgregar  = document.getElementById('proc-btn-agregar');
-  var btnEliminar = document.getElementById('proc-btn-eliminar');
-  var btnWord     = document.getElementById('proc-btn-word');
-  var btnVolver   = document.getElementById('proc-volver-btn');
-  if (btnAgregar)  btnAgregar.onclick  = openAddProcesoModal;
-  if (btnEliminar) btnEliminar.onclick = openDeleteProcesoModal;
-  if (btnWord)     btnWord.onclick     = exportProcesoWord;
-  if (btnVolver)   btnVolver.onclick   = procMostrarGrid;
-
-  procCargar(cid);
-  procRenderizarTabla();
-}
-
-function procRenderizarTabla() {
-  var cid  = activeProcesoCursoId;
-  if (!cid) return;
-
-  var list = studentsOf(cid).slice().sort(function(a,b) {
-    return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'', 'es');
-  });
-  var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b) {
-    return a.fecha.localeCompare(b.fecha);
-  });
-
-  var tablaWrap  = document.getElementById('proc-tabla-wrap');
-  var sinRegs    = document.getElementById('proc-sin-registros');
-  var thead      = document.getElementById('proc-thead');
-  var tbody      = document.getElementById('proc-tbody');
-
-  if (!list.length || !regs.length) {
-    if (tablaWrap) tablaWrap.style.display = 'none';
-    if (sinRegs)   sinRegs.style.display   = !list.length ? 'none' : 'flex';
-    return;
-  }
-
-  if (tablaWrap) tablaWrap.style.display = 'block';
-  if (sinRegs)   sinRegs.style.display   = 'none';
-
-  // Cabecera
-  var thHTML = '<th style="position:sticky;left:0;z-index:3;background:var(--slate);color:white;padding:10px 8px;min-width:36px">#</th>' +
-               '<th style="position:sticky;left:36px;z-index:3;background:var(--slate);color:white;padding:10px 12px;min-width:160px">Apellido y Nombre</th>';
-  for (var r = 0; r < regs.length; r++) {
-    var reg = regs[r];
-    var icon = reg.tipo === 'num' ? '&#128290;' : reg.tipo === 'cual' ? '&#128203;' : '&#127919;';
-    thHTML += '<th class="proceso-col-header" title="' + reg.nombre + ' &middot; ' + reg.fecha + '">' +
-              fmt(reg.fecha) + '<span class="proceso-col-type">' + icon + ' ' + reg.nombre + '</span></th>';
-  }
-  thead.innerHTML = thHTML;
-
-  // Filas
-  // Construir filas usando createElement para evitar problemas de comillas
-  tbody.innerHTML = '';
-  for (var s = 0; s < list.length; s++) {
-    var st = list[s];
-    var tr = document.createElement('tr');
-    // Celda número
-    var tdNum = document.createElement('td');
-    tdNum.style.cssText = 'position:sticky;left:0;background:var(--paper);font-family:monospace;font-size:0.75rem;font-weight:700;color:var(--slate);text-align:center;padding:8px 6px';
-    tdNum.textContent = String(s+1).padStart(2,'0');
-    tr.appendChild(tdNum);
-    // Celda nombre
-    var tdNombre = document.createElement('td');
-    tdNombre.style.cssText = 'position:sticky;left:36px;background:white;font-weight:700;font-size:0.88rem;padding:8px 12px;cursor:pointer';
-    tdNombre.title = 'Ver observaciones';
-    var obs = getObservationCount(st.id);
-    tdNombre.innerHTML = (st.apellido ? st.apellido + ', ' + st.nombre : st.nombre) +
-      (obs > 0 ? '<span style="font-size:0.65rem;background:var(--mist);color:var(--teal);border-radius:6px;padding:1px 5px;border:1px solid var(--teal)">' + obs + '</span>' : '');
-    (function(sid){ tdNombre.addEventListener('click', function(){ openObservations(sid); }); })(st.id);
-    tr.appendChild(tdNombre);
-    // Celdas de registros
-    for (var rr = 0; rr < regs.length; rr++) {
-      var reg2 = regs[rr];
-      var val  = procesoData[cid] && procesoData[cid][st.id] ? procesoData[cid][st.id][reg2.id] : undefined;
-      var tdCel = document.createElement('td');
-      tdCel.style.cssText = 'text-align:center;cursor:pointer;padding:6px 4px';
-      tdCel.innerHTML = procBadge(val, reg2.tipo);
-      (function(sid, rid){ tdCel.addEventListener('click', function(){ procAbrirCelda(sid, rid); }); })(st.id, reg2.id);
-      tr.appendChild(tdCel);
-    }
-    tbody.appendChild(tr);
-  }
-
-  setTimeout(function() {
-    var w = document.querySelector('#proc-tabla-wrap .table-wrap');
-    if (w) w.scrollLeft = w.scrollWidth;
-  }, 60);
-}
-
-function procBadge(val, tipo) {
-  if (val === null || val === undefined || val === '')
-    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;color:#d1d5db;font-size:0.7rem">&#8212;</span>';
-  if (tipo === 'num') {
-    var n = parseInt(val);
-    var cls = n >= 9 ? 'pnota-10' : n === 8 ? 'pnota-8' : n === 7 ? 'pnota-7' : n === 6 ? 'pnota-6' : n === 5 ? 'pnota-5' : n === 4 ? 'pnota-4' : 'pnota-1';
-    return '<span class="proceso-badge ' + cls + '">' + val + '</span>';
-  }
-  if (tipo === 'cual') {
-    var map2 = {'MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
-    return '<span class="proceso-badge ' + (map2[val]||'') + '" style="font-size:0.7rem;padding:3px 5px">' + val + '</span>';
-  }
-  return '<span style="font-size:1.1rem">' + val + '</span>';
-}
-
-function procAbrirCelda(sid, rid) {
-  var s   = students.find(function(x){ return x.id === sid; });
-  var reg = (procesoRegistros[activeProcesoCursoId]||[]).find(function(x){ return x.id === rid; });
-  if (!s || !reg) return;
-  _pcellSid = sid;
-  _pcellRid = rid;
-  var nameEl = document.getElementById('pcell-student-name');
-  var regEl  = document.getElementById('pcell-registro-name');
-  if (nameEl) nameEl.textContent = s.apellido ? s.apellido + ', ' + s.nombre : s.nombre;
-  if (regEl)  regEl.textContent  = reg.nombre + ' · ' + fmt(reg.fecha);
-  var numOpts  = document.getElementById('pcell-num-options');
-  var cualOpts = document.getElementById('pcell-cual-options');
-  var simbOpts = document.getElementById('pcell-simb-options');
-  if (numOpts)  numOpts.style.display  = reg.tipo === 'num'  ? 'block' : 'none';
-  if (cualOpts) cualOpts.style.display = reg.tipo === 'cual' ? 'block' : 'none';
-  if (simbOpts) simbOpts.style.display = reg.tipo === 'simb' ? 'block' : 'none';
-  document.getElementById('proceso-cell-modal').classList.add('open');
-}
-
-function setProcesoVal(val) {
-  if (!_pcellSid || !_pcellRid || !activeProcesoCursoId) return;
-  var cid = activeProcesoCursoId;
-  if (!procesoData[cid]) procesoData[cid] = {};
-  if (!procesoData[cid][_pcellSid]) procesoData[cid][_pcellSid] = {};
-  if (val === null) delete procesoData[cid][_pcellSid][_pcellRid];
-  else procesoData[cid][_pcellSid][_pcellRid] = val;
-  procGuardar(cid);
-  document.getElementById('proceso-cell-modal').classList.remove('open');
-  procRenderizarTabla();
-}
-
-function selectProcesoTipo(tipo) {
-  _procesoTipo = tipo;
-  var tipos = ['num','cual','simb'];
-  for (var t = 0; t < tipos.length; t++) {
-    var el = document.getElementById('ptipo-' + tipos[t]);
-    if (el) { if (tipos[t] === tipo) el.classList.add('selected'); else el.classList.remove('selected'); }
-  }
-}
-
-function openAddProcesoModal() {
-  if (!activeProcesoCursoId) return;
-  var dateEl  = document.getElementById('proceso-add-date');
-  var nameEl  = document.getElementById('proceso-add-nombre');
-  if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
-  if (nameEl) { nameEl.value = ''; setTimeout(function(){ nameEl.focus(); }, 100); }
-  selectProcesoTipo('num');
-  document.getElementById('add-proceso-modal').classList.add('open');
-}
-
-function confirmAddProceso() {
-  var fecha  = document.getElementById('proceso-add-date').value;
-  var nombre = document.getElementById('proceso-add-nombre').value.trim();
-  if (!fecha)  { showToast('Selecciona una fecha'); return; }
-  if (!nombre) { showToast('Ingresa un nombre'); return; }
-  var cid = activeProcesoCursoId;
-  if (!procesoRegistros[cid]) procesoRegistros[cid] = [];
-  procesoRegistros[cid].push({ id: genId(), fecha: fecha, nombre: nombre, tipo: _procesoTipo });
-  if (!procesoData[cid]) procesoData[cid] = {};
-  procGuardar(cid);
-  document.getElementById('add-proceso-modal').classList.remove('open');
-  procRenderizarTabla();
-  showToast('Registro "' + nombre + '" agregado');
-}
-
-function openDeleteProcesoModal() {
-  if (!activeProcesoCursoId) return;
-  var regs = (procesoRegistros[activeProcesoCursoId] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
-  if (!regs.length) { showToast('No hay registros para eliminar'); return; }
-  var sel = document.getElementById('delete-proceso-select');
-  sel.innerHTML = '<option value="">Selecciona...</option>';
-  for (var i = 0; i < regs.length; i++) {
-    sel.innerHTML += '<option value="' + regs[i].id + '">' + fmt(regs[i].fecha) + ' · ' + regs[i].nombre + '</option>';
-  }
-  document.getElementById('delete-proceso-modal').classList.add('open');
-}
-
-function confirmDeleteProceso() {
-  var id  = document.getElementById('delete-proceso-select').value;
-  if (!id) { showToast('Selecciona un registro'); return; }
-  var cid = activeProcesoCursoId;
-  procesoRegistros[cid] = (procesoRegistros[cid] || []).filter(function(r){ return r.id !== id; });
-  var data = procesoData[cid] || {};
-  var sids = Object.keys(data);
-  for (var i = 0; i < sids.length; i++) { if (data[sids[i]]) delete data[sids[i]][id]; }
-  procGuardar(cid);
-  document.getElementById('delete-proceso-modal').classList.remove('open');
-  procRenderizarTabla();
-  showToast('Registro eliminado');
-}
-
-async function exportProcesoWord() {
-  if (!activeProcesoCursoId) return;
-  if (typeof docx === 'undefined') { showToast('Libreria Word no disponible'); return; }
-  showToast('Generando Word...');
-  var cid  = activeProcesoCursoId;
-  var c    = getCurso(cid);
-  var list = studentsOf(cid).slice().sort(function(a,b){ return (a.apellido||a.nombre||'').localeCompare(b.apellido||b.nombre||'','es'); });
-  var regs = (procesoRegistros[cid] || []).slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
-  if (!regs.length) { showToast('Sin registros para exportar'); return; }
-  try {
-    var D = docx; var W = 9360;
-    var bdr = {style:D.BorderStyle.SINGLE,size:1,color:'DDDDDD'};
-    var B = {top:bdr,bottom:bdr,left:bdr,right:bdr};
-    var NB = {top:{style:D.BorderStyle.NONE,size:0,color:'FFF'},bottom:{style:D.BorderStyle.NONE,size:0,color:'FFF'},left:{style:D.BorderStyle.NONE,size:0,color:'FFF'},right:{style:D.BorderStyle.NONE,size:0,color:'FFF'}};
-    var mk = function(text, opts) {
-      opts = opts || {};
-      return new D.TableCell({borders:opts.nb?NB:B, width:opts.w?{size:opts.w,type:D.WidthType.DXA}:undefined,
-        shading:{fill:opts.bg||'FFFFFF',type:D.ShadingType.CLEAR}, verticalAlign:D.VerticalAlign.CENTER,
-        margins:{top:80,bottom:80,left:120,right:120},
-        children:[new D.Paragraph({alignment:opts.align||D.AlignmentType.CENTER,
-          children:[new D.TextRun({text:String(text||''),bold:opts.bold||false,color:opts.color||'1A1A2E',size:opts.size||18,font:'Arial'})]})]});
-    };
-    var cW = Math.max(500, Math.floor((W-3600)/Math.max(regs.length,1)));
-    var curso = c ? c.nombre + (c.materia?' · '+c.materia:'') : 'Curso';
-    var hdrRow = new D.TableRow({children:[
-      mk('#',{bg:'2D3561',bold:true,color:'FFFFFF',w:400}),
-      mk('Apellido y Nombre',{bg:'2D3561',bold:true,color:'FFFFFF',w:3200,align:D.AlignmentType.LEFT})
-    ].concat(regs.map(function(r){ return mk(fmt(r.fecha)+' '+r.nombre,{bg:'2D3561',bold:true,color:'FFFFFF',w:cW,size:15}); }))});
-    var rows = [hdrRow].concat(list.map(function(st,i){
-      var bg = i%2===0?'FFFFFF':'F7F9FC';
-      return new D.TableRow({children:[
-        mk(String(i+1).padStart(2,'0'),{bg:'F0EDE4',color:'2D3561',bold:true,w:400,size:15}),
-        mk(st.apellido?st.apellido+', '+st.nombre:st.nombre,{bg:bg,color:'1A1A2E',align:D.AlignmentType.LEFT,w:3200})
-      ].concat(regs.map(function(r){
-        var val = procesoData[cid]&&procesoData[cid][st.id]?procesoData[cid][st.id][r.id]:undefined;
-        var display = val!=null?String(val):'—';
-        return mk(display,{bg:bg,bold:val!=null,w:cW,size:val!=null?19:15});
-      }))});
-    }));
-    var tabla = new D.Table({width:{size:W,type:D.WidthType.DXA},columnWidths:[400,3200].concat(regs.map(function(){ return cW; })),rows:rows});
-    var sp = new D.Paragraph({children:[new D.TextRun({text:'',size:12})]});
-    var doc = new D.Document({sections:[{properties:{},children:[
-      new D.Paragraph({children:[new D.TextRun({text:'AsistApp - Registro de Proceso - '+curso,bold:true,size:28,font:'Arial'})]}),
-      new D.Paragraph({children:[new D.TextRun({text:'Generado: '+new Date().toLocaleDateString('es-AR'),size:18,font:'Arial',color:'9CA3AF'})]}),
-      sp, tabla, sp,
-      new D.Paragraph({alignment:D.AlignmentType.CENTER,children:[new D.TextRun({text:'Desarrollado por DIGITAL SHOP · AsistApp',size:14,color:'9CA3AF',font:'Georgia'})]})
-    ]}]});
-    var blob = await D.Packer.toBlob(doc);
-    var fname = 'Proceso_' + (c?c.nombre.replace(/[^a-z0-9]/gi,'_'):'curso') + '_' + new Date().toISOString().slice(0,10) + '.docx';
-    showShareModal(blob, fname);
-  } catch(e) { showToast('Error: ' + e.message); }
-}
-
-// Alias para compatibilidad con showView
-function procRenderGrid() { procMostrarGrid(); }
-
-
-async function enterApp(userName) {
-
-  // Verificar suscripción consultando directamente la tabla profiles
-  if (_sbUserId && _sbToken) {
-    try {
-      // El admin siempre tiene acceso — nunca mostrar paywall
-      const currentEmail = _sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '';
-      if (currentEmail === ADMIN_EMAIL) {
-        // Admin: pasar directo sin chequeo de suscripción, y forzar rol profesor
-        _userRole = 'profesor';
-      } else {
-        // Intentar refrescar token
-        await sbRefreshToken().catch(()=>false);
-        // Consultar perfil usando el token actualizado
-        const profileRes = await fetch(
-          SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=suspended,subscription_status,subscription_expires_at',
-          { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
-        );
-        // Si hay error de red o servidor, dejar pasar (no penalizar al usuario)
-        // Solo mostrar paywall si definitivamente NO tiene suscripción activa
-        if (profileRes.ok) {
-          const profileArr = await profileRes.json();
-          if (profileArr && profileArr.length) {
-            const profile = profileArr[0];
-            if (profile.suspended === true) {
-              localStorage.removeItem('aa_sb_session');
-              _sbToken = null; _sbUserId = null;
-              showLoginError('🚫 Tu cuenta fue suspendida. Contactá al administrador: soydigitalshop@gmail.com');
-              return;
-            }
-            const status = profile.subscription_status;
-            const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
-            const now = new Date();
-            const GRACE_DAYS = 5;
-            const isActive = status === 'active' && (!expires || expires >= now);
-            const isExpired = status === 'expired' || (status === 'active' && expires && expires < now);
-            let inGrace = false, graceDaysLeft = 0;
-            if (isExpired && expires) {
-              const diffDays = Math.floor((now - expires) / 86400000);
-              if (diffDays <= GRACE_DAYS) { inGrace = true; graceDaysLeft = GRACE_DAYS - diffDays; }
-            }
-            // Solo pueden entrar usuarios con suscripción activa o en período de gracia
-            if (!isActive && !inGrace) { showPaywall(userName, isExpired); return; }
-            if (inGrace) {
-              const userEmail = currentEmail;
-              emailjs.send('asistapp_service', 'asistapp_grace', {to_email:userEmail,to_name:userName,days_left:graceDaysLeft,app_url:'https://digitalshop-app.github.io/AsistApp/'}).catch(()=>{});
-              showGraceModal(userName, graceDaysLeft);
-            }
-          } else {
-            // Sin perfil en Supabase → mostrar paywall (usuario nuevo sin suscripción)
-            showPaywall(userName, false); return;
-          }
-        }
-        // Si profileRes no es ok (error de red, 5xx, token issue) → dejar entrar
-        // para no bloquear usuarios activos por problemas de conectividad
-      }
-    } catch(e) {
-      // Error inesperado (red caída, JSON inválido, etc.) → no mostrar paywall
-      // Solo bloquear si hay certeza de que no tiene suscripción
-      console.warn('[AsistApp] Error en chequeo de suscripción, permitiendo acceso:', e.message);
-    }
-  }
-  document.getElementById('header-user').textContent = '👤 ' + userName;
-  document.getElementById('header-user').style.display = 'inline-flex';
-  document.getElementById('btn-logout').style.display  = 'inline-flex';
-  updateToggleRoleBtn();
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('app-wrapper').classList.add('visible');
-  const savedSession = localStorage.getItem('aa_sb_session');
-  const session = savedSession ? JSON.parse(savedSession) : null;
-  const isAdmin = session && (await getSessionEmail()) === ADMIN_EMAIL;
-  const adminBtn = document.getElementById('nav-admin');
-  if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-  showAppLoading(true);
-  await loadAllData();
-  showAppLoading(false);
-  setTodayDate();
-  renderCursosGrid();
-  syncSelects();
-  applyRoleUI();
-  // Restaurar la vista donde estaba el usuario antes de recargar
-  try {
-    const lastView = localStorage.getItem('aa_last_view');
-    if (lastView && lastView !== 'cursos') {
-      const btn = document.querySelector('.nav-btn[onclick*="' + lastView + '"]');
-      showView(lastView, btn || null);
-    } else {
-      const cursosBtn = document.querySelector('.nav-btn[onclick*="cursos"]');
-      showView('cursos', cursosBtn);
-    }
-  } catch(e) {
-    console.warn('Error restaurando vista:', e);
-    renderCursosGrid();
-  }
-  // Marcar app como lista — hace visible el contenido suavemente
-  requestAnimationFrame(() => {
-    const aw = document.getElementById('app-wrapper');
-    if (aw) aw.classList.add('app-ready');
-  });
-}
-
-function showAppLoading(on) {
-  let el = document.getElementById('app-loading');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'app-loading';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(250,248,243,0.85);z-index:99;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:Nunito,sans-serif;font-weight:700;color:#0f9b8e;font-size:1rem;backdrop-filter:blur(2px)';
-    el.innerHTML = '<div style="font-size:2.5rem;animation:spin 1s linear infinite">⏳</div><span>Cargando datos...</span>';
-    document.body.appendChild(el);
-    const style = document.createElement('style');
-    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(style);
-  }
-  el.style.display = on ? 'flex' : 'none';
-}
-
-async function doLogout() {
-  localStorage.removeItem('aa_sb_session');
-  localStorage.removeItem('aa_last_view');
-  _sbToken=null; _sbUserId=null; _sbSession=null;
-  cursos=[]; students=[]; attendance={}; procesoData={}; procesoRegistros={}; activeProcesoCursoId=null;
-  activeCursoId=null; activeQrId=null; activeScanId=null; activePlanillaId=null;
-  stopScanner();
-  // Ocultar paywall si estaba visible
-  const paywall = document.getElementById('paywall-screen-main');
-  if (paywall) paywall.style.cssText = 'display:none';
-  // Ocultar app-wrapper
-  const appWrapper = document.getElementById('app-wrapper');
-  if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = ''; }
-  // Mostrar login (remover todos los estilos inline que showPaywall pudo haber puesto)
-  const loginScreen = document.getElementById('login-screen');
-  if (loginScreen) { loginScreen.classList.remove('hidden'); loginScreen.style.display = ''; }
-  document.getElementById('login-user').value='';
-  document.getElementById('login-pass').value='';
-  document.getElementById('login-error').classList.remove('show');
-  switchLoginTab('login');
-}
-
-// ════════════════════════════════════════
-// DATA LAYER — Supabase REST
-// ════════════════════════════════════════
-async function loadAllData() {
-  if (!_sbUserId) return;
-  try {
-    const [c, s, a] = await Promise.all([
-      sbFetch(`cursos?user_id=eq.${_sbUserId}&order=created_at.asc`),
-      sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
-      sbFetch(`attendance?user_id=eq.${_sbUserId}`)
-    ]);
-    const todosLosCursos = c.map(r => ({id:r.id,nombre:r.nombre,materia:r.materia||'',docente:r.docente||'',color:r.color||'#0f9b8e',rol:(r.rol==='docente'?'profesor':r.rol)||'profesor'}));
-    cursos = todosLosCursos.filter(r => r.rol === _userRole);
-    students = s.map(r => ({id:r.id,cursoId:r.curso_id,apellido:r.apellido||'',nombre:r.nombre||'',full:r.full_name||'',emailAlumno:r.email_alumno||'',emailPadre:r.email_padre||'',emailFamilia:r.email_padre||'',whatsappFamilia:r.whatsapp_familia||''}));
-    attendance = {};
-    a.forEach(r => {
-      if (!attendance[r.student_id]) attendance[r.student_id] = {};
-      attendance[r.student_id][r.fecha] = r.estado === 'P' ? true : r.estado;
-    });
-  } catch(e) { console.error('loadAllData error:', e); showToast('⚠ Error cargando datos: ' + e.message); }
-}
-
-async function sbSaveCurso(c) {
-  await sbFetch('cursos',{method:'POST',prefer:'return=minimal',body:{id:c.id,user_id:_sbUserId,nombre:c.nombre,materia:c.materia||null,docente:c.docente||null,color:c.color,rol:c.rol||_userRole}});
-}
-async function sbDeleteCurso(id) {
-  await sbFetch(`cursos?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
-}
-async function sbSaveStudent(s) {
-  await sbFetch('students',{method:'POST',prefer:'return=minimal',body:{id:s.id,user_id:_sbUserId,curso_id:s.cursoId,apellido:s.apellido||null,nombre:s.nombre||null,full_name:s.full,email_alumno:s.emailAlumno||null,email_padre:s.emailPadre||null,whatsapp_familia:s.whatsappFamilia||null}});
-}
-async function sbDeleteStudent(id) {
-  await sbFetch(`students?id=eq.${id}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
-}
-async function sbDeleteStudentsByCurso(cursoId) {
-  await sbFetch(`students?curso_id=eq.${cursoId}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
-}
-async function sbSaveAttendance(studentId, fecha, estado) {
-  const estadoStr = estado === true ? 'P' : estado;
-  try {
-    await sbFetch('attendance',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{student_id:studentId,user_id:_sbUserId,fecha,estado:estadoStr}});
-  } catch(e) {
-    // Si falla por duplicado (409), intentar PATCH para actualizar el registro existente
-    if (e.message && (e.message.includes('duplicate') || e.message.includes('409') || e.message.includes('unique'))) {
-      await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`,
-        {method:'PATCH', prefer:'return=minimal', body:{estado:estadoStr}});
-    } else {
-      throw e;
-    }
-  }
-}
-async function sbDeleteAttendance(studentId, fecha) {
-  await sbFetch(`attendance?student_id=eq.${studentId}&fecha=eq.${fecha}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
-}
-
-// ════════════════════════════════════════
-// OFFLINE MODE & SYNC
-// ════════════════════════════════════════
-let isOnline = navigator.onLine;
-let pendingSync = [];
-
-function initOfflineMode() {
-  try { pendingSync = JSON.parse(localStorage.getItem('aa_pending_sync')||'[]'); } catch(e) { pendingSync = []; }
-  updateOfflineBanner();
-  window.addEventListener('online',  () => { isOnline = true;  updateOfflineBanner(); syncPending(); });
-  window.addEventListener('offline', () => { isOnline = false; updateOfflineBanner(); });
-  // Al volver al tab en mobile: refrescar token y sincronizar pendientes
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && isOnline && _sbToken) {
-      sbRefreshToken().catch(()=>{}).then(() => {
-        if (pendingSync.length > 0) syncPending();
-      });
-    }
-  });
-}
-
-function updateOfflineBanner() {
-  const banner = document.getElementById('offline-banner'); if (!banner) return;
-  if (!isOnline) {
-    banner.classList.add('show');
-    const pc = document.getElementById('pending-count-banner');
-    if (pc && pendingSync.length > 0) pc.textContent = ` (${pendingSync.length} pendientes)`;
-  } else { banner.classList.remove('show'); }
-}
-
-function queueSync(studentId, fecha, estado) {
-  pendingSync = pendingSync.filter(p => !(p.studentId===studentId && p.fecha===fecha));
-  pendingSync.push({studentId, fecha, estado, ts: Date.now()});
-  localStorage.setItem('aa_pending_sync', JSON.stringify(pendingSync));
-  updateOfflineBanner();
-}
-
-async function syncPending() {
-  if (!isOnline || pendingSync.length === 0) return;
-  // Refrescar token antes de sincronizar
-  await sbRefreshToken().catch(()=>{});
-  const queue = [...pendingSync];
-  let synced = 0;
-  for (const item of queue) {
-    try {
-      if (item.estado === null) await sbFetch(`attendance?student_id=eq.${item.studentId}&fecha=eq.${item.fecha}&user_id=eq.${_sbUserId}`,{method:'DELETE',prefer:'return=minimal'});
-      else await sbSaveAttendance(item.studentId, item.fecha, item.estado);
-      pendingSync = pendingSync.filter(p => !(p.studentId===item.studentId && p.fecha===item.fecha));
-      synced++;
-    } catch(e) {}
-  }
-  localStorage.setItem('aa_pending_sync', JSON.stringify(pendingSync));
-  if (synced > 0) showToast(`✅ ${synced} registro${synced!==1?'s':''} sincronizado${synced!==1?'s':''}`);
-}
-
-// ════════════════════════════════════════
-// CONSECUTIVE ABSENCES
-// ════════════════════════════════════════
-function getConsecutiveAbsences(studentId) {
-  const att = attendance[studentId] || {};
-  const dates = Object.keys(att).sort().reverse();
-  let count = 0;
-  for (const d of dates) { if (att[d] === 'A') count++; else break; }
-  return count;
-}
-
-// ════════════════════════════════════════
-// OBSERVATIONS
-// ════════════════════════════════════════
-let observations = {};
-
-function loadObservations() {
-  try { observations = JSON.parse(localStorage.getItem('aa_observations')||'{}'); } catch(e) { observations = {}; }
-}
-function saveObservations() {
-  localStorage.setItem('aa_observations', JSON.stringify(observations));
-}
-function getObservationCount(studentId) {
-  return (observations[studentId]||[]).length;
-}
-
-let obsCurrentStudentId = null;
-let obsCurrentFiles = [];
-let obsCurrentCategory = 'general';
-
-const CAT_INFO = {
-  general:   { label:'📋 General',     cls:'cat-general' },
-  academico: { label:'📚 Académico',   cls:'cat-academico' },
-  conducta:  { label:'⚠️ Conducta',    cls:'cat-conducta' },
-  salud:     { label:'🏥 Salud',       cls:'cat-salud' },
-  logro:     { label:'⭐ Logro',        cls:'cat-logro' },
-  familia:   { label:'👨‍👩‍👧 Familia',   cls:'cat-familia' }
-};
-
-function selectCat(cat, el) {
-  obsCurrentCategory = cat;
-  document.querySelectorAll('.cat-opt').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-// ─── EMOJI PICKER ───
-const EMOJIS = ['😊','😄','😃','🎉','✅','⚠️','❌','📚','📋','💡','🌟','⭐','🏆','👍','👎','👏','🙌','😢','😔','😤','🤒','🏥','👨‍👩‍👧','💬','📝','🔔','📌','🔴','🟡','🟢'];
-
-function initEmojiPicker() {
-  const picker = document.getElementById('obs-emoji-picker');
-  picker.innerHTML = '';
-  EMOJIS.forEach(em => {
-    const btn = document.createElement('button');
-    btn.className = 'emoji-btn-item';
-    btn.textContent = em;
-    btn.onclick = (e) => { e.stopPropagation(); insertEmoji(em); };
-    picker.appendChild(btn);
-  });
-}
-
-function toggleEmojiPicker(e) {
-  e.stopPropagation();
-  const picker = document.getElementById('obs-emoji-picker');
-  picker.classList.toggle('open');
-  // Position near the button
-  const btn = e.currentTarget;
-  const rect = btn.getBoundingClientRect();
-  const modalRect = document.getElementById('obs-modal').getBoundingClientRect();
-  picker.style.position = 'absolute';
-  picker.style.bottom = 'auto';
-  picker.style.top = (rect.bottom - modalRect.top + 8) + 'px';
-  picker.style.left = (rect.left - modalRect.left) + 'px';
-}
-
-function insertEmoji(emoji) {
-  const ta = document.getElementById('obs-text-input');
-  const start = ta.selectionStart || 0;
-  const end   = ta.selectionEnd   || 0;
-  ta.value = ta.value.substring(0, start) + emoji + ta.value.substring(end);
-  ta.selectionStart = ta.selectionEnd = start + emoji.length;
-  ta.focus();
-  document.getElementById('obs-emoji-picker').classList.remove('open');
-}
-
-// Close emoji picker on outside click
-document.addEventListener('click', (e) => {
-  const picker = document.getElementById('obs-emoji-picker');
-  if (picker && !picker.contains(e.target) && !e.target.classList.contains('emoji-trigger')) {
-    picker.classList.remove('open');
-  }
-});
-
-function openObservations(studentId) {
-  const s = students.find(x=>x.id===studentId); if (!s) return;
-  obsCurrentStudentId = studentId;
-  obsCurrentFiles = [];
-  obsCurrentCategory = 'general';
-  document.getElementById('obs-student-name').textContent = s.full;
-  document.getElementById('obs-text-input').value = '';
-  document.getElementById('obs-file-preview').innerHTML = '';
-  renderObsList(studentId);
-
-  document.getElementById('obs-modal').classList.add('open');
-}
-
-function renderObsList(studentId) {
-  const list = (observations[studentId]||[]).slice().reverse();
-  const el = document.getElementById('obs-list');
-  if (!list.length) {
-    el.innerHTML = '<div style="text-align:center;color:#9ca3af;font-size:0.85rem;padding:1rem">Sin observaciones registradas</div>';
-    return;
-  }
-  el.innerHTML = list.map((obs, idx) => {
-    const realIdx = (observations[studentId]||[]).length - 1 - idx;
-    const cat = CAT_INFO[obs.category||'general'] || CAT_INFO.general;
-    const filesHtml = (obs.files||[]).map(f => {
-      if (f.type && f.type.startsWith('image/')) {
-        return `<img src="${f.data}" class="obs-file-thumb" onclick="openObsLightbox('${f.data.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}')" title="🔍 ${f.name} — clic para ampliar">`;
-      } else if (f.type && f.type.startsWith('audio/')) {
-        return `<div class="obs-file-doc">🎵 ${f.name}<audio controls src="${f.data}" style="height:24px;margin-left:6px"></audio></div>`;
-      } else {
-        return `<div class="obs-file-doc" onclick="downloadObsFile('${studentId}',${realIdx},'${f.name}')">📄 ${f.name}</div>`;
-      }
-    }).join('');
-    return `<div class="obs-entry">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-        <span class="obs-entry-date">${obs.date}${obs.time?' · '+obs.time:''}</span>
-        <span style="margin-left:auto;display:flex;gap:6px">
-          <button onclick="editObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--teal);font-size:0.75rem;font-weight:700">✏️ Editar</button>
-          <button onclick="deleteObservation('${studentId}',${realIdx})" style="background:none;border:none;cursor:pointer;color:var(--rose);font-size:0.75rem;font-weight:700">✕ Eliminar</button>
-        </span>
-      </div>
-      <div class="obs-entry-text">${obs.text||''}</div>
-      ${filesHtml ? `<div class="obs-entry-files">${filesHtml}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-
-function obsPreviewFiles(input) {
-  const preview = document.getElementById('obs-file-preview');
-  const files = Array.from(input.files);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      obsCurrentFiles.push({name:file.name,type:file.type,data:e.target.result});
-      if (file.type.startsWith('image/')) {
-        const img = document.createElement('img'); img.src = e.target.result; img.className = 'obs-file-thumb'; preview.appendChild(img);
-      } else {
-        const d = document.createElement('div'); d.className = 'obs-file-doc'; d.textContent = (file.type.startsWith('audio/')?'🎵 ':'📄 ')+file.name; preview.appendChild(d);
-      }
-    };
-    reader.readAsDataURL(file);
-  });
-  input.value = '';
-}
-
-function openObsLightbox(src, name) {
-  const lb  = document.getElementById('obs-lightbox');
-  const img = document.getElementById('obs-lightbox-img');
-  img.src = src;
-  img.alt = name || 'Imagen adjunta';
-  lb.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeObsLightbox() {
-  document.getElementById('obs-lightbox').classList.remove('open');
-  document.getElementById('obs-lightbox-img').src = '';
-  document.body.style.overflow = '';
-}
-
-function saveObservation() {
-  const text = document.getElementById('obs-text-input').value.trim();
-  if (!text && obsCurrentFiles.length === 0) { showToast('⚠ Escribí una observación o adjuntá un archivo'); return; }
-  if (!observations[obsCurrentStudentId]) observations[obsCurrentStudentId] = [];
-  const now = new Date();
-  observations[obsCurrentStudentId].push({
-    id: Date.now(),
-    date: now.toLocaleDateString('es-AR'),
-    time: now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),
-    text,
-    category: obsCurrentCategory,
-    files: [...obsCurrentFiles]
-  });
-  saveObservations();
-  obsCurrentFiles = [];
-  document.getElementById('obs-text-input').value = '';
-  document.getElementById('obs-file-preview').innerHTML = '';
-  obsCurrentCategory = 'general';
-  document.querySelectorAll('.cat-opt').forEach(e=>e.classList.remove('selected'));
-  const g = document.querySelector('.cat-opt[data-cat="general"]'); if(g) g.classList.add('selected');
-  renderObsList(obsCurrentStudentId);
-  renderStudentList();
-  showToast('✅ Observación guardada');
-}
-
-function deleteObservation(studentId, idx) {
-  if (!observations[studentId]) return;
-  observations[studentId].splice(idx, 1);
-  saveObservations();
-  renderObsList(studentId);
-  renderStudentList();
-}
-
-function editObservation(studentId, idx) {
-  const obs = (observations[studentId]||[])[idx]; if (!obs) return;
-  const newText = prompt('Editá la observación:', obs.text);
-  if (newText === null) return;
-  observations[studentId][idx].text = newText.trim();
-  saveObservations();
-  renderObsList(studentId);
-}
-
-function downloadObsFile(studentId, idx, fileName) {
-  const obs = (observations[studentId]||[])[idx]; if (!obs) return;
-  const file = (obs.files||[]).find(f=>f.name===fileName); if (!file) return;
-  const a = document.createElement('a'); a.href = file.data; a.download = file.name; a.click();
-}
-
-// ─── EXPORT OBSERVATIONS PDF ───
-function exportObsPDF() {
-  if (!obsCurrentStudentId) return;
-  const s = students.find(x=>x.id===obsCurrentStudentId);
-  const c = s ? getCurso(s.cursoId) : null;
-  const list = (observations[obsCurrentStudentId]||[]).slice().reverse(); // newest first
-  if (!list.length) { showToast('⚠ Sin observaciones para exportar'); return; }
-
-  const now = new Date().toLocaleDateString('es-AR');
-
-  const obsHTML = list.map((obs, i) => {
-    const fileImgs = (obs.files||[]).filter(f=>f.type&&f.type.startsWith('image/')).map(f=>
-      `<img src="${f.data}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:3px">`
-    ).join('');
-    const safeText = (obs.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<div style="border-left:4px solid #0f9b8e;background:#fafafa;border-radius:6px;padding:12px 16px;margin-bottom:14px;page-break-inside:avoid">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="background:#0f9b8e;color:white;font-family:'Barlow Condensed',Arial,sans-serif;font-size:13px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:0.3px">${obs.date}${obs.time?' · '+obs.time:''}</span>
-        <span style="margin-left:auto;font-size:10px;color:#aaa;font-weight:700">Registro #${list.length - i}</span>
-      </div>
-      <p style="margin:0;font-size:13px;line-height:1.65;color:#1a1a2e;white-space:pre-wrap">${safeText}</p>
-      ${fileImgs?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${fileImgs}</div>`:''}
-    </div>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-  <title>Observaciones — ${s?s.full:''}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Nunito:wght@400;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Nunito', Arial, sans-serif; margin: 0; padding: 0; color: #1a1a2e; }
-    .page { max-width: 800px; margin: 0 auto; padding: 2rem 2.5rem; }
-    @media print { body { margin: 0; } .no-print { display: none; } }
-  </style>
-  </head><body>
-  <div class="page">
-    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0f9b8e;padding-bottom:14px;margin-bottom:22px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:1.9rem;line-height:1">📋</span>
-        <div>
-          <div style="font-family:'DM Serif Display',Georgia,serif;font-size:1.65rem;color:#1a1a2e;letter-spacing:-0.5px;line-height:1.1">Asist<span style="color:#1bc5b4">App</span></div>
-          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:#9ca3af;text-transform:uppercase;letter-spacing:2px;margin-top:2px">Registro de Observaciones</div>
-        </div>
-      </div>
-      <div style="text-align:right;font-size:12px;color:#6b7280;line-height:1.6;font-family:'Nunito',sans-serif">
-        <div style="font-weight:800;color:#1a1a2e;font-size:15px">${s?s.full:''}</div>
-        ${c?`<div style="color:#0f9b8e;font-weight:700">${c.nombre}${c.materia?' — '+c.materia:''}</div>`:''}
-        <div>Emitido: ${now}</div>
-      </div>
-    </div>
-    <div style="margin-bottom:16px;display:flex;gap:10px">
-      <span style="background:#e8f4f2;color:#0f9b8e;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid #0f9b8e40">${list.length} registro${list.length!==1?'s':''}</span>
-    </div>
-    ${obsHTML}
-    <div style="margin-top:2rem;border-top:1px solid #e0e0e0;padding-top:10px;display:flex;align-items:center;justify-content:space-between;font-family:'Raleway',sans-serif;font-size:0.82rem;color:#9ca3af;letter-spacing:0.3px;">
-      <span style="font-family:'DM Serif Display',Georgia,serif;font-size:0.95rem;color:#1a1a2e;letter-spacing:-0.3px;">Asist<span style="color:#1bc5b4;">App</span></span>
-      <span>Sistema de Asistencia Digital</span>
-      <span>Desarrollado por &nbsp;<span style="color:#0f9b8e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;font-size:0.85rem;">DIGITAL SHOP</span></span>
-    </div>
-  </div>
-  <script>window.onload = function(){ window.print(); }<\/script>
-  </body></html>`;
-
-  const w = window.open('', '_blank', 'width=900,height=700');
-  if (w) { w.document.write(html); w.document.close(); }
-  else showToast('⚠ Activá las ventanas emergentes para exportar el PDF');
-}
-
-// ════════════════════════════════════════
-// ADMIN PANEL
-// ════════════════════════════════════════
-async function getSessionEmail() {
-  try {
-    const res = await fetch(SUPA_URL+'/auth/v1/user',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+_sbToken}});
-    const data = await res.json();
-    return data.email || '';
-  } catch(e) { return ''; }
-}
-
-async function loadAdminUsers() {
-  const el = document.getElementById('admin-users-list'); if (!el) return;
-  el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Cargando...</div>';
-  try {
-    // Try to refresh token first if needed
-    await sbRefreshToken();
-    const users       = await sbFetch('admin_users?select=id,name,email,created_at,suspended&order=created_at.desc');
-    const cursosAll   = await sbFetch('cursos?select=id,user_id');
-    const studentsAll = await sbFetch('students?select=id,user_id');
-    if (!users.length) { el.innerHTML = '<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">Sin usuarios registrados</div>'; return; }
-    const rows = users.map(p => {
-      const nCursos   = cursosAll.filter(c=>c.user_id===p.id).length;
-      const nStudents = studentsAll.filter(s=>s.user_id===p.id).length;
-      const fecha     = p.created_at ? new Date(p.created_at).toLocaleDateString('es-AR') : '—';
-      const esAdmin   = p.email === ADMIN_EMAIL;
-      const isSuspended = p.suspended;
-      const acciones = esAdmin
-        ? '<span style="color:#9ca3af;font-size:0.8rem">— Admin —</span>'
-        : `<div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${isSuspended
-              ? `<button class="btn btn-sm" style="background:var(--success);color:white;border-color:var(--success)" onclick="adminToggleSuspend('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}',false)">✅ Reactivar</button>`
-              : `<button class="btn btn-sm" style="background:var(--gold);color:white;border-color:var(--gold)" onclick="adminToggleSuspend('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}',true)">🚫 Suspender</button>`
-            }
-            <button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${p.id}','${(p.name||p.email).replace(/'/g,"\\'")}','${p.email||''}')">🗑 Eliminar</button>
-           </div>`;
-      return `<tr>
-        <td style="font-weight:700">${p.name||'—'} ${esAdmin?'<span class="admin-badge badge-admin">ADMIN</span>':''}</td>
-        <td style="font-size:0.8rem;color:#6b7280">${p.email||'—'}</td>
-        <td>${fecha}</td>
-        <td style="text-align:center"><strong>${nCursos}</strong></td>
-        <td style="text-align:center"><strong>${nStudents}</strong></td>
-        <td>${acciones}</td>
-      </tr>`;
-    }).join('');
-    el.innerHTML = `
-      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border)">
-        <table class="admin-table">
-          <thead><tr><th>Nombre</th><th>Email</th><th>Registro</th><th>Cursos</th><th>Alumnos</th><th>Acciones</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-      <p style="font-size:0.78rem;color:#9ca3af;margin-top:0.8rem;font-weight:600">Total: ${users.length} usuario${users.length!==1?'s':''} &nbsp;·&nbsp; Para desactivar el acceso de un usuario, eliminá sus datos y luego eliminalo en Supabase Auth.</p>`;
-  } catch(e) {
-    el.innerHTML = `<div style="color:var(--rose);font-weight:700;padding:1rem">❌ Error: ${e.message}</div>
-      <div style="margin-top:0.5rem;font-size:0.85rem;color:#6b7280">Si el error es de autenticación, intentá cerrar sesión y volver a ingresar.</div>
-      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Reintentar</button>`;
-  }
-}
-
-async function adminToggleSuspend(userId, userName, suspend) {
-  const ok = await showConfirm(
-    `${suspend ? 'Suspender' : 'Reactivar'} a "${userName}"?`,
-    suspend ? 'El usuario no podrá iniciar sesión hasta que lo reactives.' : 'El usuario podrá volver a iniciar sesión normalmente.',
-    suspend ? '🚫' : '✅',
-    suspend ? 'Suspender cuenta' : 'Reactivar cuenta',
-    suspend ? 'btn-danger' : 'btn-primary'
-  );
-  if (!ok) return;
-  try {
-    // Llamar a función RPC que ejecuta con privilegios elevados
-    const res = await fetch(SUPA_URL + '/rest/v1/rpc/admin_set_suspended', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + _sbToken,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ target_user_id: userId, suspended_val: suspend })
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || err.hint || 'Error desconocido');
-    }
-    showToast(suspend ? `🚫 ${userName} suspendido` : `✅ ${userName} reactivado`);
-    loadAdminUsers();
-  } catch(e) {
-    showToast('❌ Error: ' + e.message);
-  }
-}
-
-async function adminDeleteUser(userId, userName, userEmail) {
-  const ok = await showConfirm(
-    `¿Eliminar completamente a "${userName}"?`,
-    `Se borrarán TODOS sus datos (cursos, nóminas, asistencias) y su acceso al sistema. Esta acción es irreversible.`,
-    '🗑️', 'Eliminar usuario', 'btn-danger'
-  );
-  if (!ok) return;
-
-  const el = document.getElementById('admin-users-list');
-  el.innerHTML = `<div style="text-align:center;color:#9ca3af;padding:2rem;font-weight:600">⏳ Eliminando usuario ${userName}...</div>`;
-
-  try {
-    const SUPABASE_URL = 'https://mcdvbxjdvgmkvasuzwpw.supabase.co';
-    const SUPABASE_ANON = 'sb_publishable_np2oFvaG5a689y-5Uln5cg_Mhm36lx0';
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/delete-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${_sbToken}`,
-        'apikey': SUPABASE_ANON
-      },
-      body: JSON.stringify({ userId })
-    });
-
-    let data;
-    try { data = await res.json(); } catch(e) { data = { error: 'Respuesta inválida del servidor (status ' + res.status + ')' }; }
-
-    if (!res.ok || data.error) {
-      const detail = data.details ? '<br><small style="color:#9ca3af">' + data.details.join('<br>') + '</small>' : '';
-      el.innerHTML = `<div style="background:#fde8ec;border-radius:12px;padding:1.2rem;border:1px solid var(--rose);margin-bottom:1rem">
-        <div style="font-weight:800;color:var(--rose);margin-bottom:0.5rem">⚠️ Error al eliminar</div>
-        <p style="font-size:0.85rem;color:#6b7280">${data.error || 'Error desconocido'} (HTTP ${res.status})${detail}</p>
-        <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Actualizar lista</button>
-      </div>`;
-      return;
-    }
-
-    showToast('✅ Usuario eliminado completamente: ' + userName);
-    setTimeout(() => loadAdminUsers(), 800);
-
-  } catch(e) {
-    el.innerHTML = `<div style="background:#fde8ec;border-radius:12px;padding:1.2rem;border:1px solid var(--rose);margin-bottom:1rem">
-      <div style="font-weight:800;color:var(--rose);margin-bottom:0.5rem">⚠️ Error de conexión</div>
-      <p style="font-size:0.85rem;color:#6b7280">${e.message}</p>
-      <button class="btn btn-secondary btn-sm" onclick="loadAdminUsers()" style="margin-top:0.5rem">🔄 Reintentar</button>
-    </div>`;
-  }
-}
-
-const _origShowView = showView;
-window.showView = function(id, btn) {
-  _origShowView(id, btn);
-  if (id === 'admin') loadAdminUsers();
-  // Persistir la vista activa para restaurar tras recarga
-  try { localStorage.setItem('aa_last_view', id); } catch(e) {}
-};
-
-
-// Re-chequeo de suscripción desde el paywall (para usuarios que ya pagaron)
-async function recheckSubscription() {
-  const btn = document.querySelector('#paywall-screen-main button[onclick="recheckSubscription()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ VERIFICANDO...'; }
-
-  // Si no hay userId/token, intentar recuperar de localStorage
-  if (!_sbUserId || !_sbToken) {
-    const saved = localStorage.getItem('aa_sb_session');
-    if (saved) {
-      try {
-        const s = JSON.parse(saved);
-        _sbToken = s.token; _sbUserId = s.userId;
-      } catch(e) {}
-    }
-  }
-
-  if (!_sbUserId) {
-    if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
-    showToast('⚠ Sesión no encontrada. Cerrá sesión e ingresá de nuevo.');
-    return;
-  }
-
-  try {
-    // Siempre refrescar el token antes de consultar
-    await sbRefreshToken().catch(()=>{});
-
-    const profileRes = await fetch(
-      SUPA_URL + '/rest/v1/profiles?id=eq.' + _sbUserId + '&select=subscription_status,subscription_expires_at',
-      { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _sbToken } }
-    );
-
-    if (!profileRes.ok) {
-      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
-      showToast('❌ Error al consultar. Cerrá sesión e ingresá de nuevo.');
-      return;
-    }
-
-    const arr = await profileRes.json();
-    if (!arr || !arr.length) {
-      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
-      showToast('❌ No se encontró tu perfil. Contactá a soporte.');
-      return;
-    }
-
-    const profile = arr[0];
-    const status  = profile.subscription_status;
-    const expires = profile.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
-    const now     = new Date();
-    const isActive = status === 'active' && (!expires || expires >= now);
-
-    if (isActive) {
-      // ✅ Suscripción activa — ocultar paywall y entrar
-      const paywall = document.getElementById('paywall-screen-main');
-      if (paywall) paywall.style.cssText = 'display:none !important';
-      const loginScreen = document.getElementById('login-screen');
-      if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
-      const appWrapper = document.getElementById('app-wrapper');
-      if (appWrapper) { appWrapper.style.display = ''; appWrapper.classList.add('visible'); }
-      // Nombre del usuario
-      const saved = localStorage.getItem('aa_sb_session');
-      const sess  = saved ? JSON.parse(saved) : null;
-      const uName = sess?.name || 'Usuario';
-      document.getElementById('header-user').textContent = '👤 ' + uName;
-      document.getElementById('header-user').style.display = 'inline-flex';
-      document.getElementById('btn-logout').style.display  = 'inline-flex';
-      updateToggleRoleBtn();
-      showAppLoading(true);
-      await loadAllData();
-      showAppLoading(false);
-      setTodayDate();
-      renderCursosGrid();
-      syncSelects();
-      applyRoleUI();
-      showToast('✅ ¡Suscripción verificada! Bienvenido/a ' + uName + '.');
-    } else {
-      if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
-      showToast('⏳ Pago aún no procesado. Esperá unos minutos e intentá de nuevo.');
-    }
-  } catch(e) {
-    if (btn) { btn.disabled = false; btn.textContent = '🔄 YA PAGUÉ — VERIFICAR ACCESO'; }
-    showToast('❌ Error de conexión. Verificá tu internet.');
-  }
-}
-
-// ════════════════════════════════════════
-// PAYWALL
-// ════════════════════════════════════════
-const MP_PLAN_ID = '9344e4199be045509b8c6a0e3ffe3083';
-
-function showPaywall(userName, isExpired) {
-  // NO borrar la sesión aquí — el usuario puede haber pagado y necesita
-  // poder re-chequear sin volver a loguearse. Se borra solo en doLogout.
-  // Ocultar todo lo demás
-  const appWrapper = document.getElementById('app-wrapper');
-  if (appWrapper) { appWrapper.classList.remove('visible'); appWrapper.style.display = 'none'; }
-  const loginScreen = document.getElementById('login-screen');
-  if (loginScreen) { loginScreen.classList.add('hidden'); loginScreen.style.display = 'none'; }
-  const msg = document.getElementById('paywall-msg-main');
-  if (msg) {
-    msg.textContent = isExpired
-      ? `Tu suscripción venció, ${userName}. Renovála para seguir usando AsistApp.`
-      : `Bienvenido/a ${userName}. Para acceder a AsistApp activá tu suscripción mensual.`;
-  }
-  // Generar link de suscripción con email del usuario
-  const email = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split('.')[1]))?.email || '' : '');
-  const btn = document.getElementById('btn-suscribir-main');
-  if (btn) btn.href = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${email}`;
-  // Mostrar paywall con style directo (más confiable que classList en algunos navegadores)
-  const paywall = document.getElementById('paywall-screen-main');
-  if (paywall) {
-    paywall.style.cssText = 'display:flex !important; position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e293b); z-index:99999; align-items:center; justify-content:center;';
-  }
-}
-
-function showGraceModal(userName, daysLeft) {
-  // Crear modal si no existe
-  if (document.getElementById("grace-modal")) { document.getElementById("grace-modal").style.display="flex"; return; }
-  const mp_link = (() => { const e = encodeURIComponent(_sbToken ? JSON.parse(atob(_sbToken.split(".")[1]))?.email || "" : ""); return `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}&external_reference=${e}`; })();
-  const el = document.createElement("div");
-  el.id = "grace-modal";
-  el.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;display:flex;align-items:center;justify-content:center;";
-  el.innerHTML = `<div style="background:#1e293b;border:1px solid rgba(251,191,36,0.4);border-radius:20px;padding:2.5rem 2rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-    <div style="font-size:3rem;margin-bottom:1rem;">⏳</div>
-    <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:#fff;margin-bottom:0.5rem;">Período de gracia</div>
-    <p style="color:#cbd5e1;font-size:0.9rem;margin-bottom:1.5rem;line-height:1.6;">Hola <strong>${userName}</strong>, tu suscripción venció.<br>Tenés <strong style="color:#fbbf24;">${daysLeft} día${daysLeft!==1?"s":""} de gracia</strong> para renovarla.<br>Después de ese plazo no podrás ingresar.</p>
-    <a href="${mp_link}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:0.9rem;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;font-weight:800;font-size:1rem;border-radius:12px;text-decoration:none;margin-bottom:1rem;">💳 Renovar suscripción</a>
-    <button onclick="document.getElementById('grace-modal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:0.82rem;cursor:pointer;text-decoration:underline;">Continuar sin renovar</button>
-  </div>`;
-  document.body.appendChild(el);
-}
-
-// ════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════
-(async function init() {
-  setTodayDate();
-  initOfflineMode();
-  loadObservations();
-  const saved = localStorage.getItem('aa_sb_session');
-  if (saved) {
-    try {
-      const s = JSON.parse(saved);
-      _sbToken = s.token; _sbUserId = s.userId;
-      // Restaurar rol — admin siempre entra como profesor
-      const sessionEmail = s.token ? (() => { try { return JSON.parse(atob(s.token.split('.')[1]))?.email || ''; } catch(e) { return ''; } })() : '';
-      if (sessionEmail === ADMIN_EMAIL) {
-        _userRole = 'profesor';
-      } else if (s.role) {
-        _userRole = s.role === 'docente' ? 'profesor' : s.role;
-      } else {
-        const r = localStorage.getItem('aa_role');
-        if (r) _userRole = r === 'docente' ? 'profesor' : r;
-      }
-      await enterApp(s.name);
-      return;
-    } catch(e) {
-      // NO borrar la sesión por errores de red/timeout — solo si el token es inválido
-      console.warn('[AsistApp] Error en init, intentando continuar:', e.message);
-      // Solo limpiar si el token claramente expiró o es inválido (401)
-      if (e.message && (e.message.includes('401') || e.message.includes('JWT') || e.message.includes('invalid'))) {
-        localStorage.removeItem('aa_sb_session');
-      }
-      // En cualquier otro caso (red, timeout) mostrar login sin borrar
-    }
-  }
-  // Sin sesión → mostrar pantalla de login
-})();
-</script>
 </div><!-- /app-wrapper -->
 
 <!-- LIGHTBOX para imágenes de observaciones -->
