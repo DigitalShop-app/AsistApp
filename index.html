@@ -25292,8 +25292,7 @@ async function exportProcesoWord(alumnoId) {
   ];
   regs.forEach(function(r) {
     var periodoLabel = r.periodo ? ' [' + r.periodo + ']' : '';
-    headerCells.push(mk(fmt(r.fecha) + '
-' + r.nombre + periodoLabel, {bg:C.slate, bold:true, color:C.white, w:colW, size:13}));
+    headerCells.push(mk(fmt(r.fecha) + ' ' + r.nombre + periodoLabel, {bg:C.slate, bold:true, color:C.white, w:colW, size:13}));
   });
   headerCells.push(mk('Estado', {bg:C.teal, bold:true, color:C.white, w:800, size:15}));
 
