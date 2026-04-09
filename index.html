@@ -22887,6 +22887,13 @@ var __async = (__this, __arguments, generator) => {
   .proceso-table td:nth-child(2)::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background:linear-gradient(to right,rgba(0,0,0,0.08),transparent); }
   .proceso-table td:nth-child(2) { position: sticky; left: 36px; }
   .proceso-table tr:hover td:nth-child(1), .proceso-table tr:hover td:nth-child(2) { background: var(--mist); }
+  @media (max-width: 700px) {
+    .proceso-table th:last-child, .proceso-table td:last-child,
+    .proceso-table th:nth-last-child(2), .proceso-table td:nth-last-child(2) {
+      position: static !important;
+      z-index: 1 !important;
+    }
+  }
   .proc-per-tab {
     padding: 5px 12px;
     border: 2px solid var(--teal);
@@ -23560,7 +23567,7 @@ var __async = (__this, __arguments, generator) => {
       <button class="btn btn-success" onclick="openMarkAllPresentPlanilla()">🟢 Todos Presentes</button>
       <button class="btn btn-secondary" onclick="openExportModal()">📥 Exportar / Informe</button>
       <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
-      <button class="btn btn-danger btn-sm" onclick="openDeleteDayModal()">🗑 Eliminar día</button>
+      <button class="btn btn-danger" onclick="openDeleteDayModal()">🗑 Eliminar día</button>
       <button class="btn btn-gold" onclick="printPlanilla()">🖨 Imprimir</button>
     </div>
     <div class="stat-chips" id="global-stats" style="margin-bottom:1.5rem"></div>
@@ -25677,7 +25684,15 @@ function applyRoleUI() {
 function updateToggleRoleBtn() {
   const btn = document.getElementById('btn-toggle-role');
   if (!btn) return;
-  // Siempre visible — tanto admin como usuarios regulares pueden cambiar de rol
+  const appWrapper = document.getElementById('app-wrapper');
+  const loginScreen = document.getElementById('login-screen');
+  const paywall = document.getElementById('paywall-screen-main');
+  const loginVisible = loginScreen && !loginScreen.classList.contains('hidden') && loginScreen.style.display !== 'none';
+  const paywallVisible = paywall && paywall.style.display !== 'none' && paywall.style.cssText && paywall.style.cssText.includes('flex');
+  if (loginVisible || paywallVisible || !appWrapper || !appWrapper.classList.contains('visible')) {
+    btn.style.display = 'none';
+    return;
+  }
   btn.style.display = 'inline-flex';
   btn.style.alignItems = 'center';
   btn.style.gap = '5px';
@@ -28805,12 +28820,12 @@ async function exportProcesoWord(filterStudentIds) {
       var cw = (i===regs.length-1) ? _lastColW : colW;
       headerCells.push(mkCell(fmt(r.fecha)+' - '+r.nombre,{bg:C.slate,bold:true,color:C.white,w:cw,align:AlignmentType.CENTER,size:13}));
     });
-    headerCells.push(mkCell('Nota Final',{bg:C.teal,bold:true,color:C.white,w:700,align:AlignmentType.CENTER,size:16}));
     headerCells.push(mkCell('Estado',{bg:C.slate,bold:true,color:C.white,w:1000,align:AlignmentType.CENTER,size:16}));
+    headerCells.push(mkCell('Nota Final',{bg:C.teal,bold:true,color:C.white,w:700,align:AlignmentType.CENTER,size:16}));
     if (!regs.length) {
-      colWidths = [400, nameW, 700, 1000];
+      colWidths = [400, nameW, 1000, 700];
     } else {
-      colWidths = [400, nameW].concat(regs.map(function(r,i){ return (i===regs.length-1) ? _lastColW : colW; })).concat([700, 1000]);
+      colWidths = [400, nameW].concat(regs.map(function(r,i){ return (i===regs.length-1) ? _lastColW : colW; })).concat([1000, 700]);
     }
 
     dataRows = list.map(function(st,i){
@@ -28827,8 +28842,8 @@ async function exportProcesoWord(filterStudentIds) {
       });
       var nf  = getNotaFinal(st.id, activeProcesoPeriodo);
       var est = estadoLabel(nf);
-      cells.push(mkCell(nf!==null?String(nf):'—',{bg:nf!==null?notaBg(nf):rowBg,bold:nf!==null,color:nf!==null?notaFg(nf):C.gray,w:700,align:AlignmentType.CENTER,size:22}));
       cells.push(mkCell(est.t,{bg:est.bg,bold:true,color:est.fg,w:1000,align:AlignmentType.CENTER,size:14}));
+      cells.push(mkCell(nf!==null?String(nf):'—',{bg:nf!==null?notaBg(nf):rowBg,bold:nf!==null,color:nf!==null?notaFg(nf):C.gray,w:700,align:AlignmentType.CENTER,size:22}));
       return new TableRow({children:cells});
     });
   }
