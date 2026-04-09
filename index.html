@@ -23048,7 +23048,7 @@ var __async = (__this, __arguments, generator) => {
     .logo { font-size: 1.2rem; }
     .logo-badge { display: none; }
     nav { width: 100%; justify-content: center; gap: 3px; padding-bottom: 4px; flex-wrap: wrap; }
-    .nav-btn { padding: 6px 10px; font-size: 0.7rem; letter-spacing: 0; flex: 1; min-width: 60px; text-align: center; justify-content: center; }
+    .nav-btn { padding: 6px 10px; font-size: 0.7rem; letter-spacing: 0; flex: 1; min-width: 60px; max-width: 120px; text-align: center; justify-content: center; }
     .view { padding: 1rem; padding-bottom: 2rem; }
     .page-title { font-size: 1.5rem; }
     .page-sub { font-size: 0.82rem; margin-bottom: 1.2rem; }
@@ -28460,6 +28460,9 @@ function setProcesoVal(val) {
   procGuardar(cid);
   document.getElementById('proceso-cell-modal').classList.remove('open');
   procRenderizarTabla();
+  // Resetear scroll horizontal para que nombre quede visible
+  var tw = document.querySelector('.table-wrap');
+  if (tw) tw.scrollLeft = 0;
 }
 
 function selectProcesoTipo(tipo) {
@@ -30054,7 +30057,7 @@ function showGraceModal(userName, daysLeft) {
 </div>
 
 <!-- Botón flotante cambio de rol -->
-<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:80px;right:16px;z-index:99990;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:12px 20px;font-size:0.82rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.5);transition:all 0.2s;"></button>
+<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:8px 16px;font-size:0.75rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.5);transition:all 0.2s;opacity:0.85;"></button>
 
 
 
