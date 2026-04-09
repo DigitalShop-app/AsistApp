@@ -23271,7 +23271,6 @@ var __async = (__this, __arguments, generator) => {
     <button class="nav-btn" onclick="showView('scanner',this)">📷 Escanear</button>
     <button class="nav-btn" onclick="showView('planilla',this)">📊 Planilla</button>
     <button class="nav-btn" onclick="showView('proceso',this)">📝 Proceso</button>
-    <button class="nav-btn" id="nav-toggle-role-mobile" onclick="toggleRole()" style="display:none">🔄 Rol</button>
     <button class="nav-btn" id="nav-admin" onclick="showView('admin',this)" style="display:none;background:rgba(245,166,35,0.2);color:var(--gold)">⚙️ Admin</button>
     <span id="header-user" style="display:none;color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:700;padding:0 8px;align-items:center"></span>
 
@@ -23338,8 +23337,8 @@ var __async = (__this, __arguments, generator) => {
               <option value="">Seleccioná el turno</option>
               <option value="Mañana">Mañana</option>
               <option value="Tarde">Tarde</option>
-              <option value="Noche">Noche</option>
               <option value="Vespertino">Vespertino</option>
+              <option value="Jornada Completa">Jornada Completa</option>
             </select>
           </div>
         </div>
@@ -23383,8 +23382,8 @@ var __async = (__this, __arguments, generator) => {
           <option value="">Seleccioná el turno</option>
           <option value="Mañana">Mañana</option>
           <option value="Tarde">Tarde</option>
-          <option value="Noche">Noche</option>
           <option value="Vespertino">Vespertino</option>
+          <option value="Jornada Completa">Jornada Completa</option>
         </select>
       </div>
       <div class="field">
@@ -25692,15 +25691,10 @@ function updateToggleRoleBtn() {
   const paywallVisible = paywall && paywall.style.display !== 'none' && paywall.style.cssText && paywall.style.cssText.includes('flex');
   if (loginVisible || paywallVisible || !appWrapper || !appWrapper.classList.contains('visible')) {
     btn.style.display = 'none';
-    var mobileRoleBtn2 = document.getElementById('nav-toggle-role-mobile');
-    if (mobileRoleBtn2) mobileRoleBtn2.style.display = 'none';
     return;
   }
   btn.style.display = 'inline-flex';
   btn.style.alignItems = 'center';
-  // En mobile mostrar en nav en lugar de flotante
-  var mobileRoleBtn = document.getElementById('nav-toggle-role-mobile');
-  if (mobileRoleBtn) mobileRoleBtn.style.display = 'inline-flex';
   btn.style.gap = '5px';
   if (isPreceptor()) {
     btn.innerHTML = '👩‍🏫 Modo Profesor';
@@ -28417,7 +28411,8 @@ function procRenderizarTabla() {
 
   setTimeout(function() {
     var w = document.querySelector('#proc-tabla-wrap .table-wrap');
-    if (w) w.scrollLeft = w.scrollWidth;
+    if (w && !_procSkipAutoScroll) w.scrollLeft = w.scrollWidth;
+    _procSkipAutoScroll = false;
   }, 60);
 }
 
@@ -30062,8 +30057,7 @@ function showGraceModal(userName, daysLeft) {
 </div>
 
 <!-- Botón flotante cambio de rol -->
-<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:8px 16px;font-size:0.75rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.5);transition:all 0.2s;opacity:0.85;"></button>
-<style>@media(max-width:768px){#btn-toggle-role{display:none !important;}}</style>
+<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:rgba(15,155,142,0.35);color:white;border:1px solid rgba(15,155,142,0.5);border-radius:50px;padding:6px 14px;font-size:0.72rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 2px 10px rgba(15,155,142,0.2);transition:all 0.2s;opacity:0.5;backdrop-filter:blur(4px);" onmouseover="this.style.opacity='1';this.style.background='linear-gradient(135deg,#0f9b8e,#0d7a70)'" onmouseout="this.style.opacity='0.5';this.style.background='rgba(15,155,142,0.35)'"></button>
 
 
 
