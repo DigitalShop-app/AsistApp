@@ -23195,12 +23195,12 @@ var __async = (__this, __arguments, generator) => {
     <div class="login-logo">📋 <span>Asist</span>App</div>
     <div class="login-sub">Sistema de Asistencia Digital</div>
     <div class="login-tabs">
-      <button class="login-tab active" id="tab-login" onclick="switchLoginTab('login')">Iniciar sesión</button>
-      <button class="login-tab" id="tab-register" onclick="switchLoginTab('register')">Registrarse</button>
+      <button class="login-tab" id="tab-login" onclick="switchLoginTab('login')">Iniciar sesión</button>
+      <button class="login-tab active" id="tab-register" onclick="switchLoginTab('register')">Registrarse</button>
     </div>
     <div class="login-error" id="login-error"></div>
     <!-- LOGIN FORM -->
-    <div id="form-login">
+    <div id="form-login" style="display:none">
       <div class="field">
         <label>Email</label>
         <input type="text" id="login-user" placeholder="tucorreo@email.com" onkeydown="if(event.key==='Enter')doLogin()">
@@ -23230,7 +23230,7 @@ var __async = (__this, __arguments, generator) => {
       </div>
     </div>
     <!-- REGISTER FORM -->
-    <div id="form-register" style="display:none">
+    <div id="form-register">
       <div class="field">
         <label>Nombre completo</label>
         <input type="text" id="reg-name" placeholder="Ej: Prof. Ana Pérez">
@@ -23337,8 +23337,8 @@ var __async = (__this, __arguments, generator) => {
               <option value="">Seleccioná el turno</option>
               <option value="Mañana">Mañana</option>
               <option value="Tarde">Tarde</option>
+              <option value="Noche">Noche</option>
               <option value="Vespertino">Vespertino</option>
-              <option value="Jornada Completa">Jornada Completa</option>
             </select>
           </div>
         </div>
@@ -23382,8 +23382,8 @@ var __async = (__this, __arguments, generator) => {
           <option value="">Seleccioná el turno</option>
           <option value="Mañana">Mañana</option>
           <option value="Tarde">Tarde</option>
+          <option value="Noche">Noche</option>
           <option value="Vespertino">Vespertino</option>
-          <option value="Jornada Completa">Jornada Completa</option>
         </select>
       </div>
       <div class="field">
@@ -27946,7 +27946,6 @@ var procesoData = {};
 var _procesoTipo = 'num';
 var _pcellSid = null;
 var _pcellRid = null;
-var _procSkipAutoScroll = false;
 
 function procListKey(cid) { return 'aa_pl_' + cid; }
 function procDataKey(cid) { return 'aa_pd_' + cid; }
@@ -28411,8 +28410,7 @@ function procRenderizarTabla() {
 
   setTimeout(function() {
     var w = document.querySelector('#proc-tabla-wrap .table-wrap');
-    if (w && !_procSkipAutoScroll) w.scrollLeft = w.scrollWidth;
-    _procSkipAutoScroll = false;
+    if (w) w.scrollLeft = w.scrollWidth;
   }, 60);
 }
 
@@ -28460,9 +28458,11 @@ function setProcesoVal(val) {
   if (val === null) delete procesoData[cid][_pcellSid][_pcellRid];
   else procesoData[cid][_pcellSid][_pcellRid] = val;
   procGuardar(cid);
-  _procSkipAutoScroll = true;
   document.getElementById('proceso-cell-modal').classList.remove('open');
   procRenderizarTabla();
+  // Resetear scroll horizontal para que nombre quede visible
+  var tw = document.querySelector('.table-wrap');
+  if (tw) tw.scrollLeft = 0;
 }
 
 function selectProcesoTipo(tipo) {
@@ -30019,6 +30019,10 @@ function showGraceModal(userName, daysLeft) {
   initOfflineMode();
   loadObservations();
   const saved = localStorage.getItem('aa_sb_session');
+  // Si hay sesión guardada → mostrar "Iniciar sesión"; si no → mostrar "Registrarse"
+  if (!saved) {
+    switchLoginTab('register');
+  }
   if (saved) {
     try {
       const s = JSON.parse(saved);
@@ -30057,7 +30061,7 @@ function showGraceModal(userName, daysLeft) {
 </div>
 
 <!-- Botón flotante cambio de rol -->
-<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:rgba(15,155,142,0.35);color:white;border:1px solid rgba(15,155,142,0.5);border-radius:50px;padding:6px 14px;font-size:0.72rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 2px 10px rgba(15,155,142,0.2);transition:all 0.2s;opacity:0.5;backdrop-filter:blur(4px);" onmouseover="this.style.opacity='1';this.style.background='linear-gradient(135deg,#0f9b8e,#0d7a70)'" onmouseout="this.style.opacity='0.5';this.style.background='rgba(15,155,142,0.35)'"></button>
+<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:8px 16px;font-size:0.75rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.5);transition:all 0.2s;opacity:0.85;"></button>
 
 
 
