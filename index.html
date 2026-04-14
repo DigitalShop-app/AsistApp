@@ -27950,12 +27950,36 @@ var _pcellRid = null;
 function procListKey(cid) { return 'aa_pl_' + cid; }
 function procDataKey(cid) { return 'aa_pd_' + cid; }
 
-function procCargar(cid) {
+async function procCargar(cid) {
+  if (_sbUserId && _sbToken) {
+    try {
+      const rows = await sbFetch('proceso_data?user_id=eq.' + _sbUserId + '&curso_id=eq.' + encodeURIComponent(cid) + '&select=registros,notas');
+      if (rows && rows.length > 0) {
+        procesoRegistros[cid] = rows[0].registros || [];
+        procesoData[cid]      = rows[0].notas     || {};
+      } else {
+        procesoRegistros[cid] = [];
+        procesoData[cid]      = {};
+      }
+      return;
+    } catch(e) { console.warn('procCargar Supabase error, usando localStorage:', e); }
+  }
   try { procesoRegistros[cid] = JSON.parse(localStorage.getItem(procListKey(cid)) || '[]'); } catch(e) { procesoRegistros[cid] = []; }
   try { procesoData[cid] = JSON.parse(localStorage.getItem(procDataKey(cid)) || '{}'); } catch(e) { procesoData[cid] = {}; }
 }
 
-function procGuardar(cid) {
+async function procGuardar(cid) {
+  if (_sbUserId && _sbToken) {
+    try {
+      await sbFetch('proceso_data', {
+        method: 'POST',
+        prefer: 'resolution=merge-duplicates,return=minimal',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: { user_id: _sbUserId, curso_id: cid, registros: procesoRegistros[cid] || [], notas: procesoData[cid] || {}, updated_at: new Date().toISOString() }
+      });
+      return;
+    } catch(e) { console.warn('procGuardar Supabase error, guardando en localStorage:', e); }
+  }
   localStorage.setItem(procListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
   localStorage.setItem(procDataKey(cid), JSON.stringify(procesoData[cid] || {}));
 }
@@ -28004,7 +28028,7 @@ function procRenderizarGrid() {
   }
 }
 
-function procAbrirCurso(cid) {
+async function procAbrirCurso(cid) {
   activeProcesoCursoId = cid;
   try { localStorage.setItem('aa_proceso_cid', cid); } catch(e) {}
   var c = getCurso(cid);
@@ -28029,7 +28053,7 @@ function procAbrirCurso(cid) {
   if (btnWord)     btnWord.onclick     = openProcesoWordModal;
   if (btnVolver)   btnVolver.onclick   = procMostrarGrid;
 
-  procCargar(cid);
+  await procCargar(cid);
   procRenderizarTabla();
 }
 
@@ -28219,7 +28243,7 @@ function procRenderizarTablaFinal() {
           if(!procesoData[cid]) procesoData[cid]={};
           if(nv===null){delete procesoData[cid]['nf_Final_'+sid];}
           else{procesoData[cid]['nf_Final_'+sid]=nv;}
-          procGuardar(cid); cur=nv; showD();
+          procGuardar(cid).then(function(){ cur=nv; showD(); });
           var row=cell.closest('tr');
           if(row){var tds=row.querySelectorAll('td');var est=tds[tds.length-2];if(est){var v1=calcProm(sid,'1C');var v2=calcProm(sid,'2C');est.innerHTML=estadoBadge(v1,v2);}}
         }
@@ -28450,14 +28474,14 @@ function procAbrirCelda(sid, rid) {
   document.getElementById('proceso-cell-modal').classList.add('open');
 }
 
-function setProcesoVal(val) {
+async function setProcesoVal(val) {
   if (!_pcellSid || !_pcellRid || !activeProcesoCursoId) return;
   var cid = activeProcesoCursoId;
   if (!procesoData[cid]) procesoData[cid] = {};
   if (!procesoData[cid][_pcellSid]) procesoData[cid][_pcellSid] = {};
   if (val === null) delete procesoData[cid][_pcellSid][_pcellRid];
   else procesoData[cid][_pcellSid][_pcellRid] = val;
-  procGuardar(cid);
+  await procGuardar(cid);
   document.getElementById('proceso-cell-modal').classList.remove('open');
   procRenderizarTabla();
   // Resetear scroll horizontal para que nombre quede visible
@@ -28487,7 +28511,7 @@ function openAddProcesoModal() {
   document.getElementById('add-proceso-modal').classList.add('open');
 }
 
-function confirmAddProceso() {
+async function confirmAddProceso() {
   var fecha  = document.getElementById('proceso-add-date').value;
   var nombre = document.getElementById('proceso-add-nombre').value.trim();
   if (!fecha)  { showToast('Selecciona una fecha'); return; }
@@ -28497,7 +28521,7 @@ function confirmAddProceso() {
   var periodo = activeProcesoPeriodo;
   procesoRegistros[cid].push({ id: genId(), fecha: fecha, nombre: nombre, tipo: _procesoTipo, periodo: periodo });
   if (!procesoData[cid]) procesoData[cid] = {};
-  procGuardar(cid);
+  await procGuardar(cid);
   document.getElementById('add-proceso-modal').classList.remove('open');
   procRenderizarTabla();
   showToast('Registro "' + nombre + '" agregado');
@@ -28538,7 +28562,7 @@ function onProcesoSelectChange(rid) {
   if (wrap) wrap.style.display = 'block';
 }
 
-function confirmModifProceso() {
+async function confirmModifProceso() {
   var rid  = document.getElementById('delete-proceso-select').value;
   var cid  = activeProcesoCursoId;
   if (!rid) { showToast('Seleccioná un registro'); return; }
@@ -28561,7 +28585,7 @@ function confirmModifProceso() {
       break;
     }
   }
-  procGuardar(cid);
+  await procGuardar(cid);
   document.getElementById('delete-proceso-modal').classList.remove('open');
   if (activeProcesoPeriodo === 'Final') procRenderizarTablaFinal();
   else procRenderizarTabla();
@@ -28599,7 +28623,7 @@ function openDeleteProcesoModal() {
   }
 }
 
-function confirmDeleteProceso() {
+async function confirmDeleteProceso() {
   var id  = document.getElementById('delete-proceso-select').value;
   if (!id) { showToast('Selecciona un registro'); return; }
   var cid = activeProcesoCursoId;
@@ -28607,7 +28631,7 @@ function confirmDeleteProceso() {
   var data = procesoData[cid] || {};
   var sids = Object.keys(data);
   for (var i = 0; i < sids.length; i++) { if (data[sids[i]]) delete data[sids[i]][id]; }
-  procGuardar(cid);
+  await procGuardar(cid);
   document.getElementById('delete-proceso-modal').classList.remove('open');
   procRenderizarTabla();
   showToast('Registro eliminado');
@@ -29236,10 +29260,36 @@ function getConsecutiveAbsences(studentId) {
 // ════════════════════════════════════════
 let observations = {};
 
-function loadObservations() {
+async function loadObservations() {
+  // Intentar cargar desde Supabase; fallback a localStorage si no hay sesión
+  if (_sbUserId && _sbToken) {
+    try {
+      const rows = await sbFetch('observations?user_id=eq.' + _sbUserId + '&select=student_id,data');
+      observations = {};
+      (rows || []).forEach(function(r) { observations[r.student_id] = r.data || []; });
+      return;
+    } catch(e) { console.warn('loadObservations Supabase error, usando localStorage:', e); }
+  }
   try { observations = JSON.parse(localStorage.getItem('aa_observations')||'{}'); } catch(e) { observations = {}; }
 }
-function saveObservations() {
+async function saveObservations() {
+  if (_sbUserId && _sbToken) {
+    try {
+      // Upsert de cada alumno que tenga observaciones
+      const rows = Object.keys(observations).map(function(sid) {
+        return { user_id: _sbUserId, student_id: sid, data: observations[sid], updated_at: new Date().toISOString() };
+      });
+      if (rows.length > 0) {
+        await sbFetch('observations', {
+          method: 'POST',
+          prefer: 'resolution=merge-duplicates,return=minimal',
+          headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+          body: rows
+        });
+      }
+      return;
+    } catch(e) { console.warn('saveObservations Supabase error, guardando en localStorage:', e); }
+  }
   localStorage.setItem('aa_observations', JSON.stringify(observations));
 }
 function getObservationCount(studentId) {
@@ -29391,7 +29441,7 @@ function closeObsLightbox() {
   document.body.style.overflow = '';
 }
 
-function saveObservation() {
+async function saveObservation() {
   const text = document.getElementById('obs-text-input').value.trim();
   if (!text && obsCurrentFiles.length === 0) { showToast('⚠ Escribí una observación o adjuntá un archivo'); return; }
   if (!observations[obsCurrentStudentId]) observations[obsCurrentStudentId] = [];
@@ -29404,7 +29454,7 @@ function saveObservation() {
     category: obsCurrentCategory,
     files: [...obsCurrentFiles]
   });
-  saveObservations();
+  await saveObservations();
   obsCurrentFiles = [];
   document.getElementById('obs-text-input').value = '';
   document.getElementById('obs-file-preview').innerHTML = '';
@@ -29416,20 +29466,20 @@ function saveObservation() {
   showToast('✅ Observación guardada');
 }
 
-function deleteObservation(studentId, idx) {
+async function deleteObservation(studentId, idx) {
   if (!observations[studentId]) return;
   observations[studentId].splice(idx, 1);
-  saveObservations();
+  await saveObservations();
   renderObsList(studentId);
   renderStudentList();
 }
 
-function editObservation(studentId, idx) {
+async function editObservation(studentId, idx) {
   const obs = (observations[studentId]||[])[idx]; if (!obs) return;
   const newText = prompt('Editá la observación:', obs.text);
   if (newText === null) return;
   observations[studentId][idx].text = newText.trim();
-  saveObservations();
+  await saveObservations();
   renderObsList(studentId);
 }
 
@@ -30017,16 +30067,17 @@ function showGraceModal(userName, daysLeft) {
 (async function init() {
   setTodayDate();
   initOfflineMode();
-  loadObservations();
   const saved = localStorage.getItem('aa_sb_session');
   // Si hay sesión guardada → mostrar "Iniciar sesión"; si no → mostrar "Registrarse"
   if (!saved) {
     switchLoginTab('register');
+    await loadObservations(); // sin sesión → carga desde localStorage
   }
   if (saved) {
     try {
       const s = JSON.parse(saved);
-      _sbToken = s.token; _sbUserId = s.userId;
+      _sbToken = s.token; _sbUserId = s.userId; // sesión restaurada ANTES de cargar
+      await loadObservations(); // ahora _sbToken/_sbUserId están disponibles → Supabase
       // Restaurar rol — admin siempre entra como profesor
       const sessionEmail = s.token ? (() => { try { return JSON.parse(atob(s.token.split('.')[1]))?.email || ''; } catch(e) { return ''; } })() : '';
       if (sessionEmail === ADMIN_EMAIL) {
