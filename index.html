@@ -27971,14 +27971,14 @@ async function procCargar(cid) {
 async function procGuardar(cid) {
   if (_sbUserId && _sbToken) {
     try {
-      await sbFetch('proceso_data', {
+      await sbFetch('proceso_data?on_conflict=user_id,curso_id', {
         method: 'POST',
         prefer: 'resolution=merge-duplicates,return=minimal',
         headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: { user_id: _sbUserId, curso_id: cid, registros: procesoRegistros[cid] || [], notas: procesoData[cid] || {}, updated_at: new Date().toISOString() }
       });
       return;
-    } catch(e) { console.warn('procGuardar Supabase error, guardando en localStorage:', e); }
+    } catch(e) { console.error('procGuardar ERROR:', e); showToast('⚠ Error al guardar en la nube: ' + (e.message||e)); }
   }
   localStorage.setItem(procListKey(cid), JSON.stringify(procesoRegistros[cid] || []));
   localStorage.setItem(procDataKey(cid), JSON.stringify(procesoData[cid] || {}));
@@ -29280,7 +29280,7 @@ async function saveObservations() {
         return { user_id: _sbUserId, student_id: sid, data: observations[sid], updated_at: new Date().toISOString() };
       });
       if (rows.length > 0) {
-        await sbFetch('observations', {
+        await sbFetch('observations?on_conflict=user_id,student_id', {
           method: 'POST',
           prefer: 'resolution=merge-duplicates,return=minimal',
           headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
