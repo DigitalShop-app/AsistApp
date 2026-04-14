@@ -28272,7 +28272,7 @@ function setProcesoPeriodo(per) {
   }
 }
 
-function procRenderizarTabla() {
+function procRenderizarTabla(keepScroll) {
   var cid  = activeProcesoCursoId;
   if (!cid) return;
 
@@ -28432,10 +28432,12 @@ function procRenderizarTabla() {
     tbody.appendChild(tr);
   }
 
-  setTimeout(function() {
-    var w = document.querySelector('#proc-tabla-wrap .table-wrap');
-    if (w) w.scrollLeft = w.scrollWidth;
-  }, 60);
+  if (!keepScroll) {
+    setTimeout(function() {
+      var w = document.querySelector('#proc-tabla-wrap .table-wrap');
+      if (w) w.scrollLeft = w.scrollWidth;
+    }, 60);
+  }
 }
 
 function procBadge(val, tipo) {
@@ -28483,8 +28485,8 @@ async function setProcesoVal(val) {
   else procesoData[cid][_pcellSid][_pcellRid] = val;
   await procGuardar(cid);
   document.getElementById('proceso-cell-modal').classList.remove('open');
-  procRenderizarTabla();
-  // Resetear scroll horizontal para que nombre quede visible
+  procRenderizarTabla(true);
+  // Mantener scroll al inicio para que el nombre del alumno quede visible
   var tw = document.querySelector('.table-wrap');
   if (tw) tw.scrollLeft = 0;
 }
