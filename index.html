@@ -22653,6 +22653,20 @@ var __async = (__this, __arguments, generator) => {
   .curso-card-meta { font-size: 0.78rem; color: #6b7280; font-weight: 600; margin-top: 2px; }
   .curso-card-count { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--teal); background: var(--mist); padding: 2px 8px; border-radius: 20px; width: fit-content; margin-top: 8px; }
   .curso-card-actions { display: flex; gap: 6px; margin-top: 12px; align-items: center; }
+  .curso-card { cursor: pointer; }
+  .curso-detalle-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 14px 18px; border-radius: 12px; border: 2px solid var(--border); background: white; font-family: Nunito, sans-serif; font-weight: 700; font-size: 1rem; color: var(--ink); cursor: pointer; transition: all 0.15s; text-align: center; }
+  .curso-detalle-btn:hover { border-color: var(--teal); background: var(--mist); color: var(--teal); }
+  .curso-detalle-btn .btn-icon { font-size: 1.4rem; width: 36px; text-align: center; flex-shrink: 0; }
+  .curso-detalle-btn.danger { border-color: var(--border); color: #dc2626; }
+  .curso-detalle-btn.danger:hover { background: #fff0f0; border-color: #dc2626; }
+  .curso-detalle-btn.primary { border-color: var(--teal); background: var(--teal); color: white; }
+  .curso-detalle-btn.primary:hover { background: #0d8a7e; }
+  /* Desktop: grilla apaisada 2 columnas */
+  @media (min-width: 640px) {
+    #curso-detalle-botones { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px; }
+    #curso-detalle-botones .primary { grid-column: 1 / -1; }
+    #curso-detalle-view { max-width: 700px !important; }
+  }
   .curso-btn-nomina { flex: 2; min-width: 0; }
   .curso-btn-qr     { flex: 1; min-width: 0; }
   .curso-btn-icon   { flex: 0 0 40px; width: 40px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
@@ -23304,11 +23318,25 @@ var __async = (__this, __arguments, generator) => {
 
 <!-- ═══ CURSOS ═══ -->
 <div class="view" id="view-cursos">
-  <div class="page-title">🏫 Mis Cursos</div>
-  <p class="page-sub">Seleccioná un curso para gestionarlo, o creá uno nuevo al final de la página.</p>
 
-  <!-- Cursos grid primero -->
-  <div class="cursos-grid" id="cursos-grid"></div>
+  <!-- GRID VIEW -->
+  <div id="curso-grid-view">
+    <div class="page-title">&#127979; Mis Cursos</div>
+    <p class="page-sub">Tap sobre un curso para gestionarlo, o cre&#225; uno nuevo al final de la p&#225;gina.</p>
+    <div class="cursos-grid" id="cursos-grid"></div>
+  <!-- Formulario nuevo curso -->
+  <div class="new-curso-form" id="new-curso-form-placeholder"></div>
+  </div>
+
+  <!-- DETALLE VIEW -->
+  <div id="curso-detalle-view" style="display:none;max-width:480px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <button class="btn btn-secondary btn-sm" onclick="cursosVolverGrid()">&#8592; Volver</button>
+      <div class="page-title" style="margin:0" id="curso-detalle-titulo">Curso</div>
+    </div>
+    <div class="curso-card" style="cursor:default;margin-bottom:1.5rem" id="curso-detalle-card"></div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="curso-detalle-botones"></div>
+  </div>
 
   <!-- Formulario nuevo curso al final, colapsable -->
   <div class="new-curso-form" id="new-curso-form">
@@ -23896,7 +23924,7 @@ function showView(id, btn) {
   viewEl.classList.add('active');
   if (btn) btn.classList.add('active');
   if (id !== 'scanner') stopScanner();
-  if (id === 'cursos')   renderCursosGrid();
+  if (id === 'cursos')   { renderCursosGrid(); }
   if (id === 'nomina')   { syncSelects(); renderStudentList(); }
   if (id === 'qr')       { syncSelects(); }
   if (id === 'scanner')  { syncSelects(); }
@@ -23961,33 +23989,104 @@ function addCurso() {
 function renderCursosGrid() {
   const grid = document.getElementById('cursos-grid');
   grid.innerHTML = '';
+  // Show grid view, hide detalle
+  const gv = document.getElementById('curso-grid-view');
+  const dv = document.getElementById('curso-detalle-view');
+  if (gv) gv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+
   if (cursos.length === 0) {
     const d = document.createElement('div');
     d.className = 'empty-state'; d.style.gridColumn = '1/-1';
-    d.innerHTML = '<div class="ei">🏫</div><p>Aún no tenés cursos. ¡Creá el primero abajo!</p>';
+    d.innerHTML = '<div class="ei">&#127979;</div><p>Aun no tenes cursos. Crea el primero abajo!</p>';
     grid.appendChild(d);
-    // Form always open
     return;
   }
-  cursos.forEach(c => {
-    const count = studentsOf(c.id).length;
+  cursos.forEach(cur => {
+    const count = studentsOf(cur.id).length;
     const div = document.createElement('div');
     div.className = 'curso-card';
-    div.innerHTML = `
-      <div class="curso-card-stripe" style="background:${c.color}"></div>
-      <div class="curso-card-name">${c.nombre}</div>
-      ${c.materia?`<div class="curso-card-meta">📖 ${c.materia}</div>`:''}
-      ${c.docente?`<div class="curso-card-meta">👤 ${c.docente}</div>`:''}
-      <div class="curso-card-count">👥 ${count} alumno${count!==1?'s':''}</div>
-      <div class="curso-card-actions">
-        <button class="btn btn-primary btn-sm curso-btn-nomina" onclick="goToNomina('${c.id}')">👥 Nómina</button>
-        <button class="btn btn-secondary btn-sm curso-btn-qr" onclick="goToQR('${c.id}')">🔲 QR</button>
-        <button class="btn btn-secondary btn-sm" onclick="goToDiario('${c.id}','cursos')" title="Diario de Clase">&#128211; Diario</button>
-        <button class="btn btn-secondary btn-sm curso-btn-icon" onclick="openEditCurso('${c.id}')" title="Editar curso">✏️</button>
-        <button class="btn btn-danger btn-sm curso-btn-icon" onclick="deleteCurso('${c.id}')">🗑</button>
-      </div>`;
+    div.style.cursor = 'pointer';
+    div.innerHTML =
+      '<div class="curso-card-stripe" style="background:' + (cur.color||'var(--teal)') + '"></div>' +
+      '<div class="curso-card-name">' + cur.nombre + '</div>' +
+      (cur.materia ? '<div class="curso-card-meta">&#128214; ' + cur.materia + '</div>' : '') +
+      (cur.docente ? '<div class="curso-card-meta">&#128100; ' + cur.docente + '</div>' : '') +
+      '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count!==1?'s':'') + '</div>';
+    div.addEventListener('click', function() { abrirDetalleCurso(cur.id); });
     grid.appendChild(div);
   });
+}
+
+function abrirDetalleCurso(cid) {
+  const cur = getCurso(cid);
+  if (!cur) return;
+  const count = studentsOf(cid).length;
+  const gv = document.getElementById('curso-grid-view');
+  const dv = document.getElementById('curso-detalle-view');
+  const nf = document.getElementById('new-curso-form');
+  if (gv) gv.style.display = 'none';
+  if (dv) dv.style.display = 'block';
+  if (nf) nf.style.display = 'none';
+
+  // Titulo
+  const titulo = document.getElementById('curso-detalle-titulo');
+  if (titulo) titulo.textContent = cur.nombre;
+
+  // Card info
+  const card = document.getElementById('curso-detalle-card');
+  if (card) {
+    card.innerHTML =
+      '<div class="curso-card-stripe" style="background:' + (cur.color||'var(--teal)') + '"></div>' +
+      '<div class="curso-card-name">' + cur.nombre + '</div>' +
+      (cur.materia ? '<div class="curso-card-meta">&#128214; ' + cur.materia + '</div>' : '') +
+      (cur.docente ? '<div class="curso-card-meta">&#128100; ' + cur.docente + '</div>' : '') +
+      '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count!==1?'s':'') + '</div>';
+  }
+
+  // Botones
+  const btns = document.getElementById('curso-detalle-botones');
+  if (!btns) return;
+  btns.innerHTML = '';
+
+  var bDiario = document.createElement('button');
+  bDiario.className = 'curso-detalle-btn primary';
+  bDiario.innerHTML = '<span class="btn-icon">&#128211;</span><span>Diario de Clase</span>';
+  bDiario.addEventListener('click', function() { goToDiario(cid, 'cursos'); });
+  btns.appendChild(bDiario);
+
+  var bNomina = document.createElement('button');
+  bNomina.className = 'curso-detalle-btn';
+  bNomina.innerHTML = '<span class="btn-icon">&#128101;</span><span>Nomina de Alumnos</span>';
+  bNomina.addEventListener('click', function() { goToNomina(cid); });
+  btns.appendChild(bNomina);
+
+  var bQR = document.createElement('button');
+  bQR.className = 'curso-detalle-btn';
+  bQR.innerHTML = '<span class="btn-icon">&#9726;</span><span>Ver codigos QR</span>';
+  bQR.addEventListener('click', function() { goToQR(cid); });
+  btns.appendChild(bQR);
+
+  var bEdit = document.createElement('button');
+  bEdit.className = 'curso-detalle-btn';
+  bEdit.innerHTML = '<span class="btn-icon">&#9998;</span><span>Editar datos del curso</span>';
+  bEdit.addEventListener('click', function() { openEditCurso(cid); });
+  btns.appendChild(bEdit);
+
+  var bDel = document.createElement('button');
+  bDel.className = 'curso-detalle-btn danger';
+  bDel.innerHTML = '<span class="btn-icon">&#128465;</span><span>Eliminar curso</span>';
+  bDel.addEventListener('click', function() { deleteCurso(cid); });
+  btns.appendChild(bDel);
+}
+
+function cursosVolverGrid() {
+  const gv = document.getElementById('curso-grid-view');
+  const dv = document.getElementById('curso-detalle-view');
+  const nf = document.getElementById('new-curso-form');
+  if (gv) gv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+  if (nf) nf.style.display = 'block';
 }
 
 let _editCursoId = null;
@@ -28525,6 +28624,9 @@ function openAddProcesoModal() {
   var _lbl = {'1C':'1° Cuatrimestre','2C':'2° Cuatrimestre','Int':'Intensificación','Final':'Final'};
   var _plEl = document.getElementById('proc-modal-periodo-label');
   if (_plEl) _plEl.textContent = _lbl[activeProcesoPeriodo] || activeProcesoPeriodo;
+  // Sync periodo select
+  var _pSel = document.getElementById('proc-modal-periodo-sel');
+  if (_pSel) _pSel.value = activeProcesoPeriodo;
   document.getElementById('add-proceso-modal').classList.add('open');
 }
 
@@ -29942,7 +30044,12 @@ function showGraceModal(userName, daysLeft) {
     <div class="field"><label>📌 Nombre</label><input type="text" id="proceso-add-nombre" placeholder="Ej: Examen Unidad 2, TP Nº3..."></div>
     <div class="field">
       <label>📆 Período</label>
-      <div style="padding:8px 12px;background:var(--mist);border-radius:8px;border:1px solid var(--teal);font-weight:700;color:var(--teal);font-size:0.9rem" id="proc-modal-periodo-label">1° Cuatrimestre</div>
+      <select id="proc-modal-periodo-sel" onchange="activeProcesoPeriodo=this.value" style="font-weight:700;color:var(--teal)">
+        <option value="1C">1° Cuatrimestre</option>
+        <option value="2C">2° Cuatrimestre</option>
+        <option value="Int">Intensificación</option>
+        <option value="Final">Final</option>
+      </select>
     </div>
     <div class="field">
       <label>📊 Tipo</label>
@@ -30143,7 +30250,7 @@ function showGraceModal(userName, daysLeft) {
 </div>
 
 <!-- Botón flotante cambio de rol -->
-<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:8px 16px;font-size:0.75rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.5);transition:all 0.2s;opacity:0.85;"></button>
+<button id="btn-toggle-role" onclick="toggleRole()" title="Cambiar rol" style="display:none;position:fixed;bottom:16px;right:16px;z-index:99990;background:linear-gradient(135deg,#0f9b8e,#0d7a70);color:white;border:none;border-radius:50px;padding:8px 16px;font-size:0.75rem;font-weight:800;font-family:Nunito,sans-serif;cursor:pointer;box-shadow:0 4px 20px rgba(15,155,142,0.5);transition:all 0.2s;opacity:0.35;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.35'"></button>
 
 
 
@@ -30323,9 +30430,24 @@ function diarioContador(ta){var ct=document.getElementById('diario-contador');if
 function diarioContadorEdit(ta){var ct=document.getElementById('diario-edit-contador');if(!ct)return;var len=(ta.value||'').length;ct.textContent=len+' / 600';ct.className='diario-char-counter'+(len>=600?' limit':len>=500?' warn':'');}
 function diarioInit(){var sel=document.getElementById('diario-curso-sel');if(!sel)return;sel.innerHTML='<option value="">- Selecciona un curso -</option>';(cursos||[]).forEach(function(cur){var o=document.createElement('option');o.value=cur.id;o.textContent=cur.nombre;sel.appendChild(o);});}
 function diarioCursoChange(){var sel=document.getElementById('diario-curso-sel');_diarioCursoId=sel.value||null;var ct=document.getElementById('diario-content');if(!_diarioCursoId){if(ct)ct.style.display='none';return;}if(ct)ct.style.display='block';var fd=document.getElementById('diario-fecha');if(fd&&!fd.value)fd.value=new Date().toISOString().split('T')[0];var bar=document.getElementById('diario-bar');var cur=(cursos||[]).find(function(x){return x.id===_diarioCursoId;});if(bar&&cur)bar.textContent=cur.nombre;diarioCargar();}
-async function diarioCargar(){if(!_diarioCursoId||!_sbToken)return;try{var data=await sbFetch('temas?user_id=eq.'+_sbUserId+'&curso_id=eq.'+_diarioCursoId+'&order=fecha.desc',{headers:{'Range':'0-9999','Range-Unit':'items'}});_diarioItems=Array.isArray(data)?data:[];diarioRender();}catch(e){showToast('Error cargando el Diario');}}
-function diarioRender(){var lista=document.getElementById('diario-lista'),empty=document.getElementById('diario-empty');if(!lista)return;lista.innerHTML='';if(_diarioItems.length===0){if(empty)empty.style.display='flex';return;}if(empty)empty.style.display='none';_diarioItems.forEach(function(item){var d=new Date(item.fecha+'T12:00:00');var fStr=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});fStr=fStr.charAt(0).toUpperCase()+fStr.slice(1);var entry=document.createElement('div');entry.className='diario-entry';var header=document.createElement('div');header.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px';var ds=document.createElement('span');ds.className='diario-entry-date';ds.textContent=fStr;var btns=document.createElement('div');btns.style.cssText='display:flex;gap:5px';var eb=document.createElement('button');eb.style.cssText='background:none;border:none;cursor:pointer;font-size:0.85rem;color:#6b7280;padding:2px 5px';eb.textContent='Editar';eb.title='Editar';(function(id){eb.addEventListener('click',function(){diarioAbrirEditar(id);});})(item.id);var db=document.createElement('button');db.style.cssText='background:none;border:none;cursor:pointer;font-size:0.85rem;color:#e85d75;padding:2px 5px';db.textContent='Eliminar';db.title='Eliminar';(function(id){db.addEventListener('click',function(){diarioEliminar(id);});})(item.id);btns.appendChild(eb);btns.appendChild(db);header.appendChild(ds);header.appendChild(btns);var txt=document.createElement('div');txt.className='diario-entry-text';txt.textContent=item.tema;entry.appendChild(header);entry.appendChild(txt);lista.appendChild(entry);});}
-async function diarioGuardar(){if(!_diarioCursoId){showToast('Selecciona un curso primero');return;}if(!_sbToken){showToast('Sesion expirada');return;}var fecha=(document.getElementById('diario-fecha').value||'').trim();var texto=(document.getElementById('diario-texto').value||'').trim();if(!fecha){showToast('Selecciona una fecha');return;}if(!texto){showToast('Escribi el contenido');return;}if(texto.length>600){showToast('Maximo 600 caracteres');return;}try{await sbFetch('temas',{method:'POST',prefer:'return=minimal',body:{user_id:_sbUserId,curso_id:_diarioCursoId,fecha:fecha,tema:texto}});document.getElementById('diario-texto').value='';diarioContador(document.getElementById('diario-texto'));showToast('Entrada guardada');diarioCargar();}catch(e){showToast('Error al guardar: '+(e.message||''));console.error(e);}}
+async function diarioCargar(){if(!_diarioCursoId||!_sbToken)return;try{var data=await sbFetch('temas?user_id=eq.'+_sbUserId+'&curso_id=eq.'+_diarioCursoId+'&order=created_at.desc',{headers:{'Range':'0-9999','Range-Unit':'items'}});_diarioItems=Array.isArray(data)?data:[];diarioRender();}catch(e){showToast('Error cargando el Diario');}}
+function diarioRender(){var lista=document.getElementById('diario-lista'),empty=document.getElementById('diario-empty');if(!lista)return;lista.innerHTML='';if(_diarioItems.length===0){if(empty)empty.style.display='flex';return;}if(empty)empty.style.display='none';_diarioItems.forEach(function(item){
+  var dateStr='';var dayStr='';
+  if(item.fecha){var d2=new Date(item.fecha+'T12:00:00');var days=['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];dayStr=days[d2.getDay()];var parts=item.fecha.split('-');if(parts.length===3)dateStr=parts[2]+'/'+parts[1]+'/'+parts[2].slice(-2);}
+  var dateLabel=(dayStr?dayStr+' · ':'')+dateStr;
+  var entry=document.createElement('div');entry.className='diario-entry';
+  var header=document.createElement('div');header.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap';
+  var ds=document.createElement('span');ds.className='obs-entry-date';ds.textContent=dateLabel;
+  var bWrap=document.createElement('span');bWrap.style.cssText='margin-left:auto;display:flex;gap:6px';
+  var eb=document.createElement('button');eb.style.cssText='background:none;border:none;cursor:pointer;color:var(--teal);font-size:0.75rem;font-weight:700';eb.innerHTML='&#9998; Editar';
+  (function(id){eb.addEventListener('click',function(){diarioAbrirEditar(id);});})(item.id);
+  var db=document.createElement('button');db.style.cssText='background:none;border:none;cursor:pointer;color:var(--rose);font-size:0.75rem;font-weight:700';db.innerHTML='&#10005; Eliminar';
+  (function(id){db.addEventListener('click',function(){diarioEliminar(id);});})(item.id);
+  bWrap.appendChild(eb);bWrap.appendChild(db);
+  header.appendChild(ds);header.appendChild(bWrap);
+  var txt=document.createElement('div');txt.className='diario-entry-text';txt.textContent=item.tema;
+  entry.appendChild(header);entry.appendChild(txt);lista.appendChild(entry);});}
+async function diarioGuardar(){if(!_diarioCursoId){showToast('Selecciona un curso primero');return;}if(!_sbToken){showToast('Sesion expirada');return;}var fecha=(document.getElementById('diario-fecha').value||'').trim();var texto=(document.getElementById('diario-texto').value||'').trim();if(!fecha){showToast('Selecciona una fecha');return;}if(!texto){showToast('Escribi el contenido');return;}if(texto.length>600){showToast('Maximo 600 caracteres');return;}try{var ahora=new Date();var horaStr=ahora.getHours().toString().padStart(2,'0')+':'+ahora.getMinutes().toString().padStart(2,'0');await sbFetch('temas',{method:'POST',prefer:'return=minimal',body:{user_id:_sbUserId,curso_id:_diarioCursoId,fecha:fecha,hora:horaStr,tema:texto}});document.getElementById('diario-texto').value='';diarioContador(document.getElementById('diario-texto'));showToast('Entrada guardada');diarioCargar();}catch(e){showToast('Error al guardar: '+(e.message||''));console.error(e);}}
 function diarioAbrirEditar(id){var item=_diarioItems.find(function(x){return x.id===id;});if(!item)return;document.getElementById('diario-edit-id').value=id;document.getElementById('diario-edit-fecha').value=item.fecha;var ta=document.getElementById('diario-edit-texto');ta.value=item.tema;diarioContadorEdit(ta);document.getElementById('diario-edit-modal').classList.add('open');}
 async function diarioEditarGuardar(){var id=document.getElementById('diario-edit-id').value;var fecha=(document.getElementById('diario-edit-fecha').value||'').trim();var texto=(document.getElementById('diario-edit-texto').value||'').trim();if(!fecha||!texto){showToast('Completa todos los campos');return;}if(texto.length>600){showToast('Maximo 600 caracteres');return;}try{await sbFetch('temas?id=eq.'+id+'&user_id=eq.'+_sbUserId,{method:'PATCH',prefer:'return=minimal',body:{fecha:fecha,tema:texto}});document.getElementById('diario-edit-modal').classList.remove('open');showToast('Entrada actualizada');diarioCargar();}catch(e){showToast('Error al actualizar');}}
 async function diarioEliminar(id){var ok=await showConfirm('Eliminar esta entrada?','Esta accion no se puede deshacer.','','Eliminar','btn-danger');if(!ok)return;try{await sbFetch('temas?id=eq.'+id+'&user_id=eq.'+_sbUserId,{method:'DELETE',prefer:'return=minimal'});showToast('Entrada eliminada');diarioCargar();}catch(e){showToast('Error al eliminar');}}
