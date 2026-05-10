@@ -22936,15 +22936,15 @@ var __async = (__this, __arguments, generator) => {
   .pcual-i_minus { background: #c0392b; color: white; font-size: 0.72rem; }
   /* Escala simbólica */
   .psimb { font-size: 1.2rem; }
-  .diario-entry { background:var(--paper);border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:4px solid var(--teal); }
-  .diario-entry-date { font-family:"Barlow Condensed",sans-serif;font-size:0.88rem;font-weight:600;color:white;letter-spacing:0.5px;background:var(--teal);display:inline-block;padding:2px 10px;border-radius:6px; }
-  .diario-entry-text { font-size:0.88rem;color:var(--ink);white-space:pre-wrap;margin-top:6px;line-height:1.6; }
-  .diario-char-counter { font-size:0.72rem;color:#9ca3af;text-align:right;margin-top:3px;font-family:"DM Mono",monospace; }
-  .diario-char-counter.warn { color:#e67e22; }
-  .diario-char-counter.limit { color:#e85d75;font-weight:800; }
-  .pinf-tea { background:#DBEAFE;color:#1D4ED8;font-size:0.78rem;font-weight:900; }
-  .pinf-tep { background:#DCFCE7;color:#15803D;font-size:0.78rem;font-weight:900; }
-  .pinf-ted { background:#FEE2E2;color:#DC2626;font-size:0.78rem;font-weight:900; }
+  .pinf-tea{background:#DBEAFE;color:#1D4ED8;font-size:0.78rem;font-weight:900;}
+  .pinf-tep{background:#DCFCE7;color:#15803D;font-size:0.78rem;font-weight:900;}
+  .pinf-ted{background:#FEE2E2;color:#DC2626;font-size:0.78rem;font-weight:900;}
+  .diario-entry{background:var(--paper);border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:4px solid var(--teal);}
+  .diario-entry-date{font-family:"Barlow Condensed",sans-serif;font-size:0.88rem;font-weight:600;color:white;letter-spacing:0.5px;background:var(--teal);display:inline-block;padding:2px 10px;border-radius:6px;}
+  .diario-entry-text{font-size:0.88rem;color:var(--ink);white-space:pre-wrap;margin-top:6px;line-height:1.6;}
+  .diario-char-counter{font-size:0.72rem;color:#9ca3af;text-align:right;margin-top:3px;font-family:"DM Mono",monospace;}
+  .diario-char-counter.warn{color:#e67e22;}
+  .diario-char-counter.limit{color:#e85d75;font-weight:800;}
   /* Totales proceso */
   .proceso-total-row td { background: #f0faf5 !important; font-weight: 800; font-size: 0.78rem; }
   .proceso-col-type { font-size: 0.65rem; color: #9ca3af; font-weight: 600; letter-spacing: 0.3px; display: block; margin-top: 2px; }
@@ -23982,7 +23982,7 @@ function renderCursosGrid() {
       <div class="curso-card-actions">
         <button class="btn btn-primary btn-sm curso-btn-nomina" onclick="goToNomina('${c.id}')">👥 Nómina</button>
         <button class="btn btn-secondary btn-sm curso-btn-qr" onclick="goToQR('${c.id}')">🔲 QR</button>
-        <button class="btn btn-secondary btn-sm" onclick="goToDiario('${c.id}', 'cursos')" title="Diario de Clase">📓 Diario de Clase</button>
+        <button class="btn btn-secondary btn-sm" onclick="goToDiario('${c.id}','cursos')" title="Diario de Clase">&#128211; Diario</button>
         <button class="btn btn-secondary btn-sm curso-btn-icon" onclick="openEditCurso('${c.id}')" title="Editar curso">✏️</button>
         <button class="btn btn-danger btn-sm curso-btn-icon" onclick="deleteCurso('${c.id}')">🗑</button>
       </div>`;
@@ -28025,7 +28025,6 @@ function procRenderizarGrid() {
     var div = document.createElement('div');
     div.className = 'curso-card';
     div.style.cursor = 'pointer';
-    div.style.transition = 'all 0.15s';
     (function(curso) {
       div.onclick = function() { procAbrirCurso(curso.id); };
     })(c);
@@ -28035,7 +28034,7 @@ function procRenderizarGrid() {
     var docente = c.docente ? '<div class="curso-card-meta">&#128100; ' + c.docente + '</div>' : '';
     var cant    = '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count !== 1 ? 's' : '') + '</div>';
     var acciones = '<div class="curso-card-actions" style="margin-top:12px">' +
-                   '<button class="btn btn-primary btn-sm" style="flex:1" onclick="procAbrirCurso(\''+curso.id+'\')" >📝 Ver proceso</button>' +
+                   '<button class="btn btn-primary btn-sm" style="flex:1">&#128221; Ver proceso</button>' +
                    '</div>';
     div.innerHTML = stripe + nombre + materia + docente + cant + acciones;
     grid.appendChild(div);
@@ -28467,7 +28466,7 @@ function procBadge(val, tipo) {
     var map2 = {'EX':'pcual-mb_plus','MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
     return '<span class="proceso-badge ' + (map2[val]||'') + '" style="width:32px;height:32px;font-size:0.72rem">' + val + '</span>';
   }
-  if (tipo === 'inf') { var ic=val==='TEA'?'pinf-tea':val==='TEP'?'pinf-tep':val==='TED'?'pinf-ted':''; return '<span class="proceso-badge '+ic+'" style="width:36px;height:32px;font-size:0.72rem">'+val+'</span>'; }
+  if(tipo==='inf'){var ic=val==='TEA'?'pinf-tea':val==='TEP'?'pinf-tep':val==='TED'?'pinf-ted':'';return '<span class="proceso-badge '+ic+'" style="width:36px;height:32px;font-size:0.72rem">'+val+'</span>';}
   return '<span style="'+SZ+'background:transparent">'+val+'</span>';
 }
 
@@ -29152,7 +29151,7 @@ async function loadAllData() {
     const [c, s, a] = await Promise.all([
       sbFetch(`cursos?user_id=eq.${_sbUserId}&order=created_at.asc`),
       sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
-      sbFetch(`attendance?user_id=eq.${_sbUserId}&fecha=gte.${new Date().getFullYear()}-01-01&order=fecha.asc`, {headers:{'Range':'0-99999','Range-Unit':'items'}})
+      sbFetch(`attendance?user_id=eq.${_sbUserId}&fecha=gte.${new Date().getFullYear()}-01-01&order=fecha.asc`,{headers:{'Range':'0-99999','Range-Unit':'items'}})
     ]);
     // Solo pisar los datos si la respuesta es válida
     // Si viene array vacío pero ya había cursos en memoria, puede ser un error de auth transitorio — no pisar
@@ -29915,7 +29914,7 @@ function showGraceModal(userName, daysLeft) {
       <button class="btn btn-primary btn-sm" id="proc-btn-agregar">&#43; Agregar registro</button>
       <button class="btn btn-secondary btn-sm" id="proc-btn-eliminar">&#128465; Modificar / Eliminar registro</button>
       <button class="btn btn-gold btn-sm" id="proc-btn-word">&#128196; Informe Word</button>
-      <button class="btn btn-secondary btn-sm" onclick="goToDiarioFromProceso()">📓 Diario de Clase</button>
+      <button class="btn btn-secondary btn-sm" onclick="goToDiarioFromProceso()">&#128211; Diario de Clase</button>
     </div>
     <div id="proc-tabla-wrap" style="display:none">
       <div class="table-wrap">
@@ -30275,239 +30274,66 @@ function showGraceModal(userName, daysLeft) {
 <!-- DIARIO DE CLASE -->
 <div class="view" id="view-diario">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;flex-wrap:wrap">
-    <button class="btn btn-secondary btn-sm" id="diario-back-btn" onclick="diarioVolver()" style="display:none">← Volver</button>
-    <div class="page-title" style="margin:0">📓 Diario de Clase</div>
+    <button class="btn btn-secondary btn-sm" id="diario-back-btn" onclick="diarioVolver()" style="display:none">&#8592; Volver</button>
+    <div class="page-title" style="margin:0">&#128211; Diario de Clase</div>
   </div>
-  <p class="page-sub">Registrá el contenido abordado, actividades, acuerdos y compromisos de cada clase.</p>
+  <p class="page-sub">Registr&#225; el contenido abordado, actividades, acuerdos y compromisos de cada clase.</p>
   <div class="field" style="max-width:400px;margin-bottom:1rem">
-    <label>📚 Curso</label>
-    <select id="diario-curso-sel" onchange="diarioCursoChange()"><option value="">— Seleccioná un curso —</option></select>
+    <label>&#128218; Curso</label>
+    <select id="diario-curso-sel" onchange="diarioCursoChange()"><option value="">&#8212; Seleccion&#225; un curso &#8212;</option></select>
   </div>
   <div id="diario-content" style="display:none;max-width:700px">
     <div class="curso-bar" id="diario-bar" style="margin-bottom:1.2rem"></div>
     <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.4rem;border:1.5px solid rgba(15,155,142,0.3)">
-      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">✏️ Nueva entrada</div>
-      <div style="margin-bottom:10px">
-        <div class="field" style="margin:0 0 10px 0;max-width:200px"><label>📅 Fecha</label><input type="date" id="diario-fecha" style="font-size:0.9rem"></div>
-        <textarea id="diario-texto" maxlength="600" oninput="diarioContador(this)" placeholder="Ej: Supresión de paréntesis · Actividad pág. 45 · Acuerdo: traer calculadora próxima clase." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
-        <div class="diario-char-counter" id="diario-contador">0 / 600</div>
-      </div>
-      <button class="btn btn-primary btn-full" onclick="diarioGuardar()">💾 Guardar entrada</button>
+      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">&#9998; Nueva entrada</div>
+      <div class="field" style="margin:0 0 10px 0;max-width:200px"><label>&#128197; Fecha</label><input type="date" id="diario-fecha" style="font-size:0.9rem"></div>
+      <textarea id="diario-texto" maxlength="600" oninput="diarioContador(this)" placeholder="Ej: Supresion de parentesis. Actividad pag. 45. Acuerdo: traer calculadora proxima clase." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
+      <div class="diario-char-counter" id="diario-contador">0 / 600</div>
+      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="diarioGuardar()">Guardar entrada</button>
     </div>
     <div id="diario-lista"></div>
     <div id="diario-empty" class="empty-state" style="display:none">
-      <div class="ei">📓</div>
-      <p>Sin entradas aún</p>
-      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Completá el formulario de arriba para registrar la primera clase</p>
+      <div class="ei">&#128211;</div><p>Sin entradas aun</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Complete el formulario para registrar la primera clase</p>
     </div>
   </div>
 </div>
-
 <div class="modal-overlay" id="diario-edit-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="max-width:520px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <div class="card-title" style="font-size:1.1rem;margin:0">✏️ Editar entrada del Diario</div>
-      <button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">✕</button>
+      <div class="card-title" style="font-size:1.1rem;margin:0">&#9998; Editar entrada</div>
+      <button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&#10005;</button>
     </div>
-    <div class="field"><label>📅 Fecha</label><input type="date" id="diario-edit-fecha"></div>
+    <div class="field"><label>&#128197; Fecha</label><input type="date" id="diario-edit-fecha"></div>
     <div class="field">
-      <label>📝 Contenido</label>
+      <label>&#128221; Contenido</label>
       <textarea id="diario-edit-texto" maxlength="600" oninput="diarioContadorEdit(this)" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
       <div class="diario-char-counter" id="diario-edit-contador">0 / 600</div>
     </div>
     <input type="hidden" id="diario-edit-id">
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
       <button class="btn btn-secondary" onclick="document.getElementById('diario-edit-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-primary" onclick="diarioEditarGuardar()">✅ Guardar cambios</button>
+      <button class="btn btn-primary" onclick="diarioEditarGuardar()">Guardar cambios</button>
     </div>
   </div>
 </div>
-
 <script>
-var _diarioCursoId = null, _diarioItems = [], _diarioOrigenView = null;
-
-function diarioContador(ta) {
-  var ct = document.getElementById('diario-contador');
-  if (!ct) return;
-  var len = (ta.value || '').length;
-  ct.textContent = len + ' / 600';
-  ct.className = 'diario-char-counter' + (len >= 600 ? ' limit' : len >= 500 ? ' warn' : '');
-}
-
-function diarioContadorEdit(ta) {
-  var ct = document.getElementById('diario-edit-contador');
-  if (!ct) return;
-  var len = (ta.value || '').length;
-  ct.textContent = len + ' / 600';
-  ct.className = 'diario-char-counter' + (len >= 600 ? ' limit' : len >= 500 ? ' warn' : '');
-}
-
-function diarioInit() {
-  var sel = document.getElementById('diario-curso-sel');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">— Seleccioná un curso —</option>';
-  (cursos || []).forEach(function(cur) {
-    var o = document.createElement('option');
-    o.value = cur.id; o.textContent = cur.nombre;
-    sel.appendChild(o);
-  });
-}
-
-function diarioCursoChange() {
-  var sel = document.getElementById('diario-curso-sel');
-  _diarioCursoId = sel.value || null;
-  var ct = document.getElementById('diario-content');
-  if (!_diarioCursoId) { if (ct) ct.style.display = 'none'; return; }
-  if (ct) ct.style.display = 'block';
-  var fd = document.getElementById('diario-fecha');
-  if (fd && !fd.value) fd.value = new Date().toISOString().split('T')[0];
-  var bar = document.getElementById('diario-bar');
-  var cur = (cursos || []).find(function(x) { return x.id === _diarioCursoId; });
-  if (bar && cur) bar.textContent = cur.nombre;
-  diarioCargar();
-}
-
-async function diarioCargar() {
-  if (!_diarioCursoId || !_sbToken) return;
-  try {
-    var data = await sbFetch('temas?user_id=eq.' + _sbUserId + '&curso_id=eq.' + _diarioCursoId + '&order=fecha.desc', { headers: { 'Range': '0-9999', 'Range-Unit': 'items' } });
-    _diarioItems = Array.isArray(data) ? data : [];
-    diarioRender();
-  } catch(e) { showToast('⚠ Error cargando el Diario'); }
-}
-
-function diarioRender() {
-  var lista = document.getElementById('diario-lista');
-  var empty = document.getElementById('diario-empty');
-  if (!lista) return;
-  lista.innerHTML = '';
-  if (_diarioItems.length === 0) {
-    if (empty) empty.style.display = 'flex';
-    return;
-  }
-  if (empty) empty.style.display = 'none';
-  _diarioItems.forEach(function(item) {
-    var d = new Date(item.fecha + 'T12:00:00');
-    var fStr = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    fStr = fStr.charAt(0).toUpperCase() + fStr.slice(1);
-    var entry = document.createElement('div');
-    entry.className = 'diario-entry';
-    var header = document.createElement('div');
-    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:4px';
-    var dateSpan = document.createElement('span');
-    dateSpan.className = 'diario-entry-date';
-    dateSpan.textContent = fStr;
-    var btns = document.createElement('div');
-    btns.style.cssText = 'display:flex;gap:5px';
-    var eb = document.createElement('button');
-    eb.style.cssText = 'background:none;border:none;cursor:pointer;font-size:0.85rem;color:#6b7280;padding:2px 5px';
-    eb.textContent = '✏️'; eb.title = 'Editar';
-    (function(id) { eb.addEventListener('click', function() { diarioAbrirEditar(id); }); })(item.id);
-    var db = document.createElement('button');
-    db.style.cssText = 'background:none;border:none;cursor:pointer;font-size:0.85rem;color:#e85d75;padding:2px 5px';
-    db.textContent = '🗑'; db.title = 'Eliminar';
-    (function(id) { db.addEventListener('click', function() { diarioEliminar(id); }); })(item.id);
-    btns.appendChild(eb); btns.appendChild(db);
-    header.appendChild(dateSpan); header.appendChild(btns);
-    var text = document.createElement('div');
-    text.className = 'diario-entry-text';
-    text.textContent = item.tema;
-    entry.appendChild(header); entry.appendChild(text);
-    lista.appendChild(entry);
-  });
-}
-
-async function diarioGuardar() {
-  if (!_diarioCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
-  if (!_sbToken) { showToast('⚠ Sesión expirada, volvé a ingresar'); return; }
-  var fecha = (document.getElementById('diario-fecha').value || '').trim();
-  var texto = (document.getElementById('diario-texto').value || '').trim();
-  if (!fecha) { showToast('⚠ Seleccioná una fecha'); return; }
-  if (!texto) { showToast('⚠ Escribí el contenido de la clase'); return; }
-  if (texto.length > 600) { showToast('⚠ Máximo 600 caracteres'); return; }
-  try {
-    await sbFetch('temas', { method: 'POST', prefer: 'return=minimal', body: { user_id: _sbUserId, curso_id: _diarioCursoId, fecha: fecha, tema: texto } });
-    document.getElementById('diario-texto').value = '';
-    diarioContador(document.getElementById('diario-texto'));
-    showToast('✅ Entrada guardada');
-    diarioCargar();
-  } catch(e) { showToast('❌ Error al guardar: ' + (e.message || '')); }
-}
-
-function diarioAbrirEditar(id) {
-  var item = _diarioItems.find(function(x) { return x.id === id; });
-  if (!item) return;
-  document.getElementById('diario-edit-id').value = id;
-  document.getElementById('diario-edit-fecha').value = item.fecha;
-  var ta = document.getElementById('diario-edit-texto');
-  ta.value = item.tema;
-  diarioContadorEdit(ta);
-  document.getElementById('diario-edit-modal').classList.add('open');
-}
-
-async function diarioEditarGuardar() {
-  var id    = document.getElementById('diario-edit-id').value;
-  var fecha = (document.getElementById('diario-edit-fecha').value || '').trim();
-  var texto = (document.getElementById('diario-edit-texto').value || '').trim();
-  if (!fecha || !texto) { showToast('⚠ Completá todos los campos'); return; }
-  if (texto.length > 600) { showToast('⚠ Máximo 600 caracteres'); return; }
-  try {
-    await sbFetch('temas?id=eq.' + id + '&user_id=eq.' + _sbUserId, { method: 'PATCH', prefer: 'return=minimal', body: { fecha: fecha, tema: texto } });
-    document.getElementById('diario-edit-modal').classList.remove('open');
-    showToast('✅ Entrada actualizada');
-    diarioCargar();
-  } catch(e) { showToast('❌ Error al actualizar'); }
-}
-
-async function diarioEliminar(id) {
-  var ok = await showConfirm('¿Eliminar esta entrada del Diario?', 'Esta acción no se puede deshacer.', '🗑', 'Eliminar', 'btn-danger');
-  if (!ok) return;
-  try {
-    await sbFetch('temas?id=eq.' + id + '&user_id=eq.' + _sbUserId, { method: 'DELETE', prefer: 'return=minimal' });
-    showToast('🗑 Entrada eliminada');
-    diarioCargar();
-  } catch(e) { showToast('❌ Error al eliminar'); }
-}
-
-function goToDiario(cursoId, origenView) {
-  _diarioCursoId = cursoId;
-  _diarioOrigenView = origenView || null;
-  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
-  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
-  var vd = document.getElementById('view-diario');
-  if (vd) vd.classList.add('active');
-  var backBtn = document.getElementById('diario-back-btn');
-  if (backBtn) backBtn.style.display = _diarioOrigenView ? 'inline-flex' : 'none';
-  diarioInit();
-  var sel = document.getElementById('diario-curso-sel');
-  if (sel) { sel.value = cursoId; diarioCursoChange(); }
-}
-
-function diarioVolver() {
-  if (!_diarioOrigenView) return;
-  var btn = document.querySelector('.nav-btn[onclick*="' + _diarioOrigenView + '"]');
-  showView(_diarioOrigenView, btn);
-}
-
-function goToDiarioFromPlanilla() {
-  var sel = document.getElementById('planilla-curso-sel');
-  var cid = sel ? sel.value : null;
-  if (cid) goToDiario(cid, 'planilla');
-  else showToast('⚠ Seleccioná un curso primero');
-}
-
-function goToDiarioFromProceso() {
-  var cid = activeProcesoCursoId;
-  if (cid) goToDiario(cid, 'proceso');
-  else showToast('⚠ Seleccioná un curso primero');
-}
-
-function goToDiarioFromNomina() {
-  var sel = document.getElementById('nomina-curso-sel');
-  var cid = sel ? sel.value : null;
-  if (cid) goToDiario(cid, 'nomina');
-  else showToast('⚠ Seleccioná un curso primero');
-}
+var _diarioCursoId=null,_diarioItems=[],_diarioOrigenView=null;
+function diarioContador(ta){var ct=document.getElementById('diario-contador');if(!ct)return;var len=(ta.value||'').length;ct.textContent=len+' / 600';ct.className='diario-char-counter'+(len>=600?' limit':len>=500?' warn':'');}
+function diarioContadorEdit(ta){var ct=document.getElementById('diario-edit-contador');if(!ct)return;var len=(ta.value||'').length;ct.textContent=len+' / 600';ct.className='diario-char-counter'+(len>=600?' limit':len>=500?' warn':'');}
+function diarioInit(){var sel=document.getElementById('diario-curso-sel');if(!sel)return;sel.innerHTML='<option value="">- Selecciona un curso -</option>';(cursos||[]).forEach(function(cur){var o=document.createElement('option');o.value=cur.id;o.textContent=cur.nombre;sel.appendChild(o);});}
+function diarioCursoChange(){var sel=document.getElementById('diario-curso-sel');_diarioCursoId=sel.value||null;var ct=document.getElementById('diario-content');if(!_diarioCursoId){if(ct)ct.style.display='none';return;}if(ct)ct.style.display='block';var fd=document.getElementById('diario-fecha');if(fd&&!fd.value)fd.value=new Date().toISOString().split('T')[0];var bar=document.getElementById('diario-bar');var cur=(cursos||[]).find(function(x){return x.id===_diarioCursoId;});if(bar&&cur)bar.textContent=cur.nombre;diarioCargar();}
+async function diarioCargar(){if(!_diarioCursoId||!_sbToken)return;try{var data=await sbFetch('temas?user_id=eq.'+_sbUserId+'&curso_id=eq.'+_diarioCursoId+'&order=fecha.desc',{headers:{'Range':'0-9999','Range-Unit':'items'}});_diarioItems=Array.isArray(data)?data:[];diarioRender();}catch(e){showToast('Error cargando el Diario');}}
+function diarioRender(){var lista=document.getElementById('diario-lista'),empty=document.getElementById('diario-empty');if(!lista)return;lista.innerHTML='';if(_diarioItems.length===0){if(empty)empty.style.display='flex';return;}if(empty)empty.style.display='none';_diarioItems.forEach(function(item){var d=new Date(item.fecha+'T12:00:00');var fStr=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});fStr=fStr.charAt(0).toUpperCase()+fStr.slice(1);var entry=document.createElement('div');entry.className='diario-entry';var header=document.createElement('div');header.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px';var ds=document.createElement('span');ds.className='diario-entry-date';ds.textContent=fStr;var btns=document.createElement('div');btns.style.cssText='display:flex;gap:5px';var eb=document.createElement('button');eb.style.cssText='background:none;border:none;cursor:pointer;font-size:0.85rem;color:#6b7280;padding:2px 5px';eb.textContent='Editar';eb.title='Editar';(function(id){eb.addEventListener('click',function(){diarioAbrirEditar(id);});})(item.id);var db=document.createElement('button');db.style.cssText='background:none;border:none;cursor:pointer;font-size:0.85rem;color:#e85d75;padding:2px 5px';db.textContent='Eliminar';db.title='Eliminar';(function(id){db.addEventListener('click',function(){diarioEliminar(id);});})(item.id);btns.appendChild(eb);btns.appendChild(db);header.appendChild(ds);header.appendChild(btns);var txt=document.createElement('div');txt.className='diario-entry-text';txt.textContent=item.tema;entry.appendChild(header);entry.appendChild(txt);lista.appendChild(entry);});}
+async function diarioGuardar(){if(!_diarioCursoId){showToast('Selecciona un curso primero');return;}if(!_sbToken){showToast('Sesion expirada');return;}var fecha=(document.getElementById('diario-fecha').value||'').trim();var texto=(document.getElementById('diario-texto').value||'').trim();if(!fecha){showToast('Selecciona una fecha');return;}if(!texto){showToast('Escribi el contenido');return;}if(texto.length>600){showToast('Maximo 600 caracteres');return;}try{await sbFetch('temas',{method:'POST',prefer:'return=minimal',body:{user_id:_sbUserId,curso_id:_diarioCursoId,fecha:fecha,tema:texto}});document.getElementById('diario-texto').value='';diarioContador(document.getElementById('diario-texto'));showToast('Entrada guardada');diarioCargar();}catch(e){showToast('Error al guardar: '+(e.message||''));console.error(e);}}
+function diarioAbrirEditar(id){var item=_diarioItems.find(function(x){return x.id===id;});if(!item)return;document.getElementById('diario-edit-id').value=id;document.getElementById('diario-edit-fecha').value=item.fecha;var ta=document.getElementById('diario-edit-texto');ta.value=item.tema;diarioContadorEdit(ta);document.getElementById('diario-edit-modal').classList.add('open');}
+async function diarioEditarGuardar(){var id=document.getElementById('diario-edit-id').value;var fecha=(document.getElementById('diario-edit-fecha').value||'').trim();var texto=(document.getElementById('diario-edit-texto').value||'').trim();if(!fecha||!texto){showToast('Completa todos los campos');return;}if(texto.length>600){showToast('Maximo 600 caracteres');return;}try{await sbFetch('temas?id=eq.'+id+'&user_id=eq.'+_sbUserId,{method:'PATCH',prefer:'return=minimal',body:{fecha:fecha,tema:texto}});document.getElementById('diario-edit-modal').classList.remove('open');showToast('Entrada actualizada');diarioCargar();}catch(e){showToast('Error al actualizar');}}
+async function diarioEliminar(id){var ok=await showConfirm('Eliminar esta entrada?','Esta accion no se puede deshacer.','','Eliminar','btn-danger');if(!ok)return;try{await sbFetch('temas?id=eq.'+id+'&user_id=eq.'+_sbUserId,{method:'DELETE',prefer:'return=minimal'});showToast('Entrada eliminada');diarioCargar();}catch(e){showToast('Error al eliminar');}}
+function goToDiario(cursoId,origenView){_diarioCursoId=cursoId;_diarioOrigenView=origenView||null;document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});var vd=document.getElementById('view-diario');if(vd)vd.classList.add('active');var bb=document.getElementById('diario-back-btn');if(bb)bb.style.display=_diarioOrigenView?'inline-flex':'none';diarioInit();var sel=document.getElementById('diario-curso-sel');if(sel){sel.value=cursoId;diarioCursoChange();}}
+function diarioVolver(){if(!_diarioOrigenView)return;var btn=document.querySelector('.nav-btn[onclick*="'+_diarioOrigenView+'"]');showView(_diarioOrigenView,btn);}
+function goToDiarioFromPlanilla(){var sel=document.getElementById('planilla-curso-sel');var cid=sel?sel.value:null;if(cid)goToDiario(cid,'planilla');else showToast('Selecciona un curso primero');}
+function goToDiarioFromProceso(){var cid=activeProcesoCursoId;if(cid)goToDiario(cid,'proceso');else showToast('Selecciona un curso primero');}
+function goToDiarioFromNomina(){var sel=document.getElementById('nomina-curso-sel');var cid=sel?sel.value:null;if(cid)goToDiario(cid,'nomina');else showToast('Selecciona un curso primero');}
 </script>
 </body>
 </html>
