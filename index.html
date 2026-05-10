@@ -28038,7 +28038,7 @@ function procRenderizarGrid() {
     var docente = c.docente ? '<div class="curso-card-meta">&#128100; ' + c.docente + '</div>' : '';
     var cant    = '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count !== 1 ? 's' : '') + '</div>';
     var acciones = '<div class="curso-card-actions" style="margin-top:12px">' +
-                   '<button class="btn btn-primary btn-sm" style="flex:1" onclick="procAbrirCurso(\''+curso.id+'\')">④ Ver proceso</button>' +
+                   '<button class="btn btn-primary btn-sm" style="flex:1" onclick="procAbrirCurso(\''+curso.id+'\')">📝 Ver proceso</button>' +
                    '</div>';
     div.innerHTML = stripe + nombre + materia + docente + cant + acciones;
     grid.appendChild(div);
