@@ -23274,7 +23274,6 @@ var __async = (__this, __arguments, generator) => {
     <button class="nav-btn" onclick="showView('scanner',this)">📷 Escanear</button>
     <button class="nav-btn" onclick="showView('planilla',this)">📊 Planilla</button>
     <button class="nav-btn" onclick="showView('proceso',this)">📝 Proceso</button>
-    <button class="nav-btn" onclick="showView('diario',this)">📓 Diario</button>
     <button class="nav-btn" id="nav-admin" onclick="showView('admin',this)" style="display:none;background:rgba(245,166,35,0.2);color:var(--gold)">⚙️ Admin</button>
     <span id="header-user" style="display:none;color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:700;padding:0 8px;align-items:center"></span>
 
@@ -23301,7 +23300,6 @@ var __async = (__this, __arguments, generator) => {
 <div class="view" id="view-cursos">
   <div class="page-title">🏫 Mis Cursos</div>
   <p class="page-sub">Seleccioná un curso para gestionarlo, o creá uno nuevo al final de la página.</p>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem"><button class="btn btn-secondary btn-sm" onclick="showView('diario',document.querySelector('.nav-btn[onclick*=diario]'))">📓 Diario de Clase</button></div>
 
   <!-- Cursos grid primero -->
   <div class="cursos-grid" id="cursos-grid"></div>
@@ -23561,7 +23559,6 @@ var __async = (__this, __arguments, generator) => {
 <div class="view" id="view-planilla">
   <div class="page-title">📊 Planilla de Asistencia</div>
   <p class="page-sub">Seleccioná el curso para ver su registro completo. P = Presente · A = Ausente · T = Tarde · J = Ausencia Justificada <span style="color:#9ca3af;font-size:0.85em">(no se computa en el porcentaje)</span></p>
-  <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem"><button class="btn btn-secondary btn-sm" onclick="showView('diario',document.querySelector('.nav-btn[onclick*=diario]'))">📓 Diario de Clase</button></div>
   <div class="field" style="max-width:400px;margin-bottom:1.5rem">
     <label>📚 Curso</label>
     <select id="planilla-curso-sel" onchange="onPlanillaCursoChange()"><option value="">— Seleccioná un curso —</option></select>
@@ -23575,6 +23572,7 @@ var __async = (__this, __arguments, generator) => {
       <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
       <button class="btn btn-danger" onclick="openDeleteDayModal()">🗑 Eliminar día</button>
       <button class="btn btn-gold" onclick="printPlanilla()">🖨 Imprimir</button>
+      <button class="btn btn-secondary" onclick="goToDiarioFromPlanilla()">📓 Diario</button>
     </div>
     <div class="stat-chips" id="global-stats" style="margin-bottom:1.5rem"></div>
     <div class="table-wrap">
@@ -23978,6 +23976,7 @@ function renderCursosGrid() {
       <div class="curso-card-actions">
         <button class="btn btn-primary btn-sm curso-btn-nomina" onclick="goToNomina('${c.id}')">👥 Nómina</button>
         <button class="btn btn-secondary btn-sm curso-btn-qr" onclick="goToQR('${c.id}')">🔲 QR</button>
+        <button class="btn btn-secondary btn-sm" onclick="goToDiario('${c.id}')" title="Diario de Clase">📓</button>
         <button class="btn btn-secondary btn-sm curso-btn-icon" onclick="openEditCurso('${c.id}')" title="Editar curso">✏️</button>
         <button class="btn btn-danger btn-sm curso-btn-icon" onclick="deleteCurso('${c.id}')">🗑</button>
       </div>`;
@@ -29883,7 +29882,6 @@ function showGraceModal(userName, daysLeft) {
   <div id="proc-grid-view">
     <div class="page-title">&#128221; Registro de Proceso</div>
     <p class="page-sub">Selecciona un curso para ver y registrar el proceso de aprendizaje</p>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:0.8rem"><button class="btn btn-secondary btn-sm" onclick="showView('diario',document.querySelector('.nav-btn[onclick*=diario]'))">📓 Diario de Clase</button></div>
     <div class="cursos-grid" id="proc-cursos-grid"></div>
     <div id="proc-empty" class="empty-state" style="display:none">
       <div class="ei">&#128221;</div>
@@ -29910,6 +29908,7 @@ function showGraceModal(userName, daysLeft) {
       <button class="btn btn-primary btn-sm" id="proc-btn-agregar">&#43; Agregar registro</button>
       <button class="btn btn-secondary btn-sm" id="proc-btn-eliminar">&#128465; Modificar / Eliminar registro</button>
       <button class="btn btn-gold btn-sm" id="proc-btn-word">&#128196; Informe Word</button>
+      <button class="btn btn-secondary btn-sm" onclick="goToDiarioFromProceso()">📓 Diario</button>
     </div>
     <div id="proc-tabla-wrap" style="display:none">
       <div class="table-wrap">
@@ -30281,6 +30280,24 @@ function showGraceModal(userName, daysLeft) {
 <div class="modal-overlay" id="diario-edit-modal" onclick="if(event.target===this)this.classList.remove('open')"><div class="modal" style="max-width:480px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem"><h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--slate)">✏️ Editar registro</h3><button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button></div><div class="field"><label>📅 Fecha</label><input type="date" id="diario-edit-fecha"></div><div class="field"><label>📝 Tema / Contenido</label><textarea id="diario-edit-texto" rows="4" style="font-family:Nunito,sans-serif;font-size:0.88rem;resize:vertical;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;width:100%"></textarea></div><input type="hidden" id="diario-edit-id"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem"><button class="btn btn-secondary" onclick="document.getElementById('diario-edit-modal').classList.remove('open')">Cancelar</button><button class="btn btn-primary" onclick="diarioEditarGuardar()">✅ Guardar cambios</button></div></div></div>
 <script>
 var _diarioCursoId=null,_diarioItems=[];
+function goToDiario(cursoId){
+  _diarioCursoId=cursoId;
+  document.getElementById('view-diario').classList.add('active');
+  document.querySelectorAll('.view').forEach(function(v){if(v.id!=='view-diario')v.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  diarioInit();
+  var sel=document.getElementById('diario-curso-sel');
+  if(sel){sel.value=cursoId;diarioCursoChange();}
+}
+function goToDiarioFromPlanilla(){
+  var sel=document.getElementById('planilla-curso-sel');
+  var cid=sel?sel.value:null;
+  if(cid)goToDiario(cid);
+}
+function goToDiarioFromProceso(){
+  var cid=activeProcesoCursoId;
+  if(cid)goToDiario(cid);
+}
 function diarioInit(){var sel=document.getElementById('diario-curso-sel');if(!sel)return;sel.innerHTML='<option value="">— Seleccioná un curso —</option>';(cursos||[]).forEach(function(cur){var o=document.createElement('option');o.value=cur.id;o.textContent=cur.nombre;sel.appendChild(o);});}
 function diarioCursoChange(){var sel=document.getElementById('diario-curso-sel');_diarioCursoId=sel.value||null;var ct=document.getElementById('diario-content');if(!_diarioCursoId){if(ct)ct.style.display='none';return;}if(ct)ct.style.display='block';var fd=document.getElementById('diario-fecha');if(fd&&!fd.value)fd.value=new Date().toISOString().split('T')[0];var bar=document.getElementById('diario-bar');var cur=(cursos||[]).find(function(x){return x.id===_diarioCursoId;});if(bar&&cur)bar.textContent=cur.nombre;diarioCargar();}
 async function diarioCargar(){if(!_diarioCursoId||!_sbToken)return;try{var d=await sbFetch('temas?user_id=eq.'+_sbUserId+'&curso_id=eq.'+_diarioCursoId+'&order=fecha.desc',{headers:{'Range':'0-9999','Range-Unit':'items'}});_diarioItems=Array.isArray(d)?d:[];diarioRender();}catch(e){showToast('⚠ Error cargando el Diario');}}
