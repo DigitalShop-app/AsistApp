@@ -22805,6 +22805,15 @@ var __async = (__this, __arguments, generator) => {
   .absent-alert-badge { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:8px; padding:2px 8px; font-size:0.72rem; font-weight:800; margin-left:6px; }
 
   /* OBSERVATIONS MODAL */
+
+  /* DIARIO DE CLASE entries */
+  .diario-entry { background: var(--paper); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
+  .diario-entry-date { font-family: 'Barlow Condensed', sans-serif; font-size: 0.88rem; font-weight: 600; color: white; letter-spacing: 0.5px; background: var(--teal); display: inline-block; padding: 2px 10px; border-radius: 6px; }
+  .diario-entry-text { font-size: 0.88rem; color: var(--ink); white-space: pre-wrap; margin-top: 6px; line-height: 1.6; }
+  .diario-char-counter { font-size: 0.72rem; color: #9ca3af; text-align: right; margin-top: 3px; font-family: 'DM Mono', monospace; }
+  .diario-char-counter.warn { color: #e67e22; }
+  .diario-char-counter.limit { color: #e85d75; font-weight: 800; }
+
   .obs-entry { background: var(--paper); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
   .obs-entry-date { 
     font-family: 'Barlow Condensed', sans-serif; font-size: 0.88rem; font-weight: 600;
@@ -30269,43 +30278,237 @@ function showGraceModal(userName, daysLeft) {
 <div class="view" id="view-diario">
   <div class="page-title">📓 Diario de Clase</div>
   <p class="page-sub">Registrá el contenido abordado, actividades, acuerdos y compromisos de cada clase.</p>
-  <div class="field" style="max-width:400px;margin-bottom:1rem"><label>📚 Curso</label><select id="diario-curso-sel" onchange="diarioCursoChange()"><option value="">— Seleccioná un curso —</option></select></div>
-  <div id="diario-content" style="display:none">
-    <div class="curso-bar" id="diario-bar" style="margin-bottom:1rem"></div>
-    <div class="card" style="max-width:700px;margin-bottom:1.5rem"><div class="card-title" style="margin-bottom:0.8rem">➕ Nuevo registro</div><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><div class="field" style="margin:0;flex:0 0 160px"><label>📅 Fecha</label><input type="date" id="diario-fecha" style="font-size:0.9rem"></div><div class="field" style="margin:0;flex:1;min-width:200px"><label>📝 Tema / Contenido</label><textarea id="diario-texto" rows="2" placeholder="Ej: Introducción a ecuaciones. Actividad pág. 45." style="font-family:Nunito,sans-serif;font-size:0.88rem;resize:vertical;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;width:100%"></textarea></div><button class="btn btn-primary" onclick="diarioGuardar()" style="flex:0 0 auto;align-self:flex-end">💾 Guardar</button></div></div>
-    <div id="diario-lista" style="max-width:700px"></div>
-    <div id="diario-empty" class="empty-state" style="display:none"><div class="ei">📓</div><p>No hay registros aún</p><p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Completá el formulario de arriba para agregar el primer tema</p></div>
+  <div class="field" style="max-width:400px;margin-bottom:1rem">
+    <label>📚 Curso</label>
+    <select id="diario-curso-sel" onchange="diarioCursoChange()"><option value="">— Seleccioná un curso —</option></select>
+  </div>
+  <div id="diario-content" style="display:none;max-width:700px">
+    <div class="curso-bar" id="diario-bar" style="margin-bottom:1.2rem"></div>
+
+    <!-- Formulario nueva entrada -->
+    <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.4rem;border:1.5px solid rgba(15,155,142,0.3)">
+      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">✏️ Nueva entrada</div>
+      <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">
+        <div class="field" style="margin:0;flex:0 0 160px">
+          <label>📅 Fecha</label>
+          <input type="date" id="diario-fecha" style="font-size:0.9rem">
+        </div>
+      </div>
+      <textarea id="diario-texto" maxlength="600" oninput="diarioContador(this)" placeholder="Ej: Supresión de paréntesis · Actividad pág. 45 · Acuerdo: traer calculadora próxima clase." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
+      <div class="diario-char-counter" id="diario-contador">0 / 600</div>
+      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="diarioGuardar()">💾 Guardar entrada</button>
+    </div>
+
+    <!-- Lista de entradas -->
+    <div id="diario-lista"></div>
+    <div id="diario-empty" class="empty-state" style="display:none">
+      <div class="ei">📓</div>
+      <p>Sin entradas aún</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Completá el formulario de arriba para registrar la primera clase</p>
+    </div>
   </div>
 </div>
-<div class="modal-overlay" id="diario-edit-modal" onclick="if(event.target===this)this.classList.remove('open')"><div class="modal" style="max-width:480px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem"><h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--slate)">✏️ Editar registro</h3><button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">✕</button></div><div class="field"><label>📅 Fecha</label><input type="date" id="diario-edit-fecha"></div><div class="field"><label>📝 Tema / Contenido</label><textarea id="diario-edit-texto" rows="4" style="font-family:Nunito,sans-serif;font-size:0.88rem;resize:vertical;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;width:100%"></textarea></div><input type="hidden" id="diario-edit-id"><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem"><button class="btn btn-secondary" onclick="document.getElementById('diario-edit-modal').classList.remove('open')">Cancelar</button><button class="btn btn-primary" onclick="diarioEditarGuardar()">✅ Guardar cambios</button></div></div></div>
+<div class="modal-overlay" id="diario-edit-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <div class="card-title" style="font-size:1.1rem;margin:0">✏️ Editar entrada del Diario</div>
+      <button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div class="field"><label>📅 Fecha</label><input type="date" id="diario-edit-fecha"></div>
+    <div class="field">
+      <label>📝 Contenido</label>
+      <textarea id="diario-edit-texto" maxlength="600" oninput="diarioContadorEdit(this)" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
+      <div class="diario-char-counter" id="diario-edit-contador">0 / 600</div>
+    </div>
+    <input type="hidden" id="diario-edit-id">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-secondary" onclick="document.getElementById('diario-edit-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="diarioEditarGuardar()">✅ Guardar cambios</button>
+    </div>
+  </div>
+</div>
 <script>
-var _diarioCursoId=null,_diarioItems=[];
-function goToDiario(cursoId){
-  _diarioCursoId=cursoId;
-  document.getElementById('view-diario').classList.add('active');
-  document.querySelectorAll('.view').forEach(function(v){if(v.id!=='view-diario')v.classList.remove('active');});
-  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+var _diarioCursoId = null, _diarioItems = [];
+
+function diarioContador(ta) {
+  var ct = document.getElementById('diario-contador');
+  if (!ct) return;
+  var len = (ta.value || '').length;
+  ct.textContent = len + ' / 600';
+  ct.className = 'diario-char-counter' + (len >= 600 ? ' limit' : len >= 500 ? ' warn' : '');
+}
+
+function diarioContadorEdit(ta) {
+  var ct = document.getElementById('diario-edit-contador');
+  if (!ct) return;
+  var len = (ta.value || '').length;
+  ct.textContent = len + ' / 600';
+  ct.className = 'diario-char-counter' + (len >= 600 ? ' limit' : len >= 500 ? ' warn' : '');
+}
+
+function diarioInit() {
+  var sel = document.getElementById('diario-curso-sel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Seleccioná un curso —</option>';
+  (cursos || []).forEach(function(cur) {
+    var o = document.createElement('option');
+    o.value = cur.id; o.textContent = cur.nombre;
+    sel.appendChild(o);
+  });
+}
+
+function diarioCursoChange() {
+  var sel = document.getElementById('diario-curso-sel');
+  _diarioCursoId = sel.value || null;
+  var ct = document.getElementById('diario-content');
+  if (!_diarioCursoId) { if (ct) ct.style.display = 'none'; return; }
+  if (ct) ct.style.display = 'block';
+  var fd = document.getElementById('diario-fecha');
+  if (fd && !fd.value) fd.value = new Date().toISOString().split('T')[0];
+  var bar = document.getElementById('diario-bar');
+  var cur = (cursos || []).find(function(x) { return x.id === _diarioCursoId; });
+  if (bar && cur) bar.textContent = cur.nombre;
+  diarioCargar();
+}
+
+async function diarioCargar() {
+  if (!_diarioCursoId || !_sbToken) return;
+  try {
+    var data = await sbFetch('temas?user_id=eq.' + _sbUserId + '&curso_id=eq.' + _diarioCursoId + '&order=fecha.desc', { headers: { 'Range': '0-9999', 'Range-Unit': 'items' } });
+    _diarioItems = Array.isArray(data) ? data : [];
+    diarioRender();
+  } catch(e) { showToast('⚠ Error cargando el Diario'); }
+}
+
+function diarioRender() {
+  var lista = document.getElementById('diario-lista');
+  var empty = document.getElementById('diario-empty');
+  if (!lista) return;
+  lista.innerHTML = '';
+  if (_diarioItems.length === 0) {
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  _diarioItems.forEach(function(item) {
+    var d = new Date(item.fecha + 'T12:00:00');
+    var fStr = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    fStr = fStr.charAt(0).toUpperCase() + fStr.slice(1);
+    var entry = document.createElement('div');
+    entry.className = 'diario-entry';
+    var header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:2px';
+    var dateSpan = document.createElement('span');
+    dateSpan.className = 'diario-entry-date';
+    dateSpan.textContent = fStr;
+    var btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:5px';
+    var eb = document.createElement('button');
+    eb.style.cssText = 'background:none;border:none;cursor:pointer;font-size:0.85rem;color:#6b7280;padding:2px 5px';
+    eb.textContent = '✏️';
+    eb.title = 'Editar';
+    (function(id) { eb.addEventListener('click', function() { diarioAbrirEditar(id); }); })(item.id);
+    var db = document.createElement('button');
+    db.style.cssText = 'background:none;border:none;cursor:pointer;font-size:0.85rem;color:#e85d75;padding:2px 5px';
+    db.textContent = '🗑';
+    db.title = 'Eliminar';
+    (function(id) { db.addEventListener('click', function() { diarioEliminar(id); }); })(item.id);
+    btns.appendChild(eb); btns.appendChild(db);
+    header.appendChild(dateSpan); header.appendChild(btns);
+    var text = document.createElement('div');
+    text.className = 'diario-entry-text';
+    text.textContent = item.tema;
+    entry.appendChild(header); entry.appendChild(text);
+    lista.appendChild(entry);
+  });
+}
+
+async function diarioGuardar() {
+  if (!_diarioCursoId) { showToast('⚠ Seleccioná un curso primero'); return; }
+  if (!_sbToken) { showToast('⚠ Sesión expirada, volvé a ingresar'); return; }
+  var fecha = (document.getElementById('diario-fecha').value || '').trim();
+  var texto = (document.getElementById('diario-texto').value || '').trim();
+  if (!fecha) { showToast('⚠ Seleccioná una fecha'); return; }
+  if (!texto) { showToast('⚠ Escribí el contenido de la clase'); return; }
+  if (texto.length > 600) { showToast('⚠ Máximo 600 caracteres'); return; }
+  try {
+    var res = await sbFetch('temas', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: { user_id: _sbUserId, curso_id: _diarioCursoId, fecha: fecha, tema: texto }
+    });
+    document.getElementById('diario-texto').value = '';
+    diarioContador(document.getElementById('diario-texto'));
+    showToast('✅ Entrada guardada');
+    diarioCargar();
+  } catch(e) {
+    showToast('❌ Error al guardar: ' + (e.message || ''));
+    console.error('diarioGuardar error:', e);
+  }
+}
+
+function diarioAbrirEditar(id) {
+  var item = _diarioItems.find(function(x) { return x.id === id; });
+  if (!item) return;
+  document.getElementById('diario-edit-id').value = id;
+  document.getElementById('diario-edit-fecha').value = item.fecha;
+  var ta = document.getElementById('diario-edit-texto');
+  ta.value = item.tema;
+  diarioContadorEdit(ta);
+  document.getElementById('diario-edit-modal').classList.add('open');
+}
+
+async function diarioEditarGuardar() {
+  var id    = document.getElementById('diario-edit-id').value;
+  var fecha = (document.getElementById('diario-edit-fecha').value || '').trim();
+  var texto = (document.getElementById('diario-edit-texto').value || '').trim();
+  if (!fecha || !texto) { showToast('⚠ Completá todos los campos'); return; }
+  if (texto.length > 600) { showToast('⚠ Máximo 600 caracteres'); return; }
+  try {
+    await sbFetch('temas?id=eq.' + id + '&user_id=eq.' + _sbUserId, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: { fecha: fecha, tema: texto }
+    });
+    document.getElementById('diario-edit-modal').classList.remove('open');
+    showToast('✅ Entrada actualizada');
+    diarioCargar();
+  } catch(e) { showToast('❌ Error al actualizar'); }
+}
+
+async function diarioEliminar(id) {
+  var ok = await showConfirm('¿Eliminar esta entrada del Diario?', 'Esta acción no se puede deshacer.', '🗑', 'Eliminar', 'btn-danger');
+  if (!ok) return;
+  try {
+    await sbFetch('temas?id=eq.' + id + '&user_id=eq.' + _sbUserId, { method: 'DELETE', prefer: 'return=minimal' });
+    showToast('🗑 Entrada eliminada');
+    diarioCargar();
+  } catch(e) { showToast('❌ Error al eliminar'); }
+}
+
+function goToDiario(cursoId) {
+  _diarioCursoId = cursoId;
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  var vd = document.getElementById('view-diario');
+  if (vd) vd.classList.add('active');
   diarioInit();
-  var sel=document.getElementById('diario-curso-sel');
-  if(sel){sel.value=cursoId;diarioCursoChange();}
+  var sel = document.getElementById('diario-curso-sel');
+  if (sel) { sel.value = cursoId; diarioCursoChange(); }
 }
-function goToDiarioFromPlanilla(){
-  var sel=document.getElementById('planilla-curso-sel');
-  var cid=sel?sel.value:null;
-  if(cid)goToDiario(cid);
+
+function goToDiarioFromPlanilla() {
+  var sel = document.getElementById('planilla-curso-sel');
+  var cid = sel ? sel.value : null;
+  if (cid) goToDiario(cid);
+  else showToast('⚠ Seleccioná un curso primero');
 }
-function goToDiarioFromProceso(){
-  var cid=activeProcesoCursoId;
-  if(cid)goToDiario(cid);
+
+function goToDiarioFromProceso() {
+  var cid = activeProcesoCursoId;
+  if (cid) goToDiario(cid);
+  else showToast('⚠ Seleccioná un curso primero');
 }
-function diarioInit(){var sel=document.getElementById('diario-curso-sel');if(!sel)return;sel.innerHTML='<option value="">— Seleccioná un curso —</option>';(cursos||[]).forEach(function(cur){var o=document.createElement('option');o.value=cur.id;o.textContent=cur.nombre;sel.appendChild(o);});}
-function diarioCursoChange(){var sel=document.getElementById('diario-curso-sel');_diarioCursoId=sel.value||null;var ct=document.getElementById('diario-content');if(!_diarioCursoId){if(ct)ct.style.display='none';return;}if(ct)ct.style.display='block';var fd=document.getElementById('diario-fecha');if(fd&&!fd.value)fd.value=new Date().toISOString().split('T')[0];var bar=document.getElementById('diario-bar');var cur=(cursos||[]).find(function(x){return x.id===_diarioCursoId;});if(bar&&cur)bar.textContent=cur.nombre;diarioCargar();}
-async function diarioCargar(){if(!_diarioCursoId||!_sbToken)return;try{var d=await sbFetch('temas?user_id=eq.'+_sbUserId+'&curso_id=eq.'+_diarioCursoId+'&order=fecha.desc',{headers:{'Range':'0-9999','Range-Unit':'items'}});_diarioItems=Array.isArray(d)?d:[];diarioRender();}catch(e){showToast('⚠ Error cargando el Diario');}}
-function diarioRender(){var lista=document.getElementById('diario-lista'),empty=document.getElementById('diario-empty');if(!lista)return;lista.innerHTML='';if(_diarioItems.length===0){if(empty)empty.style.display='flex';return;}if(empty)empty.style.display='none';_diarioItems.forEach(function(item){var d=new Date(item.fecha+'T12:00:00');var fStr=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});fStr=fStr.charAt(0).toUpperCase()+fStr.slice(1);var card=document.createElement('div');card.className='card';card.style.cssText='margin-bottom:0.8rem;padding:1rem 1.2rem';var row=document.createElement('div');row.style.cssText='display:flex;justify-content:space-between;align-items:flex-start;gap:8px';var left=document.createElement('div');left.style.flex='1';var fd2=document.createElement('div');fd2.style.cssText='font-size:0.75rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px';fd2.textContent=fStr;var td2=document.createElement('div');td2.style.cssText='font-size:0.9rem;color:var(--ink);line-height:1.6;white-space:pre-wrap';td2.textContent=item.tema;left.appendChild(fd2);left.appendChild(td2);var bd=document.createElement('div');bd.style.cssText='display:flex;gap:6px;flex-shrink:0';var eb=document.createElement('button');eb.style.cssText='background:none;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:0.8rem;color:#6b7280';eb.textContent='✏️';(function(id){eb.addEventListener('click',function(){diarioAbrirEditar(id);});})(item.id);var db=document.createElement('button');db.style.cssText='background:none;border:1px solid #fee2e2;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:0.8rem;color:#dc2626';db.textContent='🗑';(function(id){db.addEventListener('click',function(){diarioEliminar(id);});})(item.id);bd.appendChild(eb);bd.appendChild(db);row.appendChild(left);row.appendChild(bd);card.appendChild(row);lista.appendChild(card);});}
-async function diarioGuardar(){if(!_diarioCursoId||!_sbToken)return;var fecha=document.getElementById('diario-fecha').value;var texto=(document.getElementById('diario-texto').value||'').trim();if(!fecha){showToast('⚠ Seleccioná una fecha');return;}if(!texto){showToast('⚠ Escribí el tema');return;}try{await sbFetch('temas',{method:'POST',prefer:'return=minimal',body:{user_id:_sbUserId,curso_id:_diarioCursoId,fecha:fecha,tema:texto}});document.getElementById('diario-texto').value='';showToast('✅ Tema guardado');diarioCargar();}catch(e){showToast('❌ Error al guardar');}}
-function diarioAbrirEditar(id){var item=_diarioItems.find(function(x){return x.id===id;});if(!item)return;document.getElementById('diario-edit-id').value=id;document.getElementById('diario-edit-fecha').value=item.fecha;document.getElementById('diario-edit-texto').value=item.tema;document.getElementById('diario-edit-modal').classList.add('open');}
-async function diarioEditarGuardar(){var id=document.getElementById('diario-edit-id').value;var fecha=document.getElementById('diario-edit-fecha').value;var texto=(document.getElementById('diario-edit-texto').value||'').trim();if(!fecha||!texto){showToast('⚠ Completá todos los campos');return;}try{await sbFetch('temas?id=eq.'+id+'&user_id=eq.'+_sbUserId,{method:'PATCH',prefer:'return=minimal',body:{fecha:fecha,tema:texto}});document.getElementById('diario-edit-modal').classList.remove('open');showToast('✅ Registro actualizado');diarioCargar();}catch(e){showToast('❌ Error al actualizar');}}
-async function diarioEliminar(id){var ok=await showConfirm('¿Eliminar este registro del Diario?','Esta acción no se puede deshacer.','🗑','Eliminar','btn-danger');if(!ok)return;try{await sbFetch('temas?id=eq.'+id+'&user_id=eq.'+_sbUserId,{method:'DELETE',prefer:'return=minimal'});showToast('🗑 Registro eliminado');diarioCargar();}catch(e){showToast('❌ Error al eliminar');}}
 </script>
 </body>
 </html>
