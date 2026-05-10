@@ -23581,7 +23581,7 @@ var __async = (__this, __arguments, generator) => {
       <button class="btn btn-slate" onclick="openCloseDayFromPlanilla()">🔒 Cerrar día</button>
       <button class="btn btn-danger" onclick="openDeleteDayModal()">🗑 Eliminar día</button>
       <button class="btn btn-gold" onclick="printPlanilla()">🖨 Imprimir</button>
-      <button class="btn btn-secondary" onclick="goToDiarioFromPlanilla()">📓 Diario</button>
+      <button class="btn btn-secondary" onclick="goToDiarioFromPlanilla()">📓 Diario de Clase</button>
     </div>
     <div class="stat-chips" id="global-stats" style="margin-bottom:1.5rem"></div>
     <div class="table-wrap">
@@ -28028,6 +28028,7 @@ function procRenderizarGrid() {
     var div = document.createElement('div');
     div.className = 'curso-card';
     div.style.cursor = 'pointer';
+    div.style.transition = 'all 0.15s';
     (function(curso) {
       div.onclick = function() { procAbrirCurso(curso.id); };
     })(c);
@@ -28037,7 +28038,7 @@ function procRenderizarGrid() {
     var docente = c.docente ? '<div class="curso-card-meta">&#128100; ' + c.docente + '</div>' : '';
     var cant    = '<div class="curso-card-count">&#128101; ' + count + ' alumno' + (count !== 1 ? 's' : '') + '</div>';
     var acciones = '<div class="curso-card-actions" style="margin-top:12px">' +
-                   '<button class="btn btn-primary btn-sm" style="flex:1">&#128221; Ver proceso</button>' +
+                   '<button class="btn btn-primary btn-sm" style="flex:1" onclick="procAbrirCurso(\''+curso.id+'\')">④ Ver proceso</button>' +
                    '</div>';
     div.innerHTML = stripe + nombre + materia + docente + cant + acciones;
     grid.appendChild(div);
@@ -29917,7 +29918,7 @@ function showGraceModal(userName, daysLeft) {
       <button class="btn btn-primary btn-sm" id="proc-btn-agregar">&#43; Agregar registro</button>
       <button class="btn btn-secondary btn-sm" id="proc-btn-eliminar">&#128465; Modificar / Eliminar registro</button>
       <button class="btn btn-gold btn-sm" id="proc-btn-word">&#128196; Informe Word</button>
-      <button class="btn btn-secondary btn-sm" onclick="goToDiarioFromProceso()">📓 Diario</button>
+      <button class="btn btn-secondary btn-sm" onclick="goToDiarioFromProceso()">📓 Diario de Clase</button>
     </div>
     <div id="proc-tabla-wrap" style="display:none">
       <div class="table-wrap">
