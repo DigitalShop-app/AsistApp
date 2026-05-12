@@ -27730,13 +27730,24 @@ const SUPA_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 async function sbFetch(path, options={}) {
   const url = SUPA_URL + '/rest/v1/' + path;
-  const makeHeaders = () => ({
-    'apikey':        SUPA_KEY,
-    'Authorization': 'Bearer ' + (_sbToken || SUPA_KEY),
-    'Content-Type':  'application/json',
-    'Prefer':        options.prefer || 'return=representation',
-    ...options.headers
-  });
+  const makeHeaders = () => {
+    const h = {
+      'apikey':        SUPA_KEY,
+      'Authorization': 'Bearer ' + (_sbToken || SUPA_KEY),
+      'Content-Type':  'application/json',
+      'Prefer':        options.prefer || 'return=representation',
+    };
+    if (options.headers) {
+      Object.keys(options.headers).forEach(k => {
+        if (k.toLowerCase() === 'prefer' && h['Prefer']) {
+          h['Prefer'] = h['Prefer'] + ',' + options.headers[k];
+        } else {
+          h[k] = options.headers[k];
+        }
+      });
+    }
+    return h;
+  };
   let res = await fetch(url, { method: options.method||'GET', headers: makeHeaders(), body: options.body ? JSON.stringify(options.body) : undefined });
   // Auto-refresh on JWT expired
   if (res.status === 401 || res.status === 403) {
@@ -29253,7 +29264,7 @@ async function loadAllData() {
     const [c, s, a] = await Promise.all([
       sbFetch(`cursos?user_id=eq.${_sbUserId}&order=created_at.asc`),
       sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
-      sbFetch(`attendance?user_id=eq.${_sbUserId}&fecha=gte.${new Date().getFullYear()}-01-01&order=fecha.asc`,{headers:{'Range':'0-99999','Range-Unit':'items'}})
+      sbFetch(`attendance?user_id=eq.${_sbUserId}&fecha=gte.${new Date().getFullYear()}-01-01&order=fecha.asc&limit=100000`,{headers:{'Range':'0-99999','Range-Unit':'items','Prefer':'count=exact'}})
     ]);
     // Solo pisar los datos si la respuesta es válida
     // Si viene array vacío pero ya había cursos en memoria, puede ser un error de auth transitorio — no pisar
@@ -30459,4 +30470,3 @@ function goToDiarioFromNomina(){var sel=document.getElementById('nomina-curso-se
 </script>
 </body>
 </html>
-
