@@ -29264,7 +29264,19 @@ async function loadAllData() {
     const [c, s, a] = await Promise.all([
       sbFetch(`cursos?user_id=eq.${_sbUserId}&order=created_at.asc`),
       sbFetch(`students?user_id=eq.${_sbUserId}&order=created_at.asc`),
-      sbFetch(`attendance?user_id=eq.${_sbUserId}&fecha=gte.${new Date().getFullYear()}-01-01&order=fecha.asc&limit=100000`,{headers:{'Range':'0-99999','Range-Unit':'items','Prefer':'count=exact'}})
+(async () => {
+        const pageSize = 1000;
+        let allAtt = [];
+        let offset = 0;
+        while (true) {
+          const page = await sbFetch(`attendance?user_id=eq.${_sbUserId}&fecha=gte.${new Date().getFullYear()}-01-01&order=fecha.asc&limit=${pageSize}&offset=${offset}`);
+          if (!Array.isArray(page) || page.length === 0) break;
+          allAtt = allAtt.concat(page);
+          if (page.length < pageSize) break;
+          offset += pageSize;
+        }
+        return allAtt;
+      })()
     ]);
     // Solo pisar los datos si la respuesta es válida
     // Si viene array vacío pero ya había cursos en memoria, puede ser un error de auth transitorio — no pisar
