@@ -22950,6 +22950,11 @@ var __async = (__this, __arguments, generator) => {
   .pcual-i_minus { background: #c0392b; color: white; font-size: 0.72rem; }
   /* Escala simbólica */
   .psimb { font-size: 1.2rem; }
+  .psimb-cumple { background:#DCFCE7;color:#15803D;font-size:0.72rem;font-weight:900;border-radius:8px; }
+  .psimb-incompleto { background:#FFEDD5;color:#C2410C;font-size:0.72rem;font-weight:900;border-radius:8px; }
+  .psimb-noentrego { background:#FEE2E2;color:#DC2626;font-size:0.72rem;font-weight:900;border-radius:8px; }
+  .psimb-ausente { background:#EDE9FE;color:#7C3AED;font-size:0.72rem;font-weight:900;border-radius:8px; }
+  .paus { background:#EDE9FE;color:#7C3AED;font-size:0.78rem;font-weight:900;border-radius:8px; }
   .pinf-tea{background:#DBEAFE;color:#1D4ED8;font-size:0.78rem;font-weight:900;}
   .pinf-tep{background:#DCFCE7;color:#15803D;font-size:0.78rem;font-weight:900;}
   .pinf-ted{background:#FEE2E2;color:#DC2626;font-size:0.78rem;font-weight:900;}
@@ -28577,6 +28582,11 @@ function procBadge(val, tipo) {
     return '<span class="proceso-badge ' + (map2[val]||'') + '" style="width:32px;height:32px;font-size:0.72rem">' + val + '</span>';
   }
   if(tipo==='inf'){var ic=val==='TEA'?'pinf-tea':val==='TEP'?'pinf-tep':val==='TED'?'pinf-ted':'';return '<span class="proceso-badge '+ic+'" style="width:36px;height:32px;font-size:0.72rem">'+val+'</span>';}
+  if(val==='Aus'){return '<span class="proceso-badge paus" style="width:36px;height:32px;font-size:0.78rem">Aus</span>';}
+  if(val==='Cumplió'){return '<span class="proceso-badge psimb-cumple" style="min-width:36px;height:32px;font-size:0.65rem;padding:0 4px">Cum.</span>';}
+  if(val==='Incompleto'){return '<span class="proceso-badge psimb-incompleto" style="min-width:36px;height:32px;font-size:0.65rem;padding:0 4px">Inc.</span>';}
+  if(val==='No entregó'){return '<span class="proceso-badge psimb-noentrego" style="min-width:36px;height:32px;font-size:0.65rem;padding:0 4px">N/E</span>';}
+  if(val==='Ausente'){return '<span class="proceso-badge psimb-ausente" style="min-width:36px;height:32px;font-size:0.65rem;padding:0 4px">Aus</span>';}
   return '<span style="'+SZ+'background:transparent">'+val+'</span>';
 }
 
@@ -30113,6 +30123,9 @@ function showGraceModal(userName, daysLeft) {
         <button class="proceso-badge pnota-2"  onclick="setProcesoVal(2)">2</button>
         <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
       </div>
+      <div style="margin-top:6px">
+        <button class="proceso-badge paus" style="width:100%;padding:8px;font-size:0.85rem" onclick="setProcesoVal('Aus')">Aus</button>
+      </div>
     </div>
     <div id="pcell-cual-options" style="display:none">
       <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Escala cualitativa</p>
@@ -30125,6 +30138,7 @@ function showGraceModal(userName, daysLeft) {
         <button class="proceso-badge pcual-s_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('S-')">S- · Suficiente -</button>
         <button class="proceso-badge pcual-i"       style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I')">I · Insuficiente</button>
         <button class="proceso-badge pcual-i_minus" style="width:100%;font-size:0.78rem;padding:8px" onclick="setProcesoVal('I-')">I- · Insuf. Grave</button>
+        <button class="proceso-badge paus" style="width:100%;font-size:0.78rem;padding:8px;grid-column:1/-1" onclick="setProcesoVal('Aus')">Aus</button>
       </div>
     </div>
     <div id="pcell-simb-options" style="display:none">
@@ -30140,6 +30154,12 @@ function showGraceModal(userName, daysLeft) {
         <button class="proceso-badge psimb" title="Necesita apoyo" onclick="setProcesoVal('😟')">😟</button>
         <button class="proceso-badge psimb" title="Entregó"        onclick="setProcesoVal('📎')">📎</button>
         <button class="proceso-badge psimb" title="No entregó"     onclick="setProcesoVal('🚫')">🚫</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:0.5rem">
+        <button class="proceso-badge psimb-cumple" style="width:100%;padding:8px" onclick="setProcesoVal('Cumplió')">Cumplió</button>
+        <button class="proceso-badge psimb-incompleto" style="width:100%;padding:8px" onclick="setProcesoVal('Incompleto')">Incompleto</button>
+        <button class="proceso-badge psimb-noentrego" style="width:100%;padding:8px" onclick="setProcesoVal('No entregó')">No entregó</button>
+        <button class="proceso-badge psimb-ausente" style="width:100%;padding:8px" onclick="setProcesoVal('Aus')">Aus</button>
       </div>
     </div>
     <div id="pcell-inf-options" style="display:none"><p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Informe de desempeño</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem"><button style="padding:12px 8px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:1rem;background:#DBEAFE;color:#1D4ED8" onclick="setProcesoVal('TEA')">TEA</button><button style="padding:12px 8px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:1rem;background:#DCFCE7;color:#15803D" onclick="setProcesoVal('TEP')">TEP</button><button style="padding:12px 8px;border-radius:10px;border:none;cursor:pointer;font-weight:800;font-size:1rem;background:#FEE2E2;color:#DC2626" onclick="setProcesoVal('TED')">TED</button></div></div>
