@@ -28574,8 +28574,8 @@ function procBadge(val, tipo) {
     return '<span style="' + SZ + 'color:#d1d5db;background:transparent">—</span>';
   if (tipo === 'num') {
     var n = parseInt(val);
-    var cls = n >= 9 ? 'pnota-10' : n === 8 ? 'pnota-8' : n === 7 ? 'pnota-7' : n === 6 ? 'pnota-6' : n === 5 ? 'pnota-5' : n === 4 ? 'pnota-4' : 'pnota-1';
-    return '<span class="proceso-badge ' + cls + '" style="width:32px;height:32px;font-size:0.88rem">' + val + '</span>';
+    var cls = n >= 9 ? 'pnota-10' : n >= 8 ? 'pnota-8' : n >= 7 ? 'pnota-7' : n >= 6 ? 'pnota-6' : n >= 5 ? 'pnota-5' : n >= 4 ? 'pnota-4' : 'pnota-1';
+    return '<span class="proceso-badge ' + cls + '" style="width:32px;height:32px;font-size:0.88rem">' + (typeof val==='number' && !Number.isInteger(val) ? String(val).replace('.',',') : val) + '</span>';
   }
   if (tipo === 'cual') {
     var map2 = {'EX':'pcual-mb_plus','MB+':'pcual-mb_plus','MB':'pcual-mb','B+':'pcual-b_plus','B':'pcual-b','S':'pcual-s','S-':'pcual-s_minus','I':'pcual-i','I-':'pcual-i_minus'};
@@ -30122,6 +30122,19 @@ function showGraceModal(userName, daysLeft) {
         <button class="proceso-badge pnota-3"  onclick="setProcesoVal(3)">3</button>
         <button class="proceso-badge pnota-2"  onclick="setProcesoVal(2)">2</button>
         <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1)">1</button>
+      </div>
+      <p style="font-size:0.75rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0">Con decimal</p>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:1rem">
+        <button class="proceso-badge pnota-9"  onclick="setProcesoVal(9.5)">9,5</button>
+        <button class="proceso-badge pnota-8"  onclick="setProcesoVal(8.5)">8,5</button>
+        <button class="proceso-badge pnota-7"  onclick="setProcesoVal(7.5)">7,5</button>
+        <button class="proceso-badge pnota-6"  onclick="setProcesoVal(6.5)">6,5</button>
+        <button class="proceso-badge pnota-5"  onclick="setProcesoVal(5.5)">5,5</button>
+        <button class="proceso-badge pnota-4"  onclick="setProcesoVal(4.5)">4,5</button>
+        <button class="proceso-badge pnota-4"  onclick="setProcesoVal(3.5)">3,5</button>
+        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(2.5)">2,5</button>
+        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(1.5)">1,5</button>
+        <button class="proceso-badge pnota-1"  onclick="setProcesoVal(0.5)">0,5</button>
       </div>
       <div style="margin-top:6px">
         <button class="proceso-badge paus" style="width:100%;padding:8px;font-size:0.85rem" onclick="setProcesoVal('Aus')">Aus</button>
