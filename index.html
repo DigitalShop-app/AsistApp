@@ -29217,6 +29217,7 @@ async function enterApp(userName) {
   await loadAllData();
   showAppLoading(false);
   setTodayDate();
+  await new Promise(r => setTimeout(r, 80)); // pequeño delay para que el DOM procese los datos
   renderCursosGrid();
   syncSelects();
   applyRoleUI();
@@ -29248,6 +29249,9 @@ async function enterApp(userName) {
         }
       }, 200);
     } else {
+      // Forzar renderizado completo de cursos con datos ya cargados
+      const btnCursos = document.querySelector('.nav-btn[onclick*="cursos"]');
+      showView('cursos', btnCursos || null);
       renderCursosGrid();
     }
   } catch(e) {
