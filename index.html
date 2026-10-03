@@ -30739,7 +30739,9 @@ function goToDiarioFromNomina(){var sel=document.getElementById('nomina-curso-se
   .jf-num-j { color:#7c3aed; font-weight:800; }
   .jf-num-p { color:#27ae60; font-weight:800; }
   .jf-num-zero { color:#c4c0b6; font-weight:700; }
-  .jf-actions { display:flex; gap:6px; justify-content:center; }
+  .jf-actions { display:grid; grid-template-columns:112px 112px; gap:8px; justify-content:center; align-items:center; }
+  .jf-actions .btn { width:100%; justify-content:center; white-space:nowrap; padding:7px 10px; }
+  .jf-actions .jf-slot-vacio { display:block; min-height:1px; }
   .jf-row { border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:#fafafa; }
   .jf-row-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .jf-row-date { font-weight:800; color:var(--ink); font-size:0.92rem; }
@@ -31063,7 +31065,8 @@ function goToDiarioFromNomina(){var sel=document.getElementById('nomina-curso-se
       var s = x.s, st = x.st;
       var sem = getSemaforoColor(x.anual);
       var btnJ = x.anual > 0
-        ? '<button class="btn btn-primary btn-sm" onclick="justifAbrirForm(\'' + s.id + '\',null)">Justificar</button>' : '';
+        ? '<button class="btn btn-primary btn-sm" onclick="justifAbrirForm(\'' + s.id + '\',null)">Justificar</button>'
+        : '<span class="jf-slot-vacio"></span>';
       return '<tr>' +
         '<td class="jf-name">' + esc(studentName(s)) + '</td>' +
         '<td>' + st.clases + '</td>' +
