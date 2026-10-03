@@ -23302,6 +23302,7 @@ var __async = (__this, __arguments, generator) => {
     <button class="nav-btn" onclick="showView('qr',this)">🔲 QR</button>
     <button class="nav-btn" onclick="showView('scanner',this)">📷 Escanear</button>
     <button class="nav-btn" onclick="showView('planilla',this)">📊 Planilla</button>
+    <button class="nav-btn hidden-role" id="nav-justif" onclick="showView('justif',this)">&#128451;&#65039; Justificaciones</button>
     <button class="nav-btn" onclick="showView('proceso',this)">📝 Proceso</button>
     <button class="nav-btn" id="nav-admin" onclick="showView('admin',this)" style="display:none;background:rgba(245,166,35,0.2);color:var(--gold)">⚙️ Admin</button>
     <span id="header-user" style="display:none;color:rgba(255,255,255,0.7);font-size:0.8rem;font-weight:700;padding:0 8px;align-items:center"></span>
@@ -23857,6 +23858,214 @@ var __async = (__this, __arguments, generator) => {
     <!-- Lista de observaciones -->
     <div id="obs-list">
       <div style="text-align:center;color:#9ca3af;font-size:0.85rem;padding:1rem">Sin observaciones registradas</div>
+    </div>
+  </div>
+</div>
+
+<!-- DIARIO DE CLASE -->
+<div class="view" id="view-diario">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;flex-wrap:wrap">
+    <button class="btn btn-secondary btn-sm" id="diario-back-btn" onclick="diarioVolver()" style="display:none">&#8592; Volver</button>
+    <div class="page-title" style="margin:0">&#128211; Diario de Clase</div>
+  </div>
+  <p class="page-sub">Registr&#225; el contenido abordado, actividades, acuerdos y compromisos de cada clase.</p>
+  <div class="field" style="max-width:400px;margin-bottom:1rem">
+    <label>&#128218; Curso</label>
+    <select id="diario-curso-sel" onchange="diarioCursoChange()"><option value="">&#8212; Seleccion&#225; un curso &#8212;</option></select>
+  </div>
+  <div id="diario-content" style="display:none;max-width:700px">
+    <div class="curso-bar" id="diario-bar" style="margin-bottom:1.2rem"></div>
+    <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.4rem;border:1.5px solid rgba(15,155,142,0.3)">
+      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">&#9998; Nueva entrada</div>
+      <div class="field" style="margin:0 0 10px 0;max-width:200px"><label>&#128197; Fecha</label><input type="date" id="diario-fecha" style="font-size:0.9rem"></div>
+      <textarea id="diario-texto" maxlength="600" oninput="diarioContador(this)" placeholder="Ej: Supresion de parentesis. Actividad pag. 45. Acuerdo: traer calculadora proxima clase." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
+      <div class="diario-char-counter" id="diario-contador">0 / 600</div>
+      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="diarioGuardar()">Guardar entrada</button>
+    </div>
+    <div id="diario-lista"></div>
+    <div id="diario-empty" class="empty-state" style="display:none">
+      <div class="ei">&#128211;</div><p>Sin entradas aun</p>
+      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Complete el formulario para registrar la primera clase</p>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="diario-edit-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+      <div class="card-title" style="font-size:1.1rem;margin:0">&#9998; Editar entrada</div>
+      <button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&#10005;</button>
+    </div>
+    <div class="field"><label>&#128197; Fecha</label><input type="date" id="diario-edit-fecha"></div>
+    <div class="field">
+      <label>&#128221; Contenido</label>
+      <textarea id="diario-edit-texto" maxlength="600" oninput="diarioContadorEdit(this)" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
+      <div class="diario-char-counter" id="diario-edit-contador">0 / 600</div>
+    </div>
+    <input type="hidden" id="diario-edit-id">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-secondary" onclick="document.getElementById('diario-edit-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="diarioEditarGuardar()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ JUSTIFICACIONES Y FALTAS (Preceptor) ═══ -->
+<div class="view" id="view-justif">
+  <div class="page-title">&#128451;&#65039; Justificaciones y Faltas</div>
+  <p class="page-sub">Recuento de asistencia por alumno y justificaci&#243;n de inasistencias. Eleg&#237; el curso y el per&#237;odo que quer&#233;s revisar.</p>
+
+  <div id="justif-setup-warning" class="jf-warning" style="display:none">
+    &#9888;&#65039; Falta crear la tabla <strong>justificaciones</strong> en Supabase. Ejecut&#225; el archivo <strong>justificaciones.sql</strong> en el SQL Editor. Mientras tanto pod&#233;s ver el recuento, pero no registrar justificaciones.
+  </div>
+
+  <div class="jf-filters">
+    <div class="field">
+      <label>&#128218; Curso</label>
+      <select id="justif-curso-sel" onchange="justifCursoChange()"><option value="">&#8212; Seleccion&#225; un curso &#8212;</option></select>
+    </div>
+    <div class="field">
+      <label>&#128197; Per&#237;odo</label>
+      <select id="justif-periodo-sel" onchange="justifPeriodoChange()">
+        <option value="all">Todo el ciclo lectivo</option>
+        <optgroup label="Cuatrimestres">
+          <option value="1C">1&#176; Cuatrimestre</option>
+          <option value="2C">2&#176; Cuatrimestre</option>
+        </optgroup>
+        <optgroup label="Trimestres">
+          <option value="1T">1&#176; Trimestre</option>
+          <option value="2T">2&#176; Trimestre</option>
+          <option value="3T">3&#176; Trimestre</option>
+        </optgroup>
+        <option value="mes">Un mes en particular</option>
+        <option value="custom">Per&#237;odo personalizado</option>
+      </select>
+    </div>
+    <div class="field" id="justif-mes-field" style="display:none">
+      <label>Mes</label>
+      <select id="justif-mes-sel" onchange="justifPeriodoChange()">
+        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+    </div>
+    <div class="field" id="justif-custom-fields" style="display:none">
+      <label>Desde / Hasta</label>
+      <div style="display:flex;gap:8px">
+        <input type="date" id="justif-desde" onchange="justifPeriodoChange()">
+        <input type="date" id="justif-hasta" onchange="justifPeriodoChange()">
+      </div>
+    </div>
+  </div>
+
+  <div id="justif-content" style="display:none">
+    <div class="curso-bar" id="justif-bar"></div>
+    <div id="justif-period-info" class="jf-period-info"></div>
+    <div class="stat-chips" id="justif-chips" style="margin-bottom:1rem"></div>
+    <div class="jf-toolbar">
+      <label class="jf-inline-check"><input type="checkbox" id="justif-solo-pend" onchange="justifRender()"> Solo alumnos con inasistencias sin justificar</label>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <span class="jf-small-lbl">Ordenar por</span>
+        <select id="justif-orden-sel" onchange="justifRender()" style="width:auto;padding:6px 10px;font-size:0.85rem">
+          <option value="apellido">Apellido</option>
+          <option value="faltas">M&#225;s inasistencias</option>
+          <option value="pct">Menor asistencia</option>
+        </select>
+      </span>
+    </div>
+    <div class="table-wrap">
+      <table class="jf-table">
+        <thead><tr id="justif-thead"></tr></thead>
+        <tbody id="justif-body"></tbody>
+      </table>
+    </div>
+    <p class="jf-legend">Asistencia % = (Presentes + Tardes) / (Presentes + Tardes + Inasistencias). Las justificadas no se computan en el porcentaje, igual que en la Planilla. La alerta anual usa los l&#237;mites de Config.</p>
+  </div>
+  <div id="justif-empty" class="empty-state"><div class="ei">&#128451;&#65039;</div><p>Seleccion&#225; un curso para ver el recuento</p></div>
+</div>
+
+<!-- MODAL: FALTAS DE UN ALUMNO -->
+<div class="modal-overlay" id="justif-detalle-modal" onclick="if(event.target===this)justifCerrarDetalle()">
+  <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:0.8rem">
+      <div>
+        <h3 id="justif-det-nombre" style="margin:0"></h3>
+        <div id="justif-det-sub" class="jf-small-lbl" style="margin-top:2px"></div>
+      </div>
+      <button onclick="justifCerrarDetalle()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&#10005;</button>
+    </div>
+    <div class="stat-chips" id="justif-det-chips" style="margin-bottom:1rem"></div>
+    <div id="justif-det-lista"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:1rem">
+      <button class="btn btn-secondary" id="justif-det-familia" onclick="justifAvisarFamilia()" style="display:none">&#128242; Avisar a la familia</button>
+      <button class="btn btn-secondary" onclick="justifCerrarDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: JUSTIFICAR -->
+<div class="modal-overlay" id="justif-form-modal" onclick="if(event.target===this)justifCerrarForm()">
+  <div class="modal" style="max-width:600px;max-height:92vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:0.8rem">
+      <div>
+        <h3 id="justif-form-titulo" style="margin:0">Justificar inasistencia</h3>
+        <div id="justif-form-alumno" class="jf-small-lbl" style="margin-top:2px"></div>
+      </div>
+      <button onclick="justifCerrarForm()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&#10005;</button>
+    </div>
+
+    <div class="field">
+      <label>&#128197; Fechas a justificar</label>
+      <div class="jf-linkbar">
+        <button type="button" class="jf-link" onclick="justifMarcarFechas(true)">Marcar todas</button>
+        <button type="button" class="jf-link" onclick="justifMarcarFechas(false)">Ninguna</button>
+      </div>
+      <div id="justif-form-fechas" class="jf-fechas"></div>
+    </div>
+
+    <div class="field">
+      <label>Motivo</label>
+      <select id="justif-motivo"></select>
+    </div>
+
+    <div class="field">
+      <label>&#128221; &#191;C&#243;mo se justific&#243;? (pod&#233;s elegir varias)</label>
+      <div id="justif-medios" class="jf-chips"></div>
+    </div>
+
+    <div class="grid-2" style="gap:0.8rem">
+      <div class="field">
+        <label>Lo present&#243;</label>
+        <select id="justif-presenta"></select>
+      </div>
+      <div class="field">
+        <label>Fecha de recepci&#243;n</label>
+        <input type="date" id="justif-recepcion">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>&#128206; Adjuntos (opcional)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('justif-file-input').click()">&#128193; Adjuntar archivo</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('justif-cam-input').click()">&#128247; Sacar foto</button>
+      </div>
+      <input type="file" id="justif-file-input" accept="image/*,application/pdf" multiple style="display:none" onchange="justifAddFiles(this)">
+      <input type="file" id="justif-cam-input" accept="image/*" capture="environment" style="display:none" onchange="justifAddFiles(this)">
+      <div id="justif-adj-prev" class="jf-adj-prev"></div>
+      <div class="jf-small-lbl" style="margin-top:6px;text-transform:none;letter-spacing:0">Fotos o PDF (hasta 4 archivos, los PDF de hasta 1 MB). Los adjuntos pueden contener datos de salud: se guardan en tu cuenta y solo vos pod&#233;s verlos.</div>
+    </div>
+
+    <div class="field">
+      <label>&#128172; Comentario (opcional)</label>
+      <textarea id="justif-comentario" maxlength="400" rows="3" oninput="justifContador(this)" placeholder="Ej: La madre avis&#243; por el cuaderno de comunicados. Presenta certificado el lunes." style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
+      <div class="diario-char-counter" id="justif-contador">0 / 400</div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:0.6rem">
+      <button class="btn btn-danger" id="justif-btn-quitar" onclick="justifQuitarDesdeForm()" style="display:none;margin-right:auto">Quitar justificaci&#243;n</button>
+      <button class="btn btn-secondary" onclick="justifCerrarForm()">Cancelar</button>
+      <button class="btn btn-primary" id="justif-btn-guardar" onclick="justifGuardar()">Guardar justificaci&#243;n</button>
     </div>
   </div>
 </div>
@@ -30477,52 +30686,6 @@ function showGraceModal(userName, daysLeft) {
   </div>
 </div>
 
-<!-- DIARIO DE CLASE -->
-<div class="view" id="view-diario">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;flex-wrap:wrap">
-    <button class="btn btn-secondary btn-sm" id="diario-back-btn" onclick="diarioVolver()" style="display:none">&#8592; Volver</button>
-    <div class="page-title" style="margin:0">&#128211; Diario de Clase</div>
-  </div>
-  <p class="page-sub">Registr&#225; el contenido abordado, actividades, acuerdos y compromisos de cada clase.</p>
-  <div class="field" style="max-width:400px;margin-bottom:1rem">
-    <label>&#128218; Curso</label>
-    <select id="diario-curso-sel" onchange="diarioCursoChange()"><option value="">&#8212; Seleccion&#225; un curso &#8212;</option></select>
-  </div>
-  <div id="diario-content" style="display:none;max-width:700px">
-    <div class="curso-bar" id="diario-bar" style="margin-bottom:1.2rem"></div>
-    <div style="background:var(--mist);border-radius:12px;padding:14px;margin-bottom:1.4rem;border:1.5px solid rgba(15,155,142,0.3)">
-      <div style="font-weight:800;font-size:0.82rem;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">&#9998; Nueva entrada</div>
-      <div class="field" style="margin:0 0 10px 0;max-width:200px"><label>&#128197; Fecha</label><input type="date" id="diario-fecha" style="font-size:0.9rem"></div>
-      <textarea id="diario-texto" maxlength="600" oninput="diarioContador(this)" placeholder="Ej: Supresion de parentesis. Actividad pag. 45. Acuerdo: traer calculadora proxima clase." style="width:100%;min-height:90px;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
-      <div class="diario-char-counter" id="diario-contador">0 / 600</div>
-      <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="diarioGuardar()">Guardar entrada</button>
-    </div>
-    <div id="diario-lista"></div>
-    <div id="diario-empty" class="empty-state" style="display:none">
-      <div class="ei">&#128211;</div><p>Sin entradas aun</p>
-      <p style="font-size:0.82rem;color:#9ca3af;margin-top:0.5rem">Complete el formulario para registrar la primera clase</p>
-    </div>
-  </div>
-</div>
-<div class="modal-overlay" id="diario-edit-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:520px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
-      <div class="card-title" style="font-size:1.1rem;margin:0">&#9998; Editar entrada</div>
-      <button onclick="document.getElementById('diario-edit-modal').classList.remove('open')" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&#10005;</button>
-    </div>
-    <div class="field"><label>&#128197; Fecha</label><input type="date" id="diario-edit-fecha"></div>
-    <div class="field">
-      <label>&#128221; Contenido</label>
-      <textarea id="diario-edit-texto" maxlength="600" oninput="diarioContadorEdit(this)" rows="5" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:Nunito,sans-serif;font-size:0.9rem;resize:vertical;background:white;color:var(--ink);outline:none;box-sizing:border-box"></textarea>
-      <div class="diario-char-counter" id="diario-edit-contador">0 / 600</div>
-    </div>
-    <input type="hidden" id="diario-edit-id">
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
-      <button class="btn btn-secondary" onclick="document.getElementById('diario-edit-modal').classList.remove('open')">Cancelar</button>
-      <button class="btn btn-primary" onclick="diarioEditarGuardar()">Guardar cambios</button>
-    </div>
-  </div>
-</div>
 <script>
 var _diarioCursoId=null,_diarioItems=[],_diarioOrigenView=null;
 function diarioContador(ta){var ct=document.getElementById('diario-contador');if(!ct)return;var len=(ta.value||'').length;ct.textContent=len+' / 600';ct.className='diario-char-counter'+(len>=600?' limit':len>=500?' warn':'');}
@@ -30530,7 +30693,7 @@ function diarioContadorEdit(ta){var ct=document.getElementById('diario-edit-cont
 function diarioInit(){var sel=document.getElementById('diario-curso-sel');if(!sel)return;sel.innerHTML='<option value="">- Selecciona un curso -</option>';(cursos||[]).forEach(function(cur){var o=document.createElement('option');o.value=cur.id;o.textContent=cur.nombre;sel.appendChild(o);});}
 function diarioCursoChange(){var sel=document.getElementById('diario-curso-sel');_diarioCursoId=sel.value||null;var ct=document.getElementById('diario-content');if(!_diarioCursoId){if(ct)ct.style.display='none';return;}if(ct)ct.style.display='block';var fd=document.getElementById('diario-fecha');if(fd&&!fd.value)fd.value=new Date().toISOString().split('T')[0];var bar=document.getElementById('diario-bar');var cur=(cursos||[]).find(function(x){return x.id===_diarioCursoId;});if(bar&&cur)bar.textContent=cur.nombre;diarioCargar();}
 async function diarioCargar(){if(!_diarioCursoId||!_sbToken)return;try{var data=await sbFetch('temas?user_id=eq.'+_sbUserId+'&curso_id=eq.'+_diarioCursoId+'&order=created_at.desc',{headers:{'Range':'0-9999','Range-Unit':'items'}});_diarioItems=Array.isArray(data)?data:[];diarioRender();}catch(e){showToast('Error cargando el Diario');}}
-function diarioRender(){var lista=document.getElementById('diario-lista'),empty=document.getElementById('diario-empty');if(!lista)return;lista.innerHTML='';if(_diarioItems.length===0){if(empty)empty.style.display='flex';return;}if(empty)empty.style.display='none';_diarioItems.forEach(function(item){
+function diarioRender(){var lista=document.getElementById('diario-lista'),empty=document.getElementById('diario-empty');if(!lista)return;lista.innerHTML='';if(_diarioItems.length===0){if(empty)empty.style.display='block';return;}if(empty)empty.style.display='none';_diarioItems.forEach(function(item){
   var dateStr='';var dayStr='';
   if(item.fecha){var d2=new Date(item.fecha+'T12:00:00');var days=['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];dayStr=days[d2.getDay()];var parts=item.fecha.split('-');if(parts.length===3)dateStr=parts[2]+'/'+parts[1]+'/'+parts[2].slice(-2);}
   var dateLabel=(dayStr?dayStr+' · ':'')+dateStr;
@@ -30555,6 +30718,755 @@ function diarioVolver(){if(!_diarioOrigenView)return;var btn=document.querySelec
 function goToDiarioFromPlanilla(){var sel=document.getElementById('planilla-curso-sel');var cid=sel?sel.value:null;if(cid)goToDiario(cid,'planilla');else showToast('Selecciona un curso primero');}
 function goToDiarioFromProceso(){var cid=activeProcesoCursoId;if(cid)goToDiario(cid,'proceso');else showToast('Selecciona un curso primero');}
 function goToDiarioFromNomina(){var sel=document.getElementById('nomina-curso-sel');var cid=sel?sel.value:null;if(cid)goToDiario(cid,'nomina');else showToast('Selecciona un curso primero');}
+</script>
+<style id="justif-styles">
+  .jf-warning { background:#fef3cd; color:#856404; border:1.5px solid #f5a623; border-radius:12px; padding:12px 16px; font-size:0.88rem; font-weight:700; margin-bottom:1rem; line-height:1.5; }
+  .jf-filters { display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem; }
+  .jf-filters .field { margin-bottom:0; min-width:220px; flex:1; max-width:340px; }
+  .jf-period-info { font-size:0.85rem; font-weight:700; color:var(--teal); margin-bottom:0.8rem; }
+  .jf-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:0.8rem; }
+  .jf-inline-check { display:flex; align-items:center; gap:8px; text-transform:none; letter-spacing:0; font-size:0.85rem; font-weight:700; color:var(--ink); margin:0; cursor:pointer; }
+  .jf-inline-check input { width:auto; accent-color:var(--teal); }
+  .jf-small-lbl { font-size:0.75rem; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.6px; }
+  .jf-legend { font-size:0.78rem; color:#9ca3af; font-weight:600; margin-top:0.8rem; line-height:1.5; }
+  .jf-table { width:100%; border-collapse:collapse; font-size:0.88rem; background:white; }
+  .jf-table th { background:var(--slate); color:white; padding:10px 12px; text-align:center; font-size:0.74rem; letter-spacing:0.4px; white-space:nowrap; }
+  .jf-table th:first-child { text-align:left; }
+  .jf-table td { padding:9px 12px; border-bottom:1px solid var(--paper); text-align:center; vertical-align:middle; white-space:nowrap; }
+  .jf-table td.jf-name { text-align:left; font-weight:700; color:var(--ink); white-space:normal; min-width:170px; }
+  .jf-table tr:hover td { background:var(--mist); }
+  .jf-num-a { color:var(--rose); font-weight:800; }
+  .jf-num-j { color:#7c3aed; font-weight:800; }
+  .jf-num-p { color:#27ae60; font-weight:800; }
+  .jf-num-zero { color:#c4c0b6; font-weight:700; }
+  .jf-actions { display:flex; gap:6px; justify-content:center; }
+  .jf-row { border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:#fafafa; }
+  .jf-row-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .jf-row-date { font-weight:800; color:var(--ink); font-size:0.92rem; }
+  .jf-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:800; }
+  .jf-pill-a { background:#fde8ec; color:var(--rose); }
+  .jf-pill-j { background:#ede9fe; color:#6d28d9; }
+  .jf-row-info { margin-top:8px; font-size:0.84rem; color:#4b5563; line-height:1.55; font-weight:600; }
+  .jf-row-info .jf-k { color:#6b7280; font-weight:800; }
+  .jf-adj { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .jf-fechas { border:1.5px solid var(--border); border-radius:10px; padding:6px 10px; max-height:170px; overflow-y:auto; background:var(--cream); }
+  .jf-check { display:flex; align-items:center; gap:8px; text-transform:none; letter-spacing:0; font-size:0.88rem; font-weight:700; color:var(--ink); margin:0; padding:5px 0; cursor:pointer; }
+  .jf-check input { width:auto; accent-color:var(--teal); }
+  .jf-linkbar { display:flex; gap:14px; margin-bottom:6px; }
+  .jf-link { background:none; border:none; color:var(--teal); font-family:'Nunito',sans-serif; font-weight:800; font-size:0.78rem; cursor:pointer; padding:0; }
+  .jf-chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .jf-chip { padding:7px 12px; border:2px solid var(--border); border-radius:20px; background:var(--cream); font-family:'Nunito',sans-serif; font-weight:700; font-size:0.8rem; cursor:pointer; color:var(--ink); }
+  .jf-chip.selected { border-color:var(--teal); background:var(--mist); color:var(--teal); }
+  .jf-adj-prev { display:flex; gap:8px; flex-wrap:wrap; }
+  .jf-adj-item { position:relative; }
+  .jf-adj-x { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:none; background:var(--rose); color:white; font-size:0.7rem; font-weight:800; cursor:pointer; line-height:20px; padding:0; }
+  .jf-pdf { display:flex; align-items:center; gap:6px; background:white; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:0.78rem; font-weight:700; color:var(--slate); cursor:pointer; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @media (max-width: 768px) {
+    .jf-filters .field { max-width:none; min-width:100%; }
+    .jf-table th, .jf-table td { padding:8px 8px; }
+  }
+</style>
+<script>
+(function () {
+  // ════════════════════════════════════════════════════════════
+  // JUSTIFICACIONES Y FALTAS — Modo Preceptor
+  // Módulo aislado: no modifica la planilla ni el resto de la app.
+  // Usa los estados existentes de asistencia (true = P, 'T', 'A', 'J').
+  // ════════════════════════════════════════════════════════════
+  var JF = {
+    cursoId: null,
+    items: {},          // 'studentId|fecha' -> datos de la justificación
+    tableOk: true,      // false si la tabla no existe en Supabase
+    detailSid: null,
+    formSid: null,
+    formAdj: [],
+    formAdjLoading: false,
+    formMedios: {},
+    formEditing: false,
+    saving: false
+  };
+
+  var MOTIVOS = [
+    ['', '&#8212; Sin especificar &#8212;'],
+    ['enfermedad', 'Enfermedad / consulta m&#233;dica'],
+    ['familiar', 'Raz&#243;n familiar'],
+    ['tramite', 'Tr&#225;mite o gesti&#243;n'],
+    ['duelo', 'Duelo / fallecimiento de un familiar'],
+    ['fuerza', 'Transporte, clima o fuerza mayor'],
+    ['representacion', 'Representaci&#243;n deportiva, cultural o escolar'],
+    ['otro', 'Otro motivo']
+  ];
+  var MEDIOS = [
+    ['cert', '&#129658;', 'Certificado m&#233;dico'],
+    ['cuaderno', '&#128211;', 'Nota en cuaderno de comunicados'],
+    ['nota', '&#128221;', 'Nota firmada por la familia'],
+    ['llamado', '&#128222;', 'Llamado telef&#243;nico'],
+    ['whatsapp', '&#128172;', 'WhatsApp / mensaje'],
+    ['email', '&#9993;&#65039;', 'Correo electr&#243;nico'],
+    ['presencial', '&#129309;', 'Aviso presencial'],
+    ['otro', '&#10133;', 'Otro medio']
+  ];
+  var PRESENTA = [
+    ['', '&#8212; Sin especificar &#8212;'],
+    ['madre', 'Madre'],
+    ['padre', 'Padre'],
+    ['tutor', 'Tutor/a o responsable'],
+    ['alumno', 'El/la alumno/a (mayor de edad)'],
+    ['otro', 'Otra persona']
+  ];
+  var MAX_ADJ = 4;
+  var MAX_PDF_BYTES = 1048576;       // 1 MB
+  var MAX_IMG_SIDE = 1280;
+  var MAX_DATAURL_LEN = 1700000;     // tope por archivo ya codificado
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function pad2(n) { return ('0' + n).slice(-2); }
+  function labelOf(list, key) {
+    for (var i = 0; i < list.length; i++) { if (list[i][0] === key) return list[i][1]; }
+    return '';
+  }
+  function medioLabel(key) {
+    for (var i = 0; i < MEDIOS.length; i++) { if (MEDIOS[i][0] === key) return MEDIOS[i][2]; }
+    return '';
+  }
+  function fillSelect(el, list) {
+    el.innerHTML = list.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+  }
+  function studentById(id) {
+    for (var i = 0; i < students.length; i++) { if (students[i].id === id) return students[i]; }
+    return null;
+  }
+  function studentName(s) { return s.apellido ? (s.apellido + ', ' + s.nombre) : (s.nombre || s.full || ''); }
+  function fmtFull(d) {
+    var p = d.split('-');
+    var dt = new Date(d + 'T12:00:00');
+    var dias = ['dom', 'lun', 'mar', 'mi\u00E9', 'jue', 'vie', 's\u00E1b'];
+    return dias[dt.getDay()] + ' ' + p[2] + '/' + p[1] + '/' + p[0];
+  }
+  function fmtShort(d) { var p = d.split('-'); return p[2] + '/' + p[1]; }
+  function todayISO() { return new Date().toLocaleDateString('en-CA'); }
+  function keyOf(sid, d) { return sid + '|' + d; }
+
+  // ─────────────── PERÍODOS ───────────────
+  function currentRange() {
+    var y = new Date().getFullYear();
+    var tipo = $('justif-periodo-sel').value;
+    var from = '', to = '', label = 'Todo el ciclo lectivo';
+    if (tipo === '1C') { from = y + '-03-01'; to = y + '-07-31'; label = '1\u00B0 Cuatrimestre'; }
+    else if (tipo === '2C') { from = y + '-08-01'; to = y + '-12-31'; label = '2\u00B0 Cuatrimestre'; }
+    else if (tipo === '1T') { from = y + '-03-01'; to = y + '-05-31'; label = '1\u00B0 Trimestre'; }
+    else if (tipo === '2T') { from = y + '-06-01'; to = y + '-08-31'; label = '2\u00B0 Trimestre'; }
+    else if (tipo === '3T') { from = y + '-09-01'; to = y + '-12-31'; label = '3\u00B0 Trimestre'; }
+    else if (tipo === 'mes') {
+      var m = parseInt($('justif-mes-sel').value, 10) || 1;
+      var last = new Date(y, m, 0).getDate();
+      from = y + '-' + pad2(m) + '-01'; to = y + '-' + pad2(m) + '-' + pad2(last);
+      label = $('justif-mes-sel').options[$('justif-mes-sel').selectedIndex].text;
+    } else if (tipo === 'custom') {
+      from = $('justif-desde').value || ''; to = $('justif-hasta').value || '';
+      label = 'Per\u00EDodo personalizado';
+    }
+    return { tipo: tipo, from: from, to: to, label: label };
+  }
+  function inRange(d, r) { return (!r.from || d >= r.from) && (!r.to || d <= r.to); }
+
+  // ─────────────── CÁLCULOS ───────────────
+  function classDays(cid, r) {
+    var set = {};
+    studentsOf(cid).forEach(function (s) {
+      var att = attendance[s.id]; if (!att) return;
+      Object.keys(att).forEach(function (d) {
+        var v = att[d];
+        if ((v === true || v === 'T' || v === 'A' || v === 'J') && inRange(d, r)) set[d] = 1;
+      });
+    });
+    return Object.keys(set).sort();
+  }
+  function statsFor(sid, days) {
+    var att = attendance[sid] || {};
+    var p = 0, t = 0, a = 0, j = 0;
+    days.forEach(function (d) {
+      var v = att[d];
+      if (v === true) p++; else if (v === 'T') t++; else if (v === 'A') a++; else if (v === 'J') j++;
+    });
+    var base = p + t + a;
+    return {
+      clases: days.length, p: p, t: t, a: a, j: j,
+      sr: days.length - (p + t + a + j),
+      faltas: a + j,
+      pct: base > 0 ? Math.round((p + t) / base * 100) : null
+    };
+  }
+  function numCell(n, cls) { return '<span class="' + (n > 0 ? cls : 'jf-num-zero') + '">' + n + '</span>'; }
+  function pctColor(p) { return p === null ? '#9ca3af' : (p >= 75 ? '#27ae60' : (p >= 50 ? '#e67e22' : '#e74c3c')); }
+
+  // ─────────────── CARGA DE DATOS ───────────────
+  function isMissingTable(e) {
+    return /justificaciones|schema cache|does not exist|relation/i.test((e && e.message) || '');
+  }
+  function showSetupWarning() {
+    var w = $('justif-setup-warning'); if (w) w.style.display = JF.tableOk ? 'none' : 'block';
+  }
+  async function loadItems() {
+    if (!_sbUserId) return;
+    try {
+      var all = [], off = 0, size = 1000;
+      while (true) {
+        var page = await sbFetch('justificaciones?user_id=eq.' + _sbUserId +
+          '&select=id,student_id,curso_id,fecha,motivo,medios,comentario,presentado_por,fecha_recepcion,n_adjuntos' +
+          '&order=fecha.asc&limit=' + size + '&offset=' + off);
+        if (!Array.isArray(page) || page.length === 0) break;
+        all = all.concat(page);
+        if (page.length < size) break;
+        off += size;
+      }
+      var map = {};
+      all.forEach(function (r) {
+        map[keyOf(r.student_id, r.fecha)] = {
+          student_id: r.student_id, curso_id: r.curso_id, fecha: r.fecha,
+          motivo: r.motivo || '', medios: r.medios || [], comentario: r.comentario || '',
+          presentado_por: r.presentado_por || '', fecha_recepcion: r.fecha_recepcion || '',
+          n_adjuntos: r.n_adjuntos || 0, adjuntos: null
+        };
+      });
+      JF.items = map;
+      JF.tableOk = true;
+    } catch (e) {
+      if (isMissingTable(e)) { JF.tableOk = false; }
+      else { console.warn('justif load error', e); showToast('Error cargando justificaciones: ' + (e.message || '')); }
+    }
+    showSetupWarning();
+  }
+  async function loadAdjuntos(sid, d) {
+    var it = JF.items[keyOf(sid, d)];
+    if (!it) return [];
+    if (it.adjuntos) return it.adjuntos;
+    if (!it.n_adjuntos) { it.adjuntos = []; return it.adjuntos; }
+    var rows = await sbFetch('justificaciones?user_id=eq.' + _sbUserId + '&student_id=eq.' + encodeURIComponent(sid) +
+      '&fecha=eq.' + d + '&select=adjuntos');
+    it.adjuntos = (rows && rows[0] && Array.isArray(rows[0].adjuntos)) ? rows[0].adjuntos : [];
+    return it.adjuntos;
+  }
+
+  // ─────────────── VISTA PRINCIPAL ───────────────
+  function populateCursos() {
+    var sel = $('justif-curso-sel'); if (!sel) return;
+    var prev = JF.cursoId || localStorage.getItem('aa_last_justif_cid') || '';
+    sel.innerHTML = '<option value="">&#8212; Seleccion\u00E1 un curso &#8212;</option>';
+    cursos.forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c.id; o.textContent = c.nombre + (c.docente ? '  \u00B7 ' + c.docente : '');
+      sel.appendChild(o);
+    });
+    if (prev && getCurso(prev)) { sel.value = prev; JF.cursoId = prev; } else { sel.value = ''; JF.cursoId = null; }
+  }
+  function restorePeriod() {
+    var saved = localStorage.getItem('aa_justif_periodo');
+    var sel = $('justif-periodo-sel');
+    if (saved && sel.querySelector('option[value="' + saved + '"]')) sel.value = saved;
+    if (!$('justif-mes-sel').getAttribute('data-init')) {
+      $('justif-mes-sel').value = String(new Date().getMonth() + 1);
+      $('justif-mes-sel').setAttribute('data-init', '1');
+    }
+    toggleExtraFields();
+  }
+  function toggleExtraFields() {
+    var t = $('justif-periodo-sel').value;
+    $('justif-mes-field').style.display = t === 'mes' ? 'block' : 'none';
+    $('justif-custom-fields').style.display = t === 'custom' ? 'block' : 'none';
+  }
+
+  window.justifOnShow = function () {
+    if (!isPreceptor()) {
+      var b = document.querySelector('.nav-btn[onclick*="cursos"]');
+      showView('cursos', b || null);
+      return;
+    }
+    populateCursos();
+    restorePeriod();
+    render();
+    loadItems().then(function () { render(); });
+  };
+  window.justifCursoChange = function () {
+    JF.cursoId = $('justif-curso-sel').value || null;
+    try { if (JF.cursoId) localStorage.setItem('aa_last_justif_cid', JF.cursoId); } catch (e) {}
+    render();
+  };
+  window.justifPeriodoChange = function () {
+    try { localStorage.setItem('aa_justif_periodo', $('justif-periodo-sel').value); } catch (e) {}
+    toggleExtraFields();
+    render();
+    if ($('justif-detalle-modal').classList.contains('open')) renderDetalle();
+  };
+
+  function render() {
+    var content = $('justif-content'), empty = $('justif-empty');
+    if (!JF.cursoId || !getCurso(JF.cursoId)) {
+      content.style.display = 'none'; empty.style.display = 'block'; return;
+    }
+    content.style.display = 'block'; empty.style.display = 'none';
+    $('justif-bar').innerHTML = buildBar(JF.cursoId);
+
+    var r = currentRange();
+    var days = classDays(JF.cursoId, r);
+    var list = studentsOf(JF.cursoId).slice();
+    var rows = list.map(function (s) {
+      return { s: s, st: statsFor(s.id, days), anual: getInasistenciasAnuales(s.id) };
+    });
+
+    // Resumen del curso
+    var tp = 0, tt = 0, ta = 0, tj = 0, conPend = 0;
+    rows.forEach(function (x) { tp += x.st.p; tt += x.st.t; ta += x.st.a; tj += x.st.j; if (x.st.a > 0) conPend++; });
+    var baseG = tp + tt + ta;
+    var pctG = baseG > 0 ? Math.round((tp + tt) / baseG * 100) : null;
+    var rangeTxt = r.from || r.to
+      ? 'Del ' + (r.from ? fmtShort(r.from) : 'inicio') + ' al ' + (r.to ? fmtShort(r.to) : 'hoy')
+      : 'Todas las fechas registradas';
+    $('justif-period-info').innerHTML = '&#128197; ' + esc(r.label) + ' &middot; ' + esc(rangeTxt) +
+      ' &middot; ' + days.length + ' d&#237;a' + (days.length !== 1 ? 's' : '') + ' de clase registrado' + (days.length !== 1 ? 's' : '');
+    $('justif-chips').innerHTML =
+      '<span class="chip chip-slate">&#128197; ' + days.length + ' clases</span>' +
+      '<span class="chip chip-teal">&#9989; ' + tp + ' presentes &middot; ' + tt + ' tardes</span>' +
+      '<span class="chip chip-rose">&#10060; ' + ta + ' inasistencias</span>' +
+      '<span class="chip chip-slate" style="background:#ede9fe;color:#6d28d9">&#128220; ' + tj + ' justificadas</span>' +
+      '<span class="chip chip-gold">&#128202; Asistencia ' + (pctG === null ? '-' : pctG + '%') + '</span>' +
+      (conPend ? '<span class="chip chip-rose">' + conPend + ' alumno' + (conPend !== 1 ? 's' : '') + ' con faltas sin justificar</span>' : '');
+
+    // Filtro y orden
+    if ($('justif-solo-pend').checked) rows = rows.filter(function (x) { return x.st.a > 0; });
+    var orden = $('justif-orden-sel').value;
+    rows.sort(function (x, y) {
+      if (orden === 'faltas') { if (y.st.a !== x.st.a) return y.st.a - x.st.a; }
+      else if (orden === 'pct') {
+        var px = x.st.pct === null ? 101 : x.st.pct, py = y.st.pct === null ? 101 : y.st.pct;
+        if (px !== py) return px - py;
+      }
+      return studentName(x.s).toLowerCase().localeCompare(studentName(y.s).toLowerCase(), 'es');
+    });
+
+    var anySR = rows.some(function (x) { return x.st.sr > 0; });
+    $('justif-thead').innerHTML =
+      '<th>Alumno</th><th title="D\u00EDas de clase registrados en el per\u00EDodo">Clases</th><th>Asistencias</th><th>Tardes</th>' +
+      '<th title="Inasistencias sin justificar">Inasistencias</th><th>Justificadas</th>' +
+      (anySR ? '<th title="D\u00EDas de clase sin registro para este alumno">Sin registrar</th>' : '') +
+      '<th>Asistencia %</th><th title="Inasistencias sin justificar en todo el a\u00F1o">Alerta anual</th><th>Acciones</th>';
+
+    if (!rows.length) {
+      $('justif-body').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2rem;color:#9ca3af;white-space:normal">' +
+        (studentsOf(JF.cursoId).length ? 'Ning&#250;n alumno coincide con el filtro.' : 'Este curso todav&#237;a no tiene alumnos.') + '</td></tr>';
+      return;
+    }
+    $('justif-body').innerHTML = rows.map(function (x) {
+      var s = x.s, st = x.st;
+      var sem = getSemaforoColor(x.anual);
+      var btnJ = x.anual > 0
+        ? '<button class="btn btn-primary btn-sm" onclick="justifAbrirForm(\'' + s.id + '\',null)">Justificar</button>' : '';
+      return '<tr>' +
+        '<td class="jf-name">' + esc(studentName(s)) + '</td>' +
+        '<td>' + st.clases + '</td>' +
+        '<td>' + numCell(st.p, 'jf-num-p') + '</td>' +
+        '<td>' + numCell(st.t, 'jf-num-p') + '</td>' +
+        '<td>' + numCell(st.a, 'jf-num-a') + '</td>' +
+        '<td>' + numCell(st.j, 'jf-num-j') + '</td>' +
+        (anySR ? '<td>' + numCell(st.sr, 'jf-num-zero') + '</td>' : '') +
+        '<td style="font-weight:800;color:' + pctColor(st.pct) + '">' + (st.pct === null ? '-' : st.pct + '%') + '</td>' +
+        '<td title="' + x.anual + ' inasistencias sin justificar en el a\u00F1o (l\u00EDmite ' + _precConfig.maxAnual + ')">' + sem.icon + ' ' + x.anual + '/' + _precConfig.maxAnual + '</td>' +
+        '<td><div class="jf-actions"><button class="btn btn-secondary btn-sm" onclick="justifAbrirDetalle(\'' + s.id + '\')">Ver faltas</button>' + btnJ + '</div></td>' +
+        '</tr>';
+    }).join('');
+  }
+  window.justifRender = render;
+
+  // ─────────────── DETALLE DE FALTAS DE UN ALUMNO ───────────────
+  window.justifAbrirDetalle = function (sid) {
+    JF.detailSid = sid;
+    renderDetalle();
+    $('justif-detalle-modal').classList.add('open');
+  };
+  window.justifCerrarDetalle = function () {
+    $('justif-detalle-modal').classList.remove('open');
+    JF.detailSid = null;
+  };
+  function renderDetalle() {
+    var sid = JF.detailSid; if (!sid) return;
+    var s = studentById(sid); if (!s) return;
+    var c = getCurso(s.cursoId);
+    var r = currentRange();
+    var days = classDays(s.cursoId, r);
+    var st = statsFor(sid, days);
+    var att = attendance[sid] || {};
+    $('justif-det-nombre').textContent = studentName(s);
+    $('justif-det-sub').textContent = (c ? c.nombre : '') + ' \u00B7 ' + r.label;
+    $('justif-det-chips').innerHTML =
+      '<span class="chip chip-slate">&#128197; ' + st.clases + ' clases</span>' +
+      '<span class="chip chip-teal">&#9989; ' + st.p + ' asistencias' + (st.t ? ' &middot; ' + st.t + ' tardes' : '') + '</span>' +
+      '<span class="chip chip-rose">&#10060; ' + st.a + ' inasistencias</span>' +
+      '<span class="chip chip-slate" style="background:#ede9fe;color:#6d28d9">&#128220; ' + st.j + ' justificadas</span>' +
+      '<span class="chip chip-gold">&#128202; ' + (st.pct === null ? '-' : st.pct + '%') + '</span>';
+
+    var dates = Object.keys(att).filter(function (d) { return (att[d] === 'A' || att[d] === 'J') && inRange(d, r); }).sort().reverse();
+    var html = '';
+    if (!dates.length) {
+      html = '<div style="text-align:center;color:#9ca3af;padding:1.2rem;font-weight:700">Sin inasistencias en este per&#237;odo &#127881;</div>';
+    } else {
+      html = dates.map(function (d) {
+        var isJ = att[d] === 'J';
+        var it = JF.items[keyOf(sid, d)];
+        var info = '';
+        if (isJ && it) {
+          var parts = [];
+          if (it.motivo) parts.push('<span class="jf-k">Motivo:</span> ' + labelOf(MOTIVOS, it.motivo));
+          if (it.medios && it.medios.length) {
+            parts.push('<span class="jf-k">Medio:</span> ' + it.medios.map(function (m) { return medioLabel(m); }).join(', '));
+          }
+          if (it.presentado_por) parts.push('<span class="jf-k">Lo present&#243;:</span> ' + labelOf(PRESENTA, it.presentado_por));
+          if (it.fecha_recepcion) parts.push('<span class="jf-k">Recibida el:</span> ' + esc(fmtShort(it.fecha_recepcion) + '/' + it.fecha_recepcion.split('-')[0]));
+          info = parts.join('<br>');
+          if (it.comentario) info += (info ? '<br>' : '') + '<span class="jf-k">Comentario:</span> ' + esc(it.comentario);
+          if (!info) info = 'Justificada sin m&#225;s detalle.';
+        } else if (isJ) {
+          info = 'Marcada como justificada desde la Planilla, sin detalle. Pod&#233;s agregarlo con Editar.';
+        }
+        var btns = isJ
+          ? '<button class="btn btn-secondary btn-sm" onclick="justifAbrirForm(\'' + sid + '\',\'' + d + '\')">Editar</button>' +
+            '<button class="btn btn-secondary btn-sm" style="color:var(--rose)" onclick="justifQuitar(\'' + sid + '\',\'' + d + '\')">Quitar</button>'
+          : '<button class="btn btn-primary btn-sm" onclick="justifAbrirForm(\'' + sid + '\',\'' + d + '\')">Justificar</button>';
+        var adjBtn = (isJ && it && it.n_adjuntos > 0)
+          ? '<button class="btn btn-secondary btn-sm" onclick="justifToggleAdj(\'' + sid + '\',\'' + d + '\',this)">&#128206; Adjuntos (' + it.n_adjuntos + ')</button>' : '';
+        return '<div class="jf-row"><div class="jf-row-head">' +
+          '<span class="jf-row-date">' + esc(fmtFull(d)) + '</span>' +
+          '<span class="jf-pill ' + (isJ ? 'jf-pill-j' : 'jf-pill-a') + '">' + (isJ ? 'Justificada' : 'Sin justificar') + '</span>' +
+          '<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">' + adjBtn + btns + '</span></div>' +
+          (info ? '<div class="jf-row-info">' + info + '</div>' : '') +
+          '<div class="jf-adj" style="display:none"></div></div>';
+      }).join('');
+    }
+    $('justif-det-lista').innerHTML = html;
+    var anual = getInasistenciasAnuales(sid);
+    $('justif-det-familia').style.display = anual > 0 ? 'inline-flex' : 'none';
+  }
+  window.justifAvisarFamilia = function () {
+    var sid = JF.detailSid; if (!sid) return;
+    justifCerrarDetalle();
+    openNotifFamilia(sid);
+  };
+
+  function openFile(f) {
+    if (f.type && f.type.indexOf('image/') === 0) { openObsLightbox(f.data, f.name); return; }
+    try {
+      var parts = String(f.data).split(',');
+      var bin = atob(parts[1] || '');
+      var u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      var blob = new Blob([u8], { type: f.type || 'application/pdf' });
+      var url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    } catch (e) { showToast('No se pudo abrir el archivo'); }
+  }
+  function fileThumb(f) {
+    if (f.type && f.type.indexOf('image/') === 0) {
+      var img = document.createElement('img');
+      img.src = f.data; img.className = 'obs-file-thumb'; img.title = f.name;
+      img.onclick = function () { openFile(f); };
+      return img;
+    }
+    var d = document.createElement('div');
+    d.className = 'jf-pdf'; d.textContent = 'PDF \u00B7 ' + f.name; d.title = f.name;
+    d.onclick = function () { openFile(f); };
+    return d;
+  }
+  window.justifToggleAdj = async function (sid, d, btn) {
+    var row = btn.closest('.jf-row'); if (!row) return;
+    var box = row.querySelector('.jf-adj'); if (!box) return;
+    if (box.style.display === 'flex') { box.style.display = 'none'; return; }
+    box.innerHTML = '<span class="jf-small-lbl">Cargando...</span>';
+    box.style.display = 'flex';
+    try {
+      var adj = await loadAdjuntos(sid, d);
+      box.innerHTML = '';
+      if (!adj.length) { box.innerHTML = '<span class="jf-small-lbl">Sin adjuntos</span>'; return; }
+      adj.forEach(function (f) { box.appendChild(fileThumb(f)); });
+    } catch (e) {
+      box.innerHTML = '<span class="jf-small-lbl">No se pudieron cargar los adjuntos</span>';
+    }
+  };
+
+  // ─────────────── FORMULARIO DE JUSTIFICACIÓN ───────────────
+  window.justifContador = function (ta) {
+    var ct = $('justif-contador'); if (!ct) return;
+    var len = (ta.value || '').length;
+    ct.textContent = len + ' / 400';
+    ct.className = 'diario-char-counter' + (len >= 400 ? ' limit' : (len >= 330 ? ' warn' : ''));
+  };
+  function renderMedios() {
+    $('justif-medios').innerHTML = MEDIOS.map(function (m) {
+      return '<button type="button" class="jf-chip' + (JF.formMedios[m[0]] ? ' selected' : '') + '" data-medio="' + m[0] + '">' + m[1] + ' ' + m[2] + '</button>';
+    }).join('');
+    Array.prototype.forEach.call($('justif-medios').querySelectorAll('.jf-chip'), function (b) {
+      b.onclick = function () {
+        var k = b.getAttribute('data-medio');
+        JF.formMedios[k] = !JF.formMedios[k];
+        b.classList.toggle('selected', !!JF.formMedios[k]);
+      };
+    });
+  }
+  function renderAdjPreview() {
+    var box = $('justif-adj-prev'); box.innerHTML = '';
+    if (JF.formAdjLoading) { box.innerHTML = '<span class="jf-small-lbl">Cargando adjuntos...</span>'; return; }
+    JF.formAdj.forEach(function (f, idx) {
+      var w = document.createElement('div'); w.className = 'jf-adj-item';
+      w.appendChild(fileThumb(f));
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'jf-adj-x'; x.textContent = 'x'; x.title = 'Quitar adjunto';
+      x.onclick = function () { JF.formAdj.splice(idx, 1); renderAdjPreview(); };
+      w.appendChild(x);
+      box.appendChild(w);
+    });
+  }
+  function updateSaveBtn() {
+    var b = $('justif-btn-guardar');
+    b.disabled = JF.formAdjLoading || JF.saving;
+    b.style.opacity = b.disabled ? '0.6' : '1';
+  }
+
+  window.justifAbrirForm = function (sid, preDate) {
+    var s = studentById(sid); if (!s) return;
+    var att = attendance[sid] || {};
+    var pend = Object.keys(att).filter(function (d) { return att[d] === 'A'; }).sort().reverse();
+    var editing = !!(preDate && att[preDate] === 'J');
+    if (!pend.length && !editing) { showToast('Este alumno no tiene inasistencias sin justificar'); return; }
+
+    JF.formSid = sid; JF.formEditing = editing; JF.formAdj = []; JF.formAdjLoading = false; JF.formMedios = {};
+    $('justif-form-titulo').textContent = editing ? 'Editar justificaci\u00F3n' : 'Justificar inasistencia';
+    $('justif-form-alumno').textContent = studentName(s);
+
+    var items = [];
+    if (editing) items.push({ d: preDate, checked: true, ya: true });
+    pend.forEach(function (d) { items.push({ d: d, checked: d === preDate, ya: false }); });
+    $('justif-form-fechas').innerHTML = items.map(function (x) {
+      return '<label class="jf-check"><input type="checkbox" value="' + x.d + '"' + (x.checked ? ' checked' : '') + '> ' +
+        esc(fmtFull(x.d)) + (x.ya ? ' <span class="jf-pill jf-pill-j">ya justificada</span>' : '') + '</label>';
+    }).join('');
+
+    fillSelect($('justif-motivo'), MOTIVOS);
+    fillSelect($('justif-presenta'), PRESENTA);
+    $('justif-recepcion').value = todayISO();
+    $('justif-comentario').value = '';
+    var it = editing ? JF.items[keyOf(sid, preDate)] : null;
+    if (it) {
+      $('justif-motivo').value = it.motivo || '';
+      $('justif-presenta').value = it.presentado_por || '';
+      if (it.fecha_recepcion) $('justif-recepcion').value = it.fecha_recepcion;
+      $('justif-comentario').value = it.comentario || '';
+      (it.medios || []).forEach(function (m) { JF.formMedios[m] = true; });
+      if (it.n_adjuntos > 0) {
+        JF.formAdjLoading = true;
+        loadAdjuntos(sid, preDate).then(function (adj) {
+          if (JF.formSid !== sid) return;
+          JF.formAdj = adj.slice(); JF.formAdjLoading = false; renderAdjPreview(); updateSaveBtn();
+        }).catch(function () {
+          if (JF.formSid !== sid) return;
+          JF.formAdjLoading = false; renderAdjPreview(); updateSaveBtn();
+          showToast('No se pudieron cargar los adjuntos actuales');
+        });
+      }
+    }
+    justifContador($('justif-comentario'));
+    renderMedios();
+    renderAdjPreview();
+    $('justif-btn-quitar').style.display = editing ? 'inline-flex' : 'none';
+    $('justif-form-modal').setAttribute('data-predate', preDate || '');
+    updateSaveBtn();
+    $('justif-form-modal').classList.add('open');
+  };
+  window.justifCerrarForm = function () {
+    $('justif-form-modal').classList.remove('open');
+    JF.formSid = null; JF.formAdjLoading = false;
+  };
+  window.justifMarcarFechas = function (on) {
+    Array.prototype.forEach.call($('justif-form-fechas').querySelectorAll('input[type=checkbox]'), function (c) { c.checked = on; });
+  };
+
+  // ── Adjuntos: archivo o cámara ──
+  function readAsDataURL(file) {
+    return new Promise(function (res, rej) {
+      var fr = new FileReader();
+      fr.onload = function () { res(fr.result); };
+      fr.onerror = function () { rej(new Error('lectura')); };
+      fr.readAsDataURL(file);
+    });
+  }
+  function compressImage(dataUrl) {
+    return new Promise(function (res, rej) {
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var k = Math.min(1, MAX_IMG_SIDE / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * k)), ch = Math.max(1, Math.round(h * k));
+        var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, 0, 0, cw, ch);
+        res(cv.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = function () { rej(new Error('imagen')); };
+      img.src = dataUrl;
+    });
+  }
+  window.justifAddFiles = async function (input) {
+    var files = Array.prototype.slice.call(input.files || []);
+    input.value = '';
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (JF.formAdj.length >= MAX_ADJ) { showToast('M\u00E1ximo ' + MAX_ADJ + ' adjuntos por justificaci\u00F3n'); break; }
+      try {
+        if (f.type && f.type.indexOf('image/') === 0) {
+          var raw = await readAsDataURL(f);
+          var data;
+          try { data = await compressImage(raw); }
+          catch (e1) { data = raw; }
+          if (data.length > MAX_DATAURL_LEN) { showToast('La imagen es demasiado pesada'); continue; }
+          var base = (f.name || ('foto-' + Date.now())).replace(/\.[^.]+$/, '');
+          JF.formAdj.push({ name: base + '.jpg', type: (data === raw ? f.type : 'image/jpeg'), data: data });
+        } else if (f.type === 'application/pdf') {
+          if (f.size > MAX_PDF_BYTES) { showToast('El PDF supera 1 MB: sacale una foto o reducilo'); continue; }
+          var pd = await readAsDataURL(f);
+          JF.formAdj.push({ name: f.name || 'documento.pdf', type: 'application/pdf', data: pd });
+        } else {
+          showToast('Formato no admitido: us\u00E1 foto o PDF');
+        }
+      } catch (e) { showToast('No se pudo leer el archivo'); }
+    }
+    renderAdjPreview();
+  };
+
+  // ── Guardar ──
+  function isNetErr(e) {
+    return (e instanceof TypeError) || !navigator.onLine || /fetch|network|failed/i.test((e && e.message) || '');
+  }
+  window.justifGuardar = async function () {
+    if (JF.saving) return;
+    var sid = JF.formSid; if (!sid) return;
+    var s = studentById(sid); if (!s) return;
+    if (!JF.tableOk) { showToast('Primero hay que crear la tabla justificaciones en Supabase (archivo justificaciones.sql)'); return; }
+    var dates = Array.prototype.map.call($('justif-form-fechas').querySelectorAll('input[type=checkbox]:checked'), function (c) { return c.value; });
+    if (!dates.length) { showToast('Marc\u00E1 al menos una fecha a justificar'); return; }
+    var medios = MEDIOS.map(function (m) { return m[0]; }).filter(function (k) { return JF.formMedios[k]; });
+    var comentario = ($('justif-comentario').value || '').trim();
+    if (!medios.length && !comentario && !JF.formAdj.length) {
+      showToast('Indic\u00E1 c\u00F3mo se justific\u00F3: eleg\u00ED un medio, dej\u00E1 un comentario o adjunt\u00E1 un archivo');
+      return;
+    }
+    var motivo = $('justif-motivo').value || '';
+    var presenta = $('justif-presenta').value || '';
+    var recepcion = $('justif-recepcion').value || null;
+    var adj = JF.formAdj.slice();
+
+    JF.saving = true; updateSaveBtn();
+    var ok = 0, fail = 0, queued = 0;
+    for (var i = 0; i < dates.length; i++) {
+      var d = dates[i];
+      var row = {
+        user_id: _sbUserId, student_id: sid, curso_id: s.cursoId, fecha: d,
+        motivo: motivo || null, medios: medios, comentario: comentario || null,
+        presentado_por: presenta || null, fecha_recepcion: recepcion,
+        n_adjuntos: adj.length, adjuntos: adj, updated_at: new Date().toISOString()
+      };
+      try {
+        await sbFetch('justificaciones?on_conflict=user_id,student_id,fecha', {
+          method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: row
+        });
+      } catch (e) {
+        if (isMissingTable(e)) { JF.tableOk = false; showSetupWarning(); }
+        console.warn('justif save error', e);
+        fail++; continue;
+      }
+      JF.items[keyOf(sid, d)] = {
+        student_id: sid, curso_id: s.cursoId, fecha: d, motivo: motivo, medios: medios.slice(),
+        comentario: comentario, presentado_por: presenta, fecha_recepcion: recepcion || '',
+        n_adjuntos: adj.length, adjuntos: adj.slice()
+      };
+      if (!attendance[sid]) attendance[sid] = {};
+      attendance[sid][d] = 'J';
+      try { await sbSaveAttendance(sid, d, 'J'); }
+      catch (e2) { queueSync(sid, d, 'J'); queued++; }
+      ok++;
+    }
+    JF.saving = false; updateSaveBtn();
+    if (ok > 0) {
+      justifCerrarForm();
+      render();
+      if ($('justif-detalle-modal').classList.contains('open')) renderDetalle();
+      var msg = '\u2705 Justificaci\u00F3n guardada (' + ok + ' fecha' + (ok !== 1 ? 's' : '') + ')';
+      if (queued) msg += ' \u00B7 sin conexi\u00F3n: la asistencia se sincronizar\u00E1 al reconectar';
+      if (fail) msg += ' \u00B7 ' + fail + ' no se pudo guardar';
+      showToast(msg);
+    } else {
+      showToast('No se pudo guardar la justificaci\u00F3n. Revis\u00E1 la conexi\u00F3n e intent\u00E1 de nuevo.');
+    }
+  };
+
+  // ── Quitar justificación (vuelve a inasistencia A) ──
+  async function quitar(sid, d) {
+    var yes = await showConfirm('\u00BFQuitar la justificaci\u00F3n?',
+      'La falta volver\u00E1 a figurar como inasistencia sin justificar y se borrar\u00E1n motivo, comentario y adjuntos.', '', 'Quitar', 'btn-danger');
+    if (!yes) return false;
+    if (JF.tableOk) {
+      try {
+        await sbFetch('justificaciones?user_id=eq.' + _sbUserId + '&student_id=eq.' + encodeURIComponent(sid) + '&fecha=eq.' + d,
+          { method: 'DELETE', prefer: 'return=minimal' });
+      } catch (e) {
+        if (!isMissingTable(e)) { showToast('No se pudo quitar la justificaci\u00F3n. Intent\u00E1 de nuevo.'); return false; }
+      }
+    }
+    delete JF.items[keyOf(sid, d)];
+    if (!attendance[sid]) attendance[sid] = {};
+    attendance[sid][d] = 'A';
+    try { await sbSaveAttendance(sid, d, 'A'); }
+    catch (e2) { queueSync(sid, d, 'A'); showToast('Sin conexi\u00F3n: el cambio se sincronizar\u00E1 al reconectar'); }
+    render();
+    if ($('justif-detalle-modal').classList.contains('open')) renderDetalle();
+    showToast('\u2705 Justificaci\u00F3n quitada');
+    return true;
+  }
+  window.justifQuitar = function (sid, d) { return quitar(sid, d); };
+  window.justifQuitarDesdeForm = async function () {
+    var sid = JF.formSid;
+    var d = $('justif-form-modal').getAttribute('data-predate');
+    if (!sid || !d) return;
+    var done = await quitar(sid, d);
+    if (done) justifCerrarForm();
+  };
+
+  // ─────────────── INTEGRACIÓN CON LA NAVEGACIÓN (sin tocar el código existente) ───────────────
+  function applyRoleToNav() {
+    var b = $('nav-justif'); if (!b) return;
+    if (isPreceptor()) b.classList.remove('hidden-role'); else b.classList.add('hidden-role');
+  }
+  var _prevShowView = window.showView;
+  window.showView = function (id, btn) {
+    _prevShowView(id, btn);
+    applyRoleToNav();
+    if (id === 'justif') window.justifOnShow();
+  };
+  if (typeof window.applyRoleUI === 'function') {
+    var _prevApply = window.applyRoleUI;
+    window.applyRoleUI = function () { _prevApply.apply(this, arguments); applyRoleToNav(); };
+  }
+  applyRoleToNav();
+
+  // Al cerrar sesión no queda nada en memoria de la sesión anterior
+  var _prevLogout = window.doLogout;
+  if (typeof _prevLogout === 'function') {
+    window.doLogout = function () {
+      JF.items = {}; JF.cursoId = null; JF.detailSid = null; JF.formSid = null;
+      return _prevLogout.apply(this, arguments);
+    };
+  }
+})();
 </script>
 </body>
 </html>
